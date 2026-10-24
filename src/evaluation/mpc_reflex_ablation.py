@@ -11,6 +11,11 @@ heuristics — vs. emergent MPC behavior — is explicit:
   - reflex:  MPC + wall vault (c_right & grounded) + hazard vault
              (0 < dx_enemy < 75 & grounded) + B edge-pulse.
 
+The module also carries a fourth, opt-in reflex: the message-box operator of 10.60,
+which pulses A while a PlayerHold reports the engine is holding the player. It is not
+part of the published ablation - the published runs overlay the three above - and it
+only enters when a caller passes a PlayerHold to apply_reflexes.
+
 Finite-horizon myopia (H = 16 frames ≈ 0.27 s) is the mathematical reason the
 reflexes help: a full running leap spans 30-50 frames, so a 16-frame planner
 cannot see landing; the reflexes inject the missing launch impulse.
@@ -21,12 +26,13 @@ Outputs `results/mpc_reflex_ablation.json` + grouped-bar figure.
 import json
 import os
 import time
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
+from src.environment.episode_hygiene import PlayerHold
 from src.environment.snes_emulator import SnesLibretroEmulator
 from src.models import HardResidualPINNDynamics, MultiEntityPINNDynamics
 from src.planning.mpc_planner import ModelPredictiveController, TrajectoryObjective
@@ -54,14 +60,22 @@ def apply_reflexes(
     curr_state: dict,
     frame: int,
     prev_b: bool,
+    message_box: Optional[PlayerHold] = None,
 ) -> Tuple[Dict[str, bool], bool, Dict[str, int]]:
-    """The three hand-coded reflexes, extracted verbatim for ablation.
+    """The three published reflexes, plus the opt-in message-box operator of 10.60.
 
     Returns (possibly overridden action_dict, updated prev_b, intervention counts).
-    Pure function — unit-testable without the emulator.
+    The three reflexes are pure functions of (action_dict, curr_state, frame, prev_b)
+    - unit-testable without the emulator. The fourth is the engine's own message box,
+    which suspends the player until the A button arrives: pass a PlayerHold whose
+    observe() the caller feeds the state vector every frame, and this function adds
+    its A pulse to the plan. Without a PlayerHold the published three-reflex contract
+    is unchanged, and the hit dict carries exactly its three keys.
     """
     action_dict = dict(action_dict)
-    hits = {"hazard_vault": 0, "wall_vault": 0, "b_pulse": 0}
+    hits: Dict[str, int] = {"hazard_vault": 0, "wall_vault": 0, "b_pulse": 0}
+    if message_box is not None:
+        hits["message_box"] = 0
 
     dx_enemy = curr_state["delta_x_enemy"]
     is_hazard_active = curr_state["hazard_active"] > 0.5
@@ -83,6 +97,14 @@ def apply_reflexes(
             action_dict["B"] = False
             hits["b_pulse"] = 1
     prev_b = curr_b
+
+    # The engine's own message boxes suspend the player until A arrives (10.60): the
+    # same shared decision the recorders and the terrain runner use, wired into the
+    # reflex layer so a controller can pass a box no model in this repository sees.
+    if message_box is not None:
+        action_dict = message_box.buttons(action_dict)
+        if action_dict.get("A"):
+            hits["message_box"] = 1
     return action_dict, prev_b, hits
 
 
