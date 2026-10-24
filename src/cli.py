@@ -88,6 +88,7 @@ MODULE_COMMANDS: dict[str, str] = {
     "physics-claims": "src.evaluation.physics_claim_audit",
     "neural-ode": "src.evaluation.neural_ode_integrator_benchmark",
     "sindy": "src.evaluation.sindy_identification_benchmark",
+    "conformal-uncertainty": "src.evaluation.conformal_uncertainty_benchmark",
     "residue-process": "src.evaluation.residue_process_study",
     "boundary-channel": "src.evaluation.boundary_channel_study",
     "pixel-frame-probe": "src.evaluation.pixel_frame_probe",
