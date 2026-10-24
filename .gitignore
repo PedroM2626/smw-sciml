@@ -53,3 +53,6 @@ runs_smoke*/
 dist/
 build/
 *.egg-info/
+
+# Generated docs-site build output (mkdocs; the source is mkdocs.yml + docs/)
+site/

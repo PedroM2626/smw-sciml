@@ -1,0 +1,60 @@
+# Documentation site: build the mkdocs-material site and publish it on GitHub Pages.
+#
+# The README is the research document, and GitHub stops rendering its math after
+# roughly the first 1,368 expressions (README Section 12 measured the limit on this
+# very page). The site renders the same file through MathJax, which has no budget.
+# scripts/sync_docs.py regenerates the site's copy from README.md first, so what is
+# published is exactly what the CI gates read - there is no second document to drift.
+
+name: Docs
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          lfs: true
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.10"
+      - name: Install the docs toolchain
+        run: pip install -r docs/requirements-docs.txt
+      - name: Sync the README into the site
+        run: python scripts/sync_docs.py
+      - name: Build
+        run: mkdocs build --strict
+      # The README links figures relative to the repository root (results/figures/...);
+      # with use_directory_urls: false those resolve from the site root, so the figures
+      # directory is copied into the build to make the README's images load.
+      - name: Copy the figures the README links
+        run: |
+          mkdir -p site/results
+          cp -r results/figures site/results/figures
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
