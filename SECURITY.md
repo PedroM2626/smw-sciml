@@ -8,6 +8,7 @@ the *development and reproduction* toolchain safe for the people running it.
 | Component | Supported |
 | :--- | :--- |
 | `main` branch (current benchmark code) | yes |
+| Tagged release (`v0.2.0`) | yes |
 | Tagged paper-reproduction release (`v0.1.0`) | yes |
 
 ## Reporting a vulnerability

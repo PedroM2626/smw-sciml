@@ -6,8 +6,8 @@ authors:
   - family-names: Lahoz
     given-names: Pedro Morato
     email: pedromoratolahoz@gmail.com
-version: 0.1.0
-date-released: 2026-09-22
+version: 0.2.0
+date-released: 2026-10-24
 license: MIT
 repository-code: "https://github.com/PedroM2626/smw-sciml"
 url: "https://github.com/PedroM2626/smw-sciml"
