@@ -115,7 +115,7 @@ def _fit_and_calibrate(
         ]
         return theta, xdot
 
-    theta_train, xdot_train, _ = pack("train")
+    theta_train, xdot_train = pack("train")
     theta_train, kept_names, dropped, keep = prune_columns(theta_train, names)
     fit = sindy(
         xdot_train,
@@ -129,7 +129,7 @@ def _fit_and_calibrate(
     predictions: Dict[str, np.ndarray] = {}
     truths: Dict[str, np.ndarray] = {}
     for split in ("val", "test"):
-        theta_full, xdot, _ = pack(split)
+        theta_full, xdot = pack(split)
         predictions[split] = theta_full[:, keep] @ fit.coefficients
         truths[split] = xdot
 

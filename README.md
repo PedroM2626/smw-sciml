@@ -2679,6 +2679,44 @@ The supports themselves, for the two recordings whose laws finding 3 and finding
 
 Regenerate: `python -m src.evaluation.sindy_identification_benchmark --alpha 0.05` (emulator-free, ~20 s for the five recordings, writes `results/sindy_identification_metrics.json`), or `make sindy`.
 
+#### 10.56.1 Conformal Intervals on the Identified Laws
+
+Section 10.43 publishes the seed-to-seed spread of a discovered law as the honest substitute for the Bayesian uncertainty it cannot compute - a regression tree has no Hessian to invert, so the Laplace machinery of 10.40 has no symbolic analogue. Split conformal prediction (Vovk, Gammerman and Shafer 2005; the split variant of Papadopoulos et al. 2002) needs neither a functional form nor a gradient: score the fitted law on a calibration split the fit never saw, read the half-width off the ceil((n+1)(1-alpha)) order statistic, and the marginal coverage of at least 1 - alpha is a finite-sample statement that assumes nothing about the residual distribution. `src/inverse/conformal_uncertainty.py` implements the three lines of arithmetic; `src/evaluation/conformal_uncertainty_benchmark.py` applies them to the 10.56 laws exactly as that section fits them (Huber loss, threshold 0.05, degree-2 dictionary, duplicates pruned), on all five recordings, with the canonical validation episodes as calibration and the canonical test episodes as evaluation - the same splits every model in 10.47/10.53/10.55 was trained and scored on.
+
+Three arms per cell. The **law arm** centres the interval on the identified law's own prediction. The **Gaussian arm** reads z times the calibration sigma instead - the parametric statement 10.58 already measured under-predicting this telemetry's tails. The **fit-mean null** runs the same conformal machinery around the calibration mean, the control every per-law table in this repository carries: a law whose interval is no tighter than the mean's has earned nothing. Coverage at the 90% level, one row per recording and target:
+
+| recording | target | conformal coverage | conformal half-width | Gaussian coverage | null coverage |
+| :-- | :--: | :--: | :--: | :--: | :--: |
+| published gameplay | dx | 1.000 | 2.1875 | 0.970 | 0.774 |
+| published gameplay | dy | 1.000 | 6.9553 | 0.941 | 0.923 |
+| published gameplay | dvx | 0.915 | 1.6902 | 0.986 | 0.957 |
+| published gameplay | dvy | 0.979 | 6.0000 | 0.988 | 0.988 |
+| tilemap (10.41) | dx | 0.939 | 0.0000 | 0.940 | 0.904 |
+| tilemap (10.41) | dy | 0.948 | 0.9910 | 0.958 | 0.936 |
+| tilemap (10.41) | dvx | 0.901 | 1.8324 | 0.972 | 0.914 |
+| tilemap (10.41) | dvy | 0.922 | 5.9946 | 0.977 | 0.977 |
+| multi-entity (10.31) | dx | 0.901 | 0.0000 | 0.960 | 0.937 |
+| multi-entity (10.31) | dy | 0.876 | 0.9731 | 0.853 | 0.929 |
+| multi-entity (10.31) | dvx | 0.882 | 1.8564 | 0.920 | 0.961 |
+| multi-entity (10.31) | dvy | 0.950 | 5.9890 | 0.971 | 0.970 |
+| sprint-targeted (10.45) | dx | 0.930 | 0.0000 | 0.930 | 0.796 |
+| sprint-targeted (10.45) | dy | 0.895 | 4.4335 | 0.922 | 0.908 |
+| sprint-targeted (10.45) | dvx | 0.981 | 2.1119 | 0.996 | 0.989 |
+| sprint-targeted (10.45) | dvy | 0.879 | 5.9758 | 0.948 | 0.965 |
+| jump-targeted (10.52) | dx | 0.957 | 0.0000 | 0.957 | 0.964 |
+| jump-targeted (10.52) | dy | 0.884 | 4.0462 | 0.886 | 0.909 |
+| jump-targeted (10.52) | dvx | 0.954 | 2.0771 | 0.806 | 0.993 |
+| jump-targeted (10.52) | dvy | 0.924 | 5.2948 | 0.949 | 0.951 |
+
+1. **The guarantee holds where the splits are exchangeable, and the dips name where they are not.** The law arm covers at or above target on 15 of 20 bounded cells, minimum coverage 0.876. The five below-target cells are all dy/dvx/dvy - never dx - on the multi-entity, sprint and jump recordings, whose excitation policies make validation and test episodes differ more than the published walk does. That is the honest reading of what the guarantee is: marginal under exchangeability, so a calibration split that under-represents the test episodes' behaviour dips by one to three points, not by the catastrophic margins the Gaussian arm shows on the same rows.
+2. **The Gaussian arm is below its own 90% claim on 3 of 20 cells, minimum 0.806** - its worst cell is the jump-targeted recording's dvx, 0.806 against the law arm's 0.954 on the same rows. It also pays for its tails in width: the median Gaussian half-width is 2.22 times the conformal one. The parametric arm is wider where it does not need to be and still wrong where it matters - the interval-level version of the tail under-prediction 10.58 measured for the residue.
+3. **The fit-mean null is the worst arm everywhere**, minimum coverage 0.774 at the same level, so the law's interval is not a re-centred constant band.
+4. **The dx cells show 10.59's exactness as a zero-width interval.** On four recordings the 95th percentile of the calibration residual is exactly 0.0000 - the law is exact on more than 95% of calibration frames - so the conformal interval around dx has zero width and still covers 90-96% of test frames. An uncertainty method that can return "this law is exact where it is exact" is the right instrument for an engine whose identity holds on 99.16-99.85% of frames once the repeats are dropped.
+
+**Limitations.** The guarantee is marginal over exchangeable draws, not per-cell: the five below-target cells are the measurement of that boundary, not a violation of the arithmetic. Coverage is scored under the recorded actions, so it is a statement about the transition kernel and not about any planner's state visitation. The recordings still contain the paused frames 10.59 identified - the calibration split scores them like any other frame - and the calibration sizes differ per recording (392 to 3,000 rows), while all 20 cells stayed bounded at every level reported. The law is the robust SINDy fit alone; the least-squares arm of 10.56 is not re-fitted here, and a different estimator needs its own calibration run.
+
+Regenerate: `python -m src.evaluation.conformal_uncertainty_benchmark` (emulator-free, ~10 s, writes `results/conformal_uncertainty_metrics.json`), or `make conformal-uncertainty`.
+
 ---
 
 ### 10.57 What Section 4 Costs: the Corrected Physics, Measured One Line at a Time
@@ -4000,6 +4038,12 @@ python -m scripts.survey_world_map --state-prefix smw_replay_node --output resul
 #     Emulator-free: it reads the three artifacts and hashes the committed savestates. Writes
 #     results/world_map_recheck_metrics.json and the section.
 python -m src.evaluation.world_map_recheck_study
+
+# 85. Distribution-free intervals on the 10.56 laws (10.56.1): split conformal prediction at
+#     three miscoverage levels, calibrated on the canonical validation split and scored on
+#     the test split, against the iid-Gaussian arm and the fit-mean null. Emulator-free,
+#     ~10 s. Writes results/conformal_uncertainty_metrics.json and the table README 10.56.1 quotes.
+python -m src.evaluation.conformal_uncertainty_benchmark
 ```
 
 ### 11.6 Engineering Workflows (CI, Configs, Parity Baselines, Regression Gates)

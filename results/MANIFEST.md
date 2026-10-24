@@ -117,6 +117,7 @@ through the installed console script: `smw-pinn benchmark`, `smw-pinn multiseed`
 | `neural_ode_integrator_metrics.json` | `src/evaluation/neural_ode_integrator_benchmark.py` | no | 10.55 |
 | `neural_ode_integrator_mpc_metrics.json` | `src/evaluation/physics_injection_mpc_benchmark.py --study ode` | yes | 10.55 |
 | `sindy_identification_metrics.json` | `src/evaluation/sindy_identification_benchmark.py` | no | 10.56 |
+| `conformal_uncertainty_metrics.json` | `src/evaluation/conformal_uncertainty_benchmark.py` | no | 10.56.1 |
 | `corrected_physics_ablation_metrics.json` | `src/evaluation/corrected_physics_ablation.py` | no | 10.57 |
 | `corrected_physics_mpc_metrics.json` | `src/evaluation/physics_injection_mpc_benchmark.py --study corrected` | yes | 10.57 |
 | `residue_process_metrics.json` | `src/evaluation/residue_process_study.py` | no | 10.58 |
