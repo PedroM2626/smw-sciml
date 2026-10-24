@@ -70,6 +70,7 @@ help:
 	@echo "physics-claims  Audit README section 4 against the code and the telemetry (10.54)"
 	@echo "neural-ode  Learn a continuous field, choose the integrator (10.55)"
 	@echo "sindy  Sparse identification of the engine's law on every recording (10.56)"
+	@echo "conformal-uncertainty  Distribution-free intervals on the 10.56 laws (10.56.1)"
 	@echo "corrected-physics  What the three section-4 corrections cost, open loop and on the console (10.57, 10.57.1)"
 	@echo "record-jump        Record jump-excited WRAM telemetry (needs the console)"
 	@echo "run MOD=... ARGS=...  any module, e.g. make run MOD=src.evaluation.spatial_holdout_benchmark"
@@ -211,6 +212,12 @@ neural-ode:
 
 sindy:
 	$(PY) -m src.evaluation.sindy_identification_benchmark
+
+# Split conformal prediction on the laws 10.56 identifies: finite-sample marginal
+# coverage against the iid-Gaussian arm and the fit-mean null (README 10.56.1).
+# Emulator-free; calibrates on the canonical validation split, scores on the test split.
+conformal-uncertainty:
+	$(PY) -m src.evaluation.conformal_uncertainty_benchmark
 
 # What the corrected forms of section 4 cost or buy, per family, paired over seeds
 # (README 10.57), then the same arms flown by the published planner on the real console
