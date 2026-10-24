@@ -9,8 +9,60 @@ numbers* - those are reported here and in README Section 12, never applied silen
 
 ## [Unreleased]
 
+_No changes yet._
+
+## [0.2.0] - 2026-10-24
+
+The world-map, message-box and corrected-perception campaign (README 10.58-10.68), plus four
+additions this release carries: the A button in the controller's reflex layer, distribution-free
+uncertainty for the identified laws, a documentation site that renders the whole README, and the
+gate the LFS migration was missing.
+
 ### Added
 
+- **The message-box A pulse reaches the controller stack** (README 10.60). The engine's own message
+  boxes suspend the player until the A button arrives, and until now only the recorders, the terrain
+  runner and the unlock campaign could press it: the learned controllers died on a hold no model input
+  can express, because A is not in the six-button action vector any published model was trained on.
+  `apply_reflexes` gains the opt-in fourth reflex - pass a `PlayerHold` whose `observe()` the
+  caller feeds every frame, and its shared A pulse joins the three published ones, with the hit counter
+  reported beside them. Without one, the three-reflex contract and its hit dict are byte-identical,
+  which is what `tests/test_hardware_loops.py` pins. `evaluate_full_level_clearance.py` wires the same
+  decision behind `--message-box-hygiene` (default off, so the published clearance artifact still
+  reproduces) and records the operator frames it spent in its metrics.
+- **Distribution-free uncertainty for the identified laws: split conformal prediction** (README 10.56.1).
+  A regression tree has no Hessian, so 10.43 could only publish a seed spread where 10.40 publishes a
+  posterior. `src/inverse/conformal_uncertainty.py` implements the order-statistic estimator - score the
+  law on a calibration split the fit never saw, read the half-width off the ceil((n+1)(1-alpha)) order
+  statistic, and marginal coverage of at least 1 - alpha holds on any exchangeable draw, finite-sample,
+  with no assumption on the residual distribution - and `src.evaluation.conformal_uncertainty_benchmark`
+  applies it to the 10.56 laws on all five recordings, calibrated on the canonical validation split and
+  scored on the test split, against the iid-Gaussian arm and the fit-mean null. Measured (seed 42): at
+  the 90% level the law arm covers at or above target on 15 of 20 bounded cells, minimum coverage 0.876 -
+  the five below-target cells are all dy/dvx/dvy on the multi-entity, sprint and jump recordings, the
+  exchangeability boundary the section measures instead of assuming; the Gaussian arm is below its own
+  claim on 3 of 20 cells (minimum 0.806) while its median half-width is 2.22 times the conformal one;
+  the null is the worst arm everywhere (minimum 0.774); and four recordings return a zero-width dx
+  interval, 10.59's exactness become an uncertainty statement. Registered as `make conformal-uncertainty`,
+  catalogued in `results/MANIFEST.md`, and gated by `tests/test_conformal_uncertainty.py`, which renders the
+  README table out of the artifact so the prose cannot drift from the measurement.
+- **A documentation site that renders the whole README** (mkdocs-material + MathJax, published by
+  `.github/workflows/docs.yml` on GitHub Pages). GitHub stops rendering math after roughly the first
+  1,368 expressions on a page - a limit README Section 12 measured on this repository, which left
+  everything past section 10.5x unreadable there. `docs/full-readme.md` is generated from `README.md` by
+  `scripts/sync_docs.py` and never edited by hand, so the site is the same document the CI gates read and
+  cannot drift from it; `docs/requirements-docs.txt` pins the docs toolchain outside the validated science
+  envelope (`tests/test_dependency_parity.py` keeps requirements.txt and pyproject.toml equal, and a site
+  dependency must never constrain the torch/CUDA caps). The strict build is verified: 1,182 math spans
+  survive into the rendered page, and the workflow copies `results/figures` so the README's images load.
+- **The LFS migration gained the gate it was missing** (`tests/test_lfs_tracking.py`). The 196-file
+  migration shaped the next commit but guarded none: a binary added before `git lfs install` lands as a
+  regular blob while `.gitattributes` still claims to route it, and every fresh clone silently regains the
+  megabytes. Three gates hold the line now - every tracked file matching an LFS suffix must be an
+  actual pointer, `.gitattributes` must keep declaring every suffix, and no tracked non-exempt file over
+  512 KB may live outside LFS - and the attributes file lost the `results/figures/*.png` line the global
+  `*.png` pattern had been shadowing. All three skip honestly outside a git checkout or without
+  git-lfs.
 - **The tile map read the way the engine reads it, and a stage finished on screen** (README 10.68).
   The dashboard's tile window classified cells from a hardcoded id list that was wrong three ways
   at once: it read only the low byte of every tile number (the "grass top `0x00`" is `0x0100`; the
@@ -1219,5 +1271,6 @@ tilemap world models, DAgger, distillation, cross-stage generalization).
 - `results/MANIFEST.md` artifact index with CI-enforced provenance (`_meta`), writer,
   command, README-section mapping and checkpoint-freshness gates.
 
-[Unreleased]: https://github.com/PedroM2626/smw-sciml/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/PedroM2626/smw-sciml/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/PedroM2626/smw-sciml/releases/tag/v0.2.0
 [0.1.0]: https://github.com/PedroM2626/smw-sciml/releases/tag/v0.1.0
