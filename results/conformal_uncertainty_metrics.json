@@ -1,0 +1,1014 @@
+{
+  "_meta": {
+    "generated_utc": "2026-10-24T16:43:13+00:00",
+    "git_sha": "6b0b68825c3053496be8167a8b8e2611f7d1f9d2",
+    "git_dirty": true,
+    "python": "3.10.11",
+    "platform": "Windows 10 (AMD64)",
+    "torch": "2.5.1+cu121",
+    "cuda_available": true,
+    "cuda_device": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "cuda_version": "12.1",
+    "numpy": "1.26.4",
+    "seed": 42,
+    "command": "python -m src.evaluation.conformal_uncertainty_benchmark --alphas 0.05,0.1,0.2"
+  },
+  "study": "Split conformal prediction on the SINDy laws of 10.56: finite-sample marginal coverage on the canonical validation/test splits, against the iid-Gaussian arm and the fit-mean null.",
+  "protocol": {
+    "seed": 42,
+    "alphas": [
+      0.05,
+      0.1,
+      0.2
+    ],
+    "selected_alpha": 0.1,
+    "law": "SINDy (10.56): Huber loss, degree-2 dictionary, duplicate columns pruned",
+    "sindy_alpha": 0.05,
+    "max_degree": 2,
+    "calibration_split": "canonical validation episodes",
+    "evaluation_split": "canonical test episodes",
+    "targets": [
+      "dx",
+      "dy",
+      "dvx",
+      "dvy"
+    ],
+    "emulator_required": false
+  },
+  "results": {
+    "published_gameplay": {
+      "dataset": "smw_gameplay_dataset.npz",
+      "n_train_transitions": 6329,
+      "n_calibration_transitions": 392,
+      "n_test_transitions": 1356,
+      "kept_terms": 45,
+      "dropped_duplicates": [
+        "c_ceiling (constant)",
+        "a_up (constant)",
+        "vx c_ceiling (constant)",
+        "vx a_up (constant)",
+        "vy c_ceiling (constant)",
+        "vy a_up (constant)",
+        "c_ground c_ceiling (constant)",
+        "c_ground c_left (duplicate of c_left)",
+        "c_ground a_up (constant)",
+        "c_ceiling c_left (constant)",
+        "c_ceiling c_right (constant)",
+        "c_ceiling a_jump (constant)",
+        "c_ceiling a_run (constant)",
+        "c_ceiling a_up (constant)",
+        "c_ceiling a_down (constant)",
+        "c_ceiling a_left (constant)",
+        "c_ceiling a_right (constant)",
+        "c_left c_right (constant)",
+        "c_left a_jump (constant)",
+        "c_left a_up (constant)",
+        "c_left a_down (constant)",
+        "c_left a_left (duplicate of c_left a_run)",
+        "c_right a_up (constant)",
+        "c_right a_down (constant)",
+        "c_right a_left (constant)",
+        "a_jump a_up (constant)",
+        "a_jump a_down (constant)",
+        "a_jump a_left (constant)",
+        "a_run a_up (constant)",
+        "a_run a_down (constant)",
+        "a_up a_down (constant)",
+        "a_up a_left (constant)",
+        "a_up a_right (constant)",
+        "a_down a_left (constant)",
+        "a_down a_right (duplicate of a_down)",
+        "a_left a_right (constant)"
+      ],
+      "targets": {
+        "dx": {
+          "alphas": {
+            "0.05": {
+              "half_width": 2.187499,
+              "unbounded": false,
+              "coverage": 1.0,
+              "gaussian_half_width": 1.477031,
+              "gaussian_coverage": 0.969764,
+              "null_centre": 0.478157,
+              "null_half_width": 1.771843,
+              "null_coverage": 0.922566
+            },
+            "0.1": {
+              "half_width": 2.187499,
+              "unbounded": false,
+              "coverage": 1.0,
+              "gaussian_half_width": 1.239563,
+              "gaussian_coverage": 0.969764,
+              "null_centre": 0.478157,
+              "null_half_width": 1.646843,
+              "null_coverage": 0.774336
+            },
+            "0.2": {
+              "half_width": 1.312499,
+              "unbounded": false,
+              "coverage": 0.969764,
+              "gaussian_half_width": 0.965778,
+              "gaussian_coverage": 0.960914,
+              "null_centre": 0.478157,
+              "null_half_width": 0.771843,
+              "null_coverage": 0.562684
+            }
+          }
+        },
+        "dy": {
+          "alphas": {
+            "0.05": {
+              "half_width": 6.955301,
+              "unbounded": false,
+              "coverage": 1.0,
+              "gaussian_half_width": 5.783604,
+              "gaussian_coverage": 0.941003,
+              "null_centre": 0.831633,
+              "null_half_width": 4.456633,
+              "null_coverage": 0.951327
+            },
+            "0.1": {
+              "half_width": 6.955301,
+              "unbounded": false,
+              "coverage": 1.0,
+              "gaussian_half_width": 4.853753,
+              "gaussian_coverage": 0.941003,
+              "null_centre": 0.831633,
+              "null_half_width": 3.543367,
+              "null_coverage": 0.923304
+            },
+            "0.2": {
+              "half_width": 6.955301,
+              "unbounded": false,
+              "coverage": 1.0,
+              "gaussian_half_width": 3.781695,
+              "gaussian_coverage": 0.941003,
+              "null_centre": 0.831633,
+              "null_half_width": 3.543367,
+              "null_coverage": 0.923304
+            }
+          }
+        },
+        "dvx": {
+          "alphas": {
+            "0.05": {
+              "half_width": 3.516754,
+              "unbounded": false,
+              "coverage": 0.981563,
+              "gaussian_half_width": 4.47528,
+              "gaussian_coverage": 0.988201,
+              "null_centre": 0.0,
+              "null_half_width": 2.0,
+              "null_coverage": 0.957227
+            },
+            "0.1": {
+              "half_width": 1.690169,
+              "unbounded": false,
+              "coverage": 0.915192,
+              "gaussian_half_width": 3.755773,
+              "gaussian_coverage": 0.985988,
+              "null_centre": 0.0,
+              "null_half_width": 2.0,
+              "null_coverage": 0.957227
+            },
+            "0.2": {
+              "half_width": 1.309831,
+              "unbounded": false,
+              "coverage": 0.726401,
+              "gaussian_half_width": 2.926228,
+              "gaussian_coverage": 0.974189,
+              "null_centre": 0.0,
+              "null_half_width": 1.0,
+              "null_coverage": 0.760324
+            }
+          }
+        },
+        "dvy": {
+          "alphas": {
+            "0.05": {
+              "half_width": 5.999999,
+              "unbounded": false,
+              "coverage": 0.988201,
+              "gaussian_half_width": 17.160643,
+              "gaussian_coverage": 0.988938,
+              "null_centre": 0.326531,
+              "null_half_width": 5.673469,
+              "null_coverage": 0.988201
+            },
+            "0.1": {
+              "half_width": 5.999991,
+              "unbounded": false,
+              "coverage": 0.978614,
+              "gaussian_half_width": 14.401666,
+              "gaussian_coverage": 0.988201,
+              "null_centre": 0.326531,
+              "null_half_width": 5.673469,
+              "null_coverage": 0.988201
+            },
+            "0.2": {
+              "half_width": 9e-06,
+              "unbounded": false,
+              "coverage": 0.712389,
+              "gaussian_half_width": 11.220741,
+              "gaussian_coverage": 0.988201,
+              "null_centre": 0.326531,
+              "null_half_width": 0.326531,
+              "null_coverage": 0.738201
+            }
+          }
+        }
+      }
+    },
+    "tilemap": {
+      "dataset": "smw_tilemap_dataset.npz",
+      "n_train_transitions": 6977,
+      "n_calibration_transitions": 1376,
+      "n_test_transitions": 2004,
+      "kept_terms": 46,
+      "dropped_duplicates": [
+        "c_ceiling (constant)",
+        "a_up (constant)",
+        "vx c_ceiling (constant)",
+        "vx a_up (constant)",
+        "vy c_ceiling (constant)",
+        "vy a_up (constant)",
+        "c_ground c_ceiling (constant)",
+        "c_ground c_right (duplicate of c_right)",
+        "c_ground a_up (constant)",
+        "c_ceiling c_left (constant)",
+        "c_ceiling c_right (constant)",
+        "c_ceiling a_jump (constant)",
+        "c_ceiling a_run (constant)",
+        "c_ceiling a_up (constant)",
+        "c_ceiling a_down (constant)",
+        "c_ceiling a_left (constant)",
+        "c_ceiling a_right (constant)",
+        "c_left c_right (constant)",
+        "c_left a_up (constant)",
+        "c_left a_down (constant)",
+        "c_left a_left (duplicate of c_left a_run)",
+        "c_right a_up (constant)",
+        "c_right a_down (constant)",
+        "c_right a_left (constant)",
+        "c_right a_right (duplicate of c_right)",
+        "a_jump a_up (constant)",
+        "a_jump a_down (constant)",
+        "a_run a_up (constant)",
+        "a_run a_down (constant)",
+        "a_up a_down (constant)",
+        "a_up a_left (constant)",
+        "a_up a_right (constant)",
+        "a_down a_left (constant)",
+        "a_down a_right (duplicate of a_down)",
+        "a_left a_right (constant)"
+      ],
+      "targets": {
+        "dx": {
+          "alphas": {
+            "0.05": {
+              "half_width": 1.312492,
+              "unbounded": false,
+              "coverage": 0.997006,
+              "gaussian_half_width": 0.856672,
+              "gaussian_coverage": 0.96008,
+              "null_centre": 0.914562,
+              "null_half_width": 2.539562,
+              "null_coverage": 0.96008
+            },
+            "0.1": {
+              "half_width": 1.4e-05,
+              "unbounded": false,
+              "coverage": 0.939122,
+              "gaussian_half_width": 0.718942,
+              "gaussian_coverage": 0.939621,
+              "null_centre": 0.914562,
+              "null_half_width": 1.977062,
+              "null_coverage": 0.904192
+            },
+            "0.2": {
+              "half_width": 1.3e-05,
+              "unbounded": false,
+              "coverage": 0.860778,
+              "gaussian_half_width": 0.560148,
+              "gaussian_coverage": 0.939122,
+              "null_centre": 0.914562,
+              "null_half_width": 1.335438,
+              "null_coverage": 0.773453
+            }
+          }
+        },
+        "dy": {
+          "alphas": {
+            "0.05": {
+              "half_width": 6.831411,
+              "unbounded": false,
+              "coverage": 0.986527,
+              "gaussian_half_width": 3.305882,
+              "gaussian_coverage": 0.959581,
+              "null_centre": 0.185638,
+              "null_half_width": 4.685638,
+              "null_coverage": 0.958583
+            },
+            "0.1": {
+              "half_width": 0.990968,
+              "unbounded": false,
+              "coverage": 0.947605,
+              "gaussian_half_width": 2.774384,
+              "gaussian_coverage": 0.958084,
+              "null_centre": 0.185638,
+              "null_half_width": 4.189362,
+              "null_coverage": 0.936128
+            },
+            "0.2": {
+              "half_width": 0.91424,
+              "unbounded": false,
+              "coverage": 0.806886,
+              "gaussian_half_width": 2.1616,
+              "gaussian_coverage": 0.958084,
+              "null_centre": 0.185638,
+              "null_half_width": 4.001862,
+              "null_coverage": 0.834331
+            }
+          }
+        },
+        "dvx": {
+          "alphas": {
+            "0.05": {
+              "half_width": 2.057354,
+              "unbounded": false,
+              "coverage": 0.925649,
+              "gaussian_half_width": 3.319448,
+              "gaussian_coverage": 0.972056,
+              "null_centre": 0.010901,
+              "null_half_width": 2.010901,
+              "null_coverage": 0.965569
+            },
+            "0.1": {
+              "half_width": 1.832424,
+              "unbounded": false,
+              "coverage": 0.901198,
+              "gaussian_half_width": 2.785769,
+              "gaussian_coverage": 0.971557,
+              "null_centre": 0.010901,
+              "null_half_width": 1.989099,
+              "null_coverage": 0.914172
+            },
+            "0.2": {
+              "half_width": 1.635757,
+              "unbounded": false,
+              "coverage": 0.819361,
+              "gaussian_half_width": 2.170471,
+              "gaussian_coverage": 0.932635,
+              "null_centre": 0.010901,
+              "null_half_width": 1.989099,
+              "null_coverage": 0.914172
+            }
+          }
+        },
+        "dvy": {
+          "alphas": {
+            "0.05": {
+              "half_width": 5.999826,
+              "unbounded": false,
+              "coverage": 0.973553,
+              "gaussian_half_width": 30.821578,
+              "gaussian_coverage": 0.977046,
+              "null_centre": 0.144622,
+              "null_half_width": 5.855378,
+              "null_coverage": 0.977046
+            },
+            "0.1": {
+              "half_width": 5.994555,
+              "unbounded": false,
+              "coverage": 0.921657,
+              "gaussian_half_width": 25.866284,
+              "gaussian_coverage": 0.977046,
+              "null_centre": 0.144622,
+              "null_half_width": 5.855378,
+              "null_coverage": 0.977046
+            },
+            "0.2": {
+              "half_width": 0.005445,
+              "unbounded": false,
+              "coverage": 0.865269,
+              "gaussian_half_width": 20.153147,
+              "gaussian_coverage": 0.977046,
+              "null_centre": 0.144622,
+              "null_half_width": 5.855378,
+              "null_coverage": 0.977046
+            }
+          }
+        }
+      }
+    },
+    "multi_entity": {
+      "dataset": "smw_multi_entity_dataset.npz",
+      "n_train_transitions": 13210,
+      "n_calibration_transitions": 3000,
+      "n_test_transitions": 3492,
+      "kept_terms": 48,
+      "dropped_duplicates": [
+        "c_ceiling (constant)",
+        "a_up (constant)",
+        "vx c_ceiling (constant)",
+        "vx a_up (constant)",
+        "vy c_ceiling (constant)",
+        "vy a_up (constant)",
+        "c_ground c_ceiling (constant)",
+        "c_ground c_left (duplicate of c_left)",
+        "c_ground a_up (constant)",
+        "c_ceiling c_left (constant)",
+        "c_ceiling c_right (constant)",
+        "c_ceiling a_jump (constant)",
+        "c_ceiling a_run (constant)",
+        "c_ceiling a_up (constant)",
+        "c_ceiling a_down (constant)",
+        "c_ceiling a_left (constant)",
+        "c_ceiling a_right (constant)",
+        "c_left c_right (constant)",
+        "c_left a_jump (constant)",
+        "c_left a_up (constant)",
+        "c_left a_left (duplicate of c_left a_run)",
+        "c_left a_right (duplicate of c_left a_down)",
+        "c_right a_up (constant)",
+        "a_jump a_up (constant)",
+        "a_jump a_down (constant)",
+        "a_run a_up (constant)",
+        "a_run a_down (constant)",
+        "a_up a_down (constant)",
+        "a_up a_left (constant)",
+        "a_up a_right (constant)",
+        "a_down a_left (constant)",
+        "a_down a_right (duplicate of a_down)",
+        "a_left a_right (constant)"
+      ],
+      "targets": {
+        "dx": {
+          "alphas": {
+            "0.05": {
+              "half_width": 0.0,
+              "unbounded": false,
+              "coverage": 0.959622,
+              "gaussian_half_width": 0.079962,
+              "gaussian_coverage": 0.959622,
+              "null_centre": 1.275021,
+              "null_half_width": 2.462521,
+              "null_coverage": 0.97795
+            },
+            "0.1": {
+              "half_width": 0.0,
+              "unbounded": false,
+              "coverage": 0.901203,
+              "gaussian_half_width": 0.067106,
+              "gaussian_coverage": 0.959622,
+              "null_centre": 1.275021,
+              "null_half_width": 1.650021,
+              "null_coverage": 0.936712
+            },
+            "0.2": {
+              "half_width": 0.0,
+              "unbounded": false,
+              "coverage": 0.786369,
+              "gaussian_half_width": 0.052284,
+              "gaussian_coverage": 0.959622,
+              "null_centre": 1.275021,
+              "null_half_width": 1.037479,
+              "null_coverage": 0.791237
+            }
+          }
+        },
+        "dy": {
+          "alphas": {
+            "0.05": {
+              "half_width": 0.973103,
+              "unbounded": false,
+              "coverage": 0.94559,
+              "gaussian_half_width": 0.847784,
+              "gaussian_coverage": 0.854525,
+              "null_centre": 0.002854,
+              "null_half_width": 4.690354,
+              "null_coverage": 0.953036
+            },
+            "0.1": {
+              "half_width": 0.973071,
+              "unbounded": false,
+              "coverage": 0.875716,
+              "gaussian_half_width": 0.711483,
+              "gaussian_coverage": 0.853379,
+              "null_centre": 0.002854,
+              "null_half_width": 4.372146,
+              "null_coverage": 0.928694
+            },
+            "0.2": {
+              "half_width": 0.026897,
+              "unbounded": false,
+              "coverage": 0.814719,
+              "gaussian_half_width": 0.554336,
+              "gaussian_coverage": 0.853379,
+              "null_centre": 0.002854,
+              "null_half_width": 4.122146,
+              "null_coverage": 0.784078
+            }
+          }
+        },
+        "dvx": {
+          "alphas": {
+            "0.05": {
+              "half_width": 2.152176,
+              "unbounded": false,
+              "coverage": 0.941008,
+              "gaussian_half_width": 2.378204,
+              "gaussian_coverage": 0.952176,
+              "null_centre": 0.030333,
+              "null_half_width": 2.030333,
+              "null_coverage": 0.961054
+            },
+            "0.1": {
+              "half_width": 1.856356,
+              "unbounded": false,
+              "coverage": 0.88173,
+              "gaussian_half_width": 1.995851,
+              "gaussian_coverage": 0.920103,
+              "null_centre": 0.030333,
+              "null_half_width": 2.030333,
+              "null_coverage": 0.961054
+            },
+            "0.2": {
+              "half_width": 1.252067,
+              "unbounded": false,
+              "coverage": 0.777491,
+              "gaussian_half_width": 1.555024,
+              "gaussian_coverage": 0.818156,
+              "null_centre": 0.030333,
+              "null_half_width": 1.969667,
+              "null_coverage": 0.915808
+            }
+          }
+        },
+        "dvy": {
+          "alphas": {
+            "0.05": {
+              "half_width": 5.998947,
+              "unbounded": false,
+              "coverage": 0.957904,
+              "gaussian_half_width": 28.508629,
+              "gaussian_coverage": 0.971077,
+              "null_centre": -0.027,
+              "null_half_width": 6.027,
+              "null_coverage": 0.970218
+            },
+            "0.1": {
+              "half_width": 5.98896,
+              "unbounded": false,
+              "coverage": 0.950172,
+              "gaussian_half_width": 23.925196,
+              "gaussian_coverage": 0.971077,
+              "null_centre": -0.027,
+              "null_half_width": 6.027,
+              "null_coverage": 0.970218
+            },
+            "0.2": {
+              "half_width": 0.295873,
+              "unbounded": false,
+              "coverage": 0.735682,
+              "gaussian_half_width": 18.640791,
+              "gaussian_coverage": 0.971077,
+              "null_centre": -0.027,
+              "null_half_width": 6.027,
+              "null_coverage": 0.970218
+            }
+          }
+        }
+      }
+    },
+    "sprint_targeted": {
+      "dataset": "smw_sprint_dataset.npz",
+      "n_train_transitions": 4591,
+      "n_calibration_transitions": 800,
+      "n_test_transitions": 1862,
+      "kept_terms": 32,
+      "dropped_duplicates": [
+        "c_ceiling (constant)",
+        "c_left (constant)",
+        "a_up (constant)",
+        "a_down (constant)",
+        "vx c_ceiling (constant)",
+        "vx c_left (constant)",
+        "vx a_up (constant)",
+        "vx a_down (constant)",
+        "vx a_left (constant)",
+        "vx a_right (duplicate of vx)",
+        "vy c_ceiling (constant)",
+        "vy c_left (constant)",
+        "vy a_up (constant)",
+        "vy a_down (constant)",
+        "c_ground c_ceiling (constant)",
+        "c_ground c_left (constant)",
+        "c_ground a_up (constant)",
+        "c_ground a_down (constant)",
+        "c_ceiling c_left (constant)",
+        "c_ceiling c_right (constant)",
+        "c_ceiling a_jump (constant)",
+        "c_ceiling a_run (constant)",
+        "c_ceiling a_up (constant)",
+        "c_ceiling a_down (constant)",
+        "c_ceiling a_left (constant)",
+        "c_ceiling a_right (constant)",
+        "c_left c_right (constant)",
+        "c_left a_jump (constant)",
+        "c_left a_run (constant)",
+        "c_left a_up (constant)",
+        "c_left a_down (constant)",
+        "c_left a_left (constant)",
+        "c_left a_right (constant)",
+        "c_right a_up (constant)",
+        "c_right a_down (constant)",
+        "c_right a_left (constant)",
+        "c_right a_right (duplicate of c_right)",
+        "a_jump a_up (constant)",
+        "a_jump a_down (constant)",
+        "a_jump a_left (constant)",
+        "a_jump a_right (duplicate of a_jump)",
+        "a_run a_up (constant)",
+        "a_run a_down (constant)",
+        "a_up a_down (constant)",
+        "a_up a_left (constant)",
+        "a_up a_right (constant)",
+        "a_down a_left (constant)",
+        "a_down a_right (constant)",
+        "a_left a_right (constant)"
+      ],
+      "targets": {
+        "dx": {
+          "alphas": {
+            "0.05": {
+              "half_width": 4e-06,
+              "unbounded": false,
+              "coverage": 0.930183,
+              "gaussian_half_width": 0.178852,
+              "gaussian_coverage": 0.930183,
+              "null_centre": 2.147813,
+              "null_half_width": 0.585313,
+              "null_coverage": 0.810419
+            },
+            "0.1": {
+              "half_width": 4e-06,
+              "unbounded": false,
+              "coverage": 0.930183,
+              "gaussian_half_width": 0.150097,
+              "gaussian_coverage": 0.930183,
+              "null_centre": 2.147813,
+              "null_half_width": 0.164687,
+              "null_coverage": 0.795918
+            },
+            "0.2": {
+              "half_width": 4e-06,
+              "unbounded": false,
+              "coverage": 0.774973,
+              "gaussian_half_width": 0.116945,
+              "gaussian_coverage": 0.930183,
+              "null_centre": 2.147813,
+              "null_half_width": 0.164687,
+              "null_coverage": 0.795918
+            }
+          }
+        },
+        "dy": {
+          "alphas": {
+            "0.05": {
+              "half_width": 4.99602,
+              "unbounded": false,
+              "coverage": 0.935553,
+              "gaussian_half_width": 5.765303,
+              "gaussian_coverage": 0.98174,
+              "null_centre": -0.050234,
+              "null_half_width": 4.824766,
+              "null_coverage": 0.949517
+            },
+            "0.1": {
+              "half_width": 4.43352,
+              "unbounded": false,
+              "coverage": 0.895274,
+              "gaussian_half_width": 4.838395,
+              "gaussian_coverage": 0.922127,
+              "null_centre": -0.050234,
+              "null_half_width": 4.425234,
+              "null_coverage": 0.908163
+            },
+            "0.2": {
+              "half_width": 3.986819,
+              "unbounded": false,
+              "coverage": 0.785177,
+              "gaussian_half_width": 3.769729,
+              "gaussian_coverage": 0.721267,
+              "null_centre": -0.050234,
+              "null_half_width": 4.237734,
+              "null_coverage": 0.794307
+            }
+          }
+        },
+        "dvx": {
+          "alphas": {
+            "0.05": {
+              "half_width": 2.111921,
+              "unbounded": false,
+              "coverage": 0.981203,
+              "gaussian_half_width": 3.367476,
+              "gaussian_coverage": 0.996778,
+              "null_centre": 0.045,
+              "null_half_width": 1.955,
+              "null_coverage": 0.988722
+            },
+            "0.1": {
+              "half_width": 2.111921,
+              "unbounded": false,
+              "coverage": 0.981203,
+              "gaussian_half_width": 2.826075,
+              "gaussian_coverage": 0.995704,
+              "null_centre": 0.045,
+              "null_half_width": 1.955,
+              "null_coverage": 0.988722
+            },
+            "0.2": {
+              "half_width": 1.842235,
+              "unbounded": false,
+              "coverage": 0.826531,
+              "gaussian_half_width": 2.201874,
+              "gaussian_coverage": 0.985499,
+              "null_centre": 0.045,
+              "null_half_width": 1.955,
+              "null_coverage": 0.988722
+            }
+          }
+        },
+        "dvy": {
+          "alphas": {
+            "0.05": {
+              "half_width": 32.04081,
+              "unbounded": false,
+              "coverage": 0.959184,
+              "gaussian_half_width": 31.167201,
+              "gaussian_coverage": 0.949517,
+              "null_centre": 0.01875,
+              "null_half_width": 5.98125,
+              "null_coverage": 0.964554
+            },
+            "0.1": {
+              "half_width": 5.975754,
+              "unbounded": false,
+              "coverage": 0.879162,
+              "gaussian_half_width": 26.156339,
+              "gaussian_coverage": 0.948443,
+              "null_centre": 0.01875,
+              "null_half_width": 5.98125,
+              "null_coverage": 0.964554
+            },
+            "0.2": {
+              "half_width": 2.961915,
+              "unbounded": false,
+              "coverage": 0.727175,
+              "gaussian_half_width": 20.379137,
+              "gaussian_coverage": 0.939313,
+              "null_centre": 0.01875,
+              "null_half_width": 5.98125,
+              "null_coverage": 0.964554
+            }
+          }
+        }
+      }
+    },
+    "jump_targeted": {
+      "dataset": "smw_jump_dataset.npz",
+      "n_train_transitions": 4016,
+      "n_calibration_transitions": 700,
+      "n_test_transitions": 1400,
+      "kept_terms": 31,
+      "dropped_duplicates": [
+        "c_ceiling (constant)",
+        "c_left (constant)",
+        "a_up (constant)",
+        "a_down (constant)",
+        "vx c_ceiling (constant)",
+        "vx c_left (constant)",
+        "vx a_up (constant)",
+        "vx a_down (constant)",
+        "vx a_left (constant)",
+        "vx a_right (duplicate of vx)",
+        "vy c_ceiling (constant)",
+        "vy c_left (constant)",
+        "vy a_up (constant)",
+        "vy a_down (constant)",
+        "c_ground c_ceiling (constant)",
+        "c_ground c_left (constant)",
+        "c_ground a_jump (duplicate of c_ground)",
+        "c_ground a_up (constant)",
+        "c_ground a_down (constant)",
+        "c_ceiling c_left (constant)",
+        "c_ceiling c_right (constant)",
+        "c_ceiling a_jump (constant)",
+        "c_ceiling a_run (constant)",
+        "c_ceiling a_up (constant)",
+        "c_ceiling a_down (constant)",
+        "c_ceiling a_left (constant)",
+        "c_ceiling a_right (constant)",
+        "c_left c_right (constant)",
+        "c_left a_jump (constant)",
+        "c_left a_run (constant)",
+        "c_left a_up (constant)",
+        "c_left a_down (constant)",
+        "c_left a_left (constant)",
+        "c_left a_right (constant)",
+        "c_right a_jump (duplicate of c_ground c_right)",
+        "c_right a_up (constant)",
+        "c_right a_down (constant)",
+        "c_right a_left (constant)",
+        "c_right a_right (duplicate of c_right)",
+        "a_jump a_up (constant)",
+        "a_jump a_down (constant)",
+        "a_jump a_left (duplicate of c_ground a_left)",
+        "a_run a_up (constant)",
+        "a_run a_down (constant)",
+        "a_up a_down (constant)",
+        "a_up a_left (constant)",
+        "a_up a_right (constant)",
+        "a_down a_left (constant)",
+        "a_down a_right (constant)",
+        "a_left a_right (constant)"
+      ],
+      "targets": {
+        "dx": {
+          "alphas": {
+            "0.05": {
+              "half_width": 3e-06,
+              "unbounded": false,
+              "coverage": 0.957143,
+              "gaussian_half_width": 0.02855,
+              "gaussian_coverage": 0.957143,
+              "null_centre": 2.192054,
+              "null_half_width": 0.120446,
+              "null_coverage": 0.964286
+            },
+            "0.1": {
+              "half_width": 3e-06,
+              "unbounded": false,
+              "coverage": 0.957143,
+              "gaussian_half_width": 0.02396,
+              "gaussian_coverage": 0.957143,
+              "null_centre": 2.192054,
+              "null_half_width": 0.120446,
+              "null_coverage": 0.964286
+            },
+            "0.2": {
+              "half_width": 3e-06,
+              "unbounded": false,
+              "coverage": 0.957143,
+              "gaussian_half_width": 0.018668,
+              "gaussian_coverage": 0.957143,
+              "null_centre": 2.192054,
+              "null_half_width": 0.120446,
+              "null_coverage": 0.964286
+            }
+          }
+        },
+        "dy": {
+          "alphas": {
+            "0.05": {
+              "half_width": 5.013485,
+              "unbounded": false,
+              "coverage": 0.952857,
+              "gaussian_half_width": 4.8743,
+              "gaussian_coverage": 0.946429,
+              "null_centre": 0.017143,
+              "null_half_width": 5.079643,
+              "null_coverage": 0.958571
+            },
+            "0.1": {
+              "half_width": 4.046222,
+              "unbounded": false,
+              "coverage": 0.883571,
+              "gaussian_half_width": 4.090641,
+              "gaussian_coverage": 0.885714,
+              "null_centre": 0.017143,
+              "null_half_width": 4.517143,
+              "null_coverage": 0.908571
+            },
+            "0.2": {
+              "half_width": 2.736515,
+              "unbounded": false,
+              "coverage": 0.797857,
+              "gaussian_half_width": 3.187133,
+              "gaussian_coverage": 0.831429,
+              "null_centre": 0.017143,
+              "null_half_width": 4.357857,
+              "null_coverage": 0.888571
+            }
+          }
+        },
+        "dvx": {
+          "alphas": {
+            "0.05": {
+              "half_width": 2.110025,
+              "unbounded": false,
+              "coverage": 0.995,
+              "gaussian_half_width": 2.326049,
+              "gaussian_coverage": 0.997857,
+              "null_centre": 0.051429,
+              "null_half_width": 1.948571,
+              "null_coverage": 0.992857
+            },
+            "0.1": {
+              "half_width": 2.077109,
+              "unbounded": false,
+              "coverage": 0.953571,
+              "gaussian_half_width": 1.952081,
+              "gaussian_coverage": 0.805714,
+              "null_centre": 0.051429,
+              "null_half_width": 1.948571,
+              "null_coverage": 0.992857
+            },
+            "0.2": {
+              "half_width": 1.919756,
+              "unbounded": false,
+              "coverage": 0.800714,
+              "gaussian_half_width": 1.520921,
+              "gaussian_coverage": 0.793571,
+              "null_centre": 0.051429,
+              "null_half_width": 1.948571,
+              "null_coverage": 0.992857
+            }
+          }
+        },
+        "dvy": {
+          "alphas": {
+            "0.05": {
+              "half_width": 18.221586,
+              "unbounded": false,
+              "coverage": 0.948571,
+              "gaussian_half_width": 22.264891,
+              "gaussian_coverage": 0.972857,
+              "null_centre": 0.091429,
+              "null_half_width": 5.908571,
+              "null_coverage": 0.950714
+            },
+            "0.1": {
+              "half_width": 5.294758,
+              "unbounded": false,
+              "coverage": 0.923571,
+              "gaussian_half_width": 18.685286,
+              "gaussian_coverage": 0.948571,
+              "null_centre": 0.091429,
+              "null_half_width": 5.908571,
+              "null_coverage": 0.950714
+            },
+            "0.2": {
+              "half_width": 5.294758,
+              "unbounded": false,
+              "coverage": 0.923571,
+              "gaussian_half_width": 14.55823,
+              "gaussian_coverage": 0.931429,
+              "null_centre": 0.091429,
+              "null_half_width": 5.908571,
+              "null_coverage": 0.950714
+            }
+          }
+        }
+      }
+    }
+  },
+  "verdict": {
+    "0.05": {
+      "target_coverage": 0.95,
+      "cells": 20,
+      "unbounded_cells": 0,
+      "conformal_cells_at_or_above_target": 14,
+      "conformal_min_coverage": 0.925649,
+      "gaussian_cells_below_target": 5,
+      "gaussian_min_coverage": 0.854525,
+      "null_min_coverage": 0.810419,
+      "median_gaussian_over_conformal_width": 1.1539791674172644
+    },
+    "0.1": {
+      "target_coverage": 0.9,
+      "cells": 20,
+      "unbounded_cells": 0,
+      "conformal_cells_at_or_above_target": 15,
+      "conformal_min_coverage": 0.875716,
+      "gaussian_cells_below_target": 3,
+      "gaussian_min_coverage": 0.805714,
+      "null_min_coverage": 0.774336,
+      "median_gaussian_over_conformal_width": 2.222128674706494
+    },
+    "0.2": {
+      "target_coverage": 0.8,
+      "cells": 20,
+      "unbounded_cells": 0,
+      "conformal_cells_at_or_above_target": 11,
+      "conformal_min_coverage": 0.712389,
+      "gaussian_cells_below_target": 2,
+      "gaussian_min_coverage": 0.721267,
+      "null_min_coverage": 0.562684,
+      "median_gaussian_over_conformal_width": 2.3643682184109203
+    },
+    "reading": "Split conformal intervals on the 10.56 laws, calibrated on the canonical validation split and scored on the test split. At the 90% level the law arm covers at or above target on 15 of 20 bounded cells (minimum 0.876), while the iid-Gaussian arm is below its own 90% claim on 3 of 20 cells (minimum 0.806) - the same tail under-prediction 10.58 measured for the residue, now on the identified laws' own predictions."
+  }
+}
