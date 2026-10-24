@@ -1,0 +1,11 @@
+# Documentation-site dependencies only.
+#
+# Deliberately outside the validated science envelope: tests/test_dependency_parity.py
+# keeps requirements.txt and pyproject.toml in agreement with each other, and the docs
+# toolchain has no reason to constrain or be constrained by the torch/CUDA caps. This
+# file is read by .github/workflows/docs.yml and by anyone serving the site locally.
+#
+# Range-pinned rather than locked: the docs build carries no published numbers, so a
+# Dependabot bump inside the range can never invalidate a result.
+mkdocs>=1.6.1,<1.7
+mkdocs-material>=9.5,<10
