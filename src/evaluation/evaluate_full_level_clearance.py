@@ -21,6 +21,7 @@ import numpy as np
 import seaborn as sns
 import torch
 
+from src.environment.episode_hygiene import PlayerHold
 from src.environment.snes_emulator import SnesLibretroEmulator
 from src.models.pinn_hard_residual import HardResidualPINNDynamics
 from src.models.pinn_multi_entity import MultiEntityPINNDynamics
@@ -42,6 +43,9 @@ from src.utils.paths import (
 )
 
 logger = get_logger(__name__)
+
+#: the eight channels PlayerHold watches, in the order the recorders use
+HOLD_KEYS = ("x", "y", "vx", "vy", "c_ground", "c_ceiling", "c_left", "c_right")
 
 
 def action_vector_to_dict(vec: np.ndarray) -> Dict[str, bool]:
@@ -84,6 +88,7 @@ def run_full_level_clearance(
     output_trajectory_log: str = results_file("full_level_trajectory_log.json"),
     output_figure: str = figure_file("full_level_clearance_trajectory.png"),
     max_frames: int = 2500,
+    message_box_hygiene: bool = False,
 ) -> Dict:
     logger.info("====================================================================")
     logger.info(
@@ -167,6 +172,11 @@ def run_full_level_clearance(
     milestones_cleared = []
     step_times = []
     prev_b = False
+    # The engine's own message boxes suspend the player until the A button arrives
+    # (10.60); with the hygiene on, the same shared PlayerHold decision the recorders
+    # and the terrain runner use releases them. Default off: the published clearance
+    # artifact was recorded without it.
+    hold = PlayerHold() if message_box_hygiene else None
 
     t0 = time.time()
     survived_frames = 0
@@ -236,6 +246,10 @@ def run_full_level_clearance(
                 action_dict["B"] = False
         prev_b = curr_b
 
+        if hold is not None:
+            hold.observe(np.asarray([curr_state[key] for key in HOLD_KEYS], dtype=np.float64))
+            action_dict = hold.buttons(action_dict)
+
         t_act1 = time.perf_counter()
         step_times.append(t_act1 - t_act0)
 
@@ -278,6 +292,8 @@ def run_full_level_clearance(
         "mean_decision_latency_ms": float(np.mean(step_times) * 1000.0),
         "decision_throughput_fps": float(1.0 / np.mean(step_times)),
         "evaluation_time_seconds": float(elapsed),
+        "message_box_hygiene": bool(message_box_hygiene),
+        "message_box_operator_frames": int(hold.operator_frames) if hold is not None else 0,
     }
 
     os.makedirs(os.path.dirname(output_metrics), exist_ok=True)
@@ -347,6 +363,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--controller", type=str, default="mpc", choices=["ppo", "mpc", "dagger"])
     parser.add_argument("--max_frames", type=int, default=2500)
+    parser.add_argument(
+        "--message-box-hygiene",
+        action="store_true",
+        help=(
+            "pulse A at the engine's own message boxes (10.60); off reproduces the published run"
+        ),
+    )
     args = parser.parse_args()
 
-    run_full_level_clearance(controller_type=args.controller, max_frames=args.max_frames)
+    run_full_level_clearance(
+        controller_type=args.controller,
+        max_frames=args.max_frames,
+        message_box_hygiene=args.message_box_hygiene,
+    )
