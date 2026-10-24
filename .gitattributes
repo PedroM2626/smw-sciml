@@ -19,7 +19,6 @@
 # Result media (results/figures/*.mp4, *.gif, *.png)
 *.mp4 filter=lfs diff=lfs merge=lfs -text
 *.gif filter=lfs diff=lfs merge=lfs -text
-results/figures/*.png filter=lfs diff=lfs merge=lfs -text
 # Commercial ROM patterns: kept here only so a locally supplied dump can never
 # be committed by accident. New clones must provide their own dump and verify
 # the SHA-1 published in the README.
