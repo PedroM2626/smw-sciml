@@ -8,4 +8,4 @@
 # Range-pinned rather than locked: the docs build carries no published numbers, so a
 # Dependabot bump inside the range can never invalidate a result.
 mkdocs>=1.6.1,<1.7
-mkdocs-material>=9.5,<10
+mkdocs-material>=9.7.7,<10
