@@ -45,7 +45,7 @@ jobs:
         run: |
           mkdir -p site/results
           cp -r results/figures site/results/figures
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
