@@ -27,6 +27,7 @@ from src.environment.snes_emulator import SnesLibretroEmulator
 from src.models import DeepPINNEnsemble, HardResidualPINNDynamics
 from src.planning.mpc_planner import ACTION_MATRIX
 from src.training.dyna_ppo import ActorCritic, DynaPPOTrainer
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CORE_PATH,
@@ -125,7 +126,9 @@ def train_online_mbpo(
             for m in world_model.members
         ]
     else:
-        world_model = HardResidualPINNDynamics(state_dim=8, action_dim=6).to(device)
+        world_model = HardResidualPINNDynamics(
+            state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+        ).to(device)
         pinn_best_path = os.path.join(output_dir, "checkpoints", "pinn_hard_best.pt")
         if os.path.exists(pinn_best_path):
             world_model.load_state_dict(

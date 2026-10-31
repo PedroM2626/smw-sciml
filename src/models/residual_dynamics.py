@@ -27,7 +27,7 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 
-from src.utils.kinematics import CARRIED, NEXT, check_position_velocity
+from src.utils.kinematics import CARRIED, DEFAULT_POSITION_VELOCITY, check_position_velocity
 
 AUX_PREFIX = 2  # residual channels 0 and 1 are delta_vx, delta_vy
 
@@ -52,12 +52,13 @@ class ResidualDynamics(nn.Module):
     modes, so the discrete-kinematics consistency residual is zero by
     construction either way; only the *bounds* depend on ``hard``.
 
-    ``position_velocity`` selects which velocity advances position. ``"next"`` is the form
-    every published artifact was recorded with. ``"carried"`` implements §4.1 as the
-    section now states it and as the telemetry measures it - position advances with the
-    velocity the frame starts with - and under it no weight vector reaches the position
-    channel: the increment still shapes the velocity output, and the residual stays zero
-    for a different reason. §10.57 measures what that swap costs.
+    ``position_velocity`` selects which velocity advances position. ``"carried"`` (the
+    default) implements §4.1 as the section now states it and as the telemetry measures it -
+    position advances with the velocity the frame starts with - and under it no weight vector
+    reaches the position channel: the increment still shapes the velocity output, and the
+    residual stays zero for a different reason. ``"next"`` is the form every published
+    artifact was recorded with, and the code paths that reproduce one pass it by name
+    (``PUBLISHED_POSITION_VELOCITY``). §10.57 measures what that swap costs.
     """
 
     def __init__(
@@ -69,7 +70,7 @@ class ResidualDynamics(nn.Module):
         terminal_vy: float = 64.0,
         min_vy: float = -80.0,
         subpixels_per_pixel: float = 16.0,
-        position_velocity: str = NEXT,
+        position_velocity: str = DEFAULT_POSITION_VELOCITY,
     ):
         super().__init__()
         self.base = base

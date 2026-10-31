@@ -64,9 +64,9 @@ def test_soft_pinn_forward():
 
 def test_hard_residual_pinn_exact_kinematic_guarantee():
     """
-    Hard Residual PINN must STRICTLY satisfy:
-        hat_X = X_t + hat_vx / 16.0
-        hat_Y = Y_t + hat_vy / 16.0
+    Hard Residual PINN must STRICTLY satisfy, under its default (carried) convention:
+        hat_X = X_t + vx_t / 16.0
+        hat_Y = Y_t + vy_t / 16.0
     with zero kinematic integration residual.
     """
     B, state_dim, action_dim = 16, 8, 6
@@ -78,8 +78,8 @@ def test_hard_residual_pinn_exact_kinematic_guarantee():
     pred = model(state, action)
 
     # Exact kinematic guarantee by structural construction
-    expected_x = state[:, 0] + (pred[:, 2] / 16.0)
-    expected_y = state[:, 1] + (pred[:, 3] / 16.0)
+    expected_x = state[:, 0] + (state[:, 2] / 16.0)
+    expected_y = state[:, 1] + (state[:, 3] / 16.0)
 
     assert torch.allclose(pred[:, 0], expected_x, atol=1e-6)
     assert torch.allclose(pred[:, 1], expected_y, atol=1e-6)

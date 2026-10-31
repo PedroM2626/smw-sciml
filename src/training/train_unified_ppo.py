@@ -21,6 +21,7 @@ from src.environment.pinn_sim_env import PINNVectorEnv
 from src.models.pinn_hard_residual import HardResidualPINNDynamics
 from src.models.pinn_multi_entity import MultiEntityPINNDynamics
 from src.utils.config import parse_args_with_config
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     checkpoint_file,
@@ -128,7 +129,9 @@ def train_unified_ppo(
     logger.info(f"Device: {device} | Parallel Envs: {num_envs} | Steps/Env: {num_steps}")
 
     # Load World Model for Simulation
-    base_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=6)
+    base_pinn = HardResidualPINNDynamics(
+        state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+    )
     world_model = MultiEntityPINNDynamics(base_pinn=base_pinn).to(device)
     if os.path.exists(checkpoint_file("pinn_multi_entity_best.pt")):
         world_model.load_state_dict(

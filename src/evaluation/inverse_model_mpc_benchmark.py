@@ -67,6 +67,7 @@ from src.models.inverse_world_models import (
 from src.models.pinn_hard_residual import HardResidualPINNDynamics
 from src.planning.mpc_planner import ModelPredictiveController, TrajectoryObjective
 from src.utils.config import parse_args_with_config
+from src.utils.kinematics import PUBLISHED_CONTACT_RULE, PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     PINN_HARD_CKPT,
@@ -136,7 +137,9 @@ def build_world_models(
     data = load_and_preprocess_data(seed=seed)
     models: Dict[str, Any] = {}
 
-    analytical = AnalyticalKinematicsDynamics().to(device)
+    analytical = AnalyticalKinematicsDynamics(
+        position_velocity=PUBLISHED_POSITION_VELOCITY, ground_rule=PUBLISHED_CONTACT_RULE
+    ).to(device)
     analytical.fit_engine_rules(*_to_tensors(data, "train", device), device=device)
     models["established_wram_engine_rules"] = analytical
 
@@ -159,7 +162,9 @@ def build_world_models(
     models["symbolically_discovered_10_43"] = SymbolicKinematicsDynamics(laws.bagged()).to(device)
 
     if os.path.isfile(pinn_ckpt):
-        pinn = HardResidualPINNDynamics(state_dim=8, action_dim=6).to(device)
+        pinn = HardResidualPINNDynamics(
+            state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+        ).to(device)
         pinn.load_state_dict(torch.load(pinn_ckpt, map_location=device, weights_only=True))
         pinn.eval()
         models["learned_hard_residual_pinn"] = pinn

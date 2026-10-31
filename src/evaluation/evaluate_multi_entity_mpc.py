@@ -21,6 +21,7 @@ from src.planning.mpc_planner import (
     ModelPredictiveController,
     TrajectoryObjective,
 )
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CORE_PATH,
@@ -83,7 +84,9 @@ def run_multi_entity_mpc(
     logger.info(f"Device: {device} | Horizon: {horizon} | Candidates: {num_candidates}")
 
     # 1. Instantiate trained Multi-Entity PINN World Model
-    base_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=6)
+    base_pinn = HardResidualPINNDynamics(
+        state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+    )
     world_model = MultiEntityPINNDynamics(base_pinn=base_pinn).to(device)
 
     if os.path.exists(model_checkpoint):

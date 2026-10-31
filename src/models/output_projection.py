@@ -25,7 +25,7 @@ changes what the agent commands rather than how a prediction is read.
 import torch
 import torch.nn as nn
 
-from src.utils.kinematics import CARRIED, NEXT, check_position_velocity
+from src.utils.kinematics import CARRIED, DEFAULT_POSITION_VELOCITY, check_position_velocity
 
 
 class ProjectedDynamics(nn.Module):
@@ -38,11 +38,12 @@ class ProjectedDynamics(nn.Module):
         max_vx / terminal_vy / min_vy: the engine's admissible velocity window.
         subpixels_per_pixel: WRAM position scale, used to re-derive position from the
             projected velocity so the output stays internally consistent.
-        position_velocity: ``"next"`` (the default every published artifact uses) re-derives
-            position from the projected next-frame velocity; ``"carried"`` advances it with
-            the velocity the frame starts with, which is how README 4.1 states the identity
-            and how the telemetry measures the console. Under ``"carried"`` the projection
-            still constrains the velocity output, but no weight reaches position at all.
+        position_velocity: ``"carried"`` (the default) advances position with the velocity
+            the frame starts with, which is how README 4.1 states the identity and how the
+            telemetry measures the console; under it the projection still constrains the
+            velocity output, but no weight reaches position at all. ``"next"`` (the form every
+            published artifact uses, passed by name as ``PUBLISHED_POSITION_VELOCITY``)
+            re-derives position from the projected next-frame velocity.
 
     The contact channels are passed through unchanged: projecting them would mean
     deciding the collision response, which is the engine's business, not the wrapper's.
@@ -56,7 +57,7 @@ class ProjectedDynamics(nn.Module):
         terminal_vy: float = 64.0,
         min_vy: float = -80.0,
         subpixels_per_pixel: float = 16.0,
-        position_velocity: str = NEXT,
+        position_velocity: str = DEFAULT_POSITION_VELOCITY,
     ):
         super().__init__()
         self.base = base

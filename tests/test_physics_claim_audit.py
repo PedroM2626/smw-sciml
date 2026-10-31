@@ -45,21 +45,41 @@ def test_the_declared_sites_and_the_dissenters_are_still_in_the_source() -> None
         )
 
 
-def test_the_ground_claim_is_implemented_but_not_by_default() -> None:
-    """§4.3.5 went from "nothing implements this" to "the rule exists, the default is elsewhere".
+def test_the_ground_claim_is_implemented_and_is_the_default() -> None:
+    """§4.3.5 went from "nothing implements this" to "the rule exists" to "the rule is the default".
 
-    That is the distinction the audit exists to keep honest. Two files now implement the rule as
-    the section states it, the same two still ship the retracted rest-state form as the value a
-    caller inherits, and if someone flips a default this test stops them from doing it without
-    revisiting the claim - because the flip changes what every published artifact measured.
+    Two files implement the rule as the section states it, and the constant both constructors
+    default to is pinned as a third site, so moving the default back to the retracted rest-state
+    form fails here instead of quietly re-dating what a caller inherits.
     """
     block = audit_claims()["4.3.5_ground_flag_gates_gravity"]
-    assert block["declared_sites"] == 2, "the corrected rule lost an implementation"
+    assert block["declared_sites"] == 3, "the corrected rule lost an implementation"
     assert block["implemented_by_every_declared_site"]
-    assert len(block["dissenting_sites"]) == 2
-    files = {site.split(":")[0] for site in block["dissenting_sites"]}
-    assert files == {"src/losses/physics_losses.py", "src/models/analytical_kinematics.py"}
-    assert block["corrected_form"] and not block["corrected_by_default"]
+    assert block["dissenting_sites"] == []
+    assert block["corrected_form"] and block["corrected_by_default"]
+
+
+def test_the_integration_identity_is_the_default_of_every_shell() -> None:
+    """§4.1's carried velocity is what the four shells give a caller who does not ask."""
+    for name in (
+        "4.1_integration_identity_carried_velocity",
+        "4.1_violation_defined_with_carried_velocity",
+    ):
+        block = audit_claims()[name]
+        assert block["implemented_by_every_declared_site"], name
+        assert block["dissenting_sites"] == [], name
+        assert block["corrected_by_default"], name
+
+
+def test_a_default_correction_leaves_no_dissenter() -> None:
+    """A claim cannot be both corrected by default and still contradicted by a default path."""
+    report = audit_claims()
+    contradicted = [
+        name
+        for name, block in report.items()
+        if block["corrected_by_default"] and block["dissenting_sites"]
+    ]
+    assert not contradicted, f"corrected by default yet still dissented from: {contradicted}"
 
 
 def test_every_diverging_claim_records_how_its_correction_is_reached() -> None:
@@ -71,9 +91,11 @@ def test_every_diverging_claim_records_how_its_correction_is_reached() -> None:
     assert not missing, (
         f"claims the code diverges from, with no reachable correction named: {missing}"
     )
-    assert all(not report[name]["corrected_by_default"] for name in diverging), (
-        "a corrected form became the default, which re-dates every artifact recorded with the old one"
-    )
+    # What is left on the list is the rollout predicate: no velocity bound the console respects
+    # exists to make its default, so its thresholds stay parameters.
+    assert {
+        path.split(":")[0] for name in diverging for path in report[name]["dissenting_sites"]
+    } == {"src/evaluation/rollout_evaluator.py"}
 
 
 def test_the_identity_is_exact_where_no_collision_flag_is_set() -> None:

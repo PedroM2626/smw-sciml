@@ -27,6 +27,7 @@ from src.models import (
     StatisticalMLPDynamics,
     TranslationInvariantPINNDynamics,
 )
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CORE_PATH,
@@ -162,7 +163,9 @@ def run_cross_level_benchmark(output_dir: str = RESULTS_DIR) -> Dict:
     )
     mlp.eval()
 
-    hard_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=6).to(device)
+    hard_pinn = HardResidualPINNDynamics(
+        state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
     hard_pinn.load_state_dict(
         torch.load(
             os.path.join(checkpoints_dir, "pinn_hard_best.pt"),

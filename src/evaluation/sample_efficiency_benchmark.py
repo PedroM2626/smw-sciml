@@ -27,6 +27,7 @@ from src.models import (
 )
 from src.training.trainer import DynamicsTrainer
 from src.utils.config import parse_args_with_config
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     DATASET_GAMEPLAY,
@@ -88,7 +89,9 @@ def run_sample_efficiency_study(
     model_factories = {
         "Statistical_MLP": lambda: StatisticalMLPDynamics(state_dim, action_dim),
         "Soft_PINN": lambda: SoftPINNDynamics(state_dim, action_dim),
-        "Hard_Residual_PINN": lambda: HardResidualPINNDynamics(state_dim, action_dim),
+        "Hard_Residual_PINN": lambda: HardResidualPINNDynamics(
+            state_dim, action_dim, position_velocity=PUBLISHED_POSITION_VELOCITY
+        ),
     }
 
     efficiency_results = {name: {"test_mse": [], "mean_drift": []} for name in model_factories}

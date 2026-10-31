@@ -14,6 +14,7 @@ import argparse
 import os
 import statistics
 import time
+from functools import partial
 from typing import Dict
 
 import matplotlib.pyplot as plt
@@ -28,6 +29,7 @@ from src.models import (
     StatisticalMLPDynamics,
 )
 from src.planning.mpc_planner import ModelPredictiveController, TrajectoryObjective
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CHECKPOINTS_DIR,
@@ -247,7 +249,10 @@ def load_world_models(
     """Restore the three 8D world models used by the published closed-loop protocol."""
     device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
     specs = {
-        "Hard_PINN_World_Model": ("pinn_hard_best.pt", HardResidualPINNDynamics),
+        "Hard_PINN_World_Model": (
+            "pinn_hard_best.pt",
+            partial(HardResidualPINNDynamics, position_velocity=PUBLISHED_POSITION_VELOCITY),
+        ),
         "Soft_PINN_World_Model": ("pinn_soft_best.pt", SoftPINNDynamics),
         "Statistical_MLP_World_Model": ("mlp_best.pt", StatisticalMLPDynamics),
     }

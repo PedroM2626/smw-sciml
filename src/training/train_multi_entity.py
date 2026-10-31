@@ -15,6 +15,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from src.models.pinn_hard_residual import HardResidualPINNDynamics
 from src.models.pinn_multi_entity import MultiEntityPINNDynamics
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     DATASET_MULTI_ENTITY,
@@ -79,7 +80,9 @@ def train_multi_entity_model(
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
     # 2. Instantiate model
-    base_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=6).to(device)
+    base_pinn = HardResidualPINNDynamics(
+        state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
     if os.path.exists(base_checkpoint):
         base_pinn.load_state_dict(
             torch.load(base_checkpoint, map_location=device, weights_only=True)

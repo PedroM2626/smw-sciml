@@ -23,10 +23,12 @@ holds §4 to three things at once:
    claim, and a divergence list for the files that implement a form §4 no longer claims.
 
 So `claims_the_telemetry_does_not_satisfy` is expected to be empty - that is the correction -
-and the load-bearing output is `prose_and_code_disagree`: the documentation says the ground
-flag gates the gravity step and `GroundContactConsistencyLoss` still penalises a vertical
-velocity of zero, the identity says the carried velocity and two shells advance with the
-predicted next one.
+and the load-bearing output is `prose_and_code_disagree`. The integration identity and the
+ground rule used to be on it, because the four shells advanced position with the predicted
+next velocity and `GroundContactConsistencyLoss` penalised a vertical velocity of zero by
+default; both corrected forms are now the defaults (`src.utils.kinematics.DEFAULT_*`), and the
+published forms survive only as `PUBLISHED_*`, passed by name where a committed artifact is
+reproduced. What is left on the list is the rollout predicate's velocity thresholds.
 
 Writes ``results/physics_claim_audit_metrics.json``. Emulator-free.
 
@@ -61,9 +63,11 @@ README_PATH = os.path.join(REPO_ROOT, "README.md")
 #
 # `corrected_in` is new as of 10.57: the literal that makes the *corrected* rule reachable in the
 # same file, and `corrected_by_default` says whether it is what a caller gets without asking.
-# Every default is still the published one, because every artifact in the repository was recorded
-# with it - so for each claim the honest state is "implemented, not default", and that is what the
-# audit now prints instead of "no implementation exists".
+# For the integration identity and the ground rule it now is: the constructors default to the
+# corrected form, a site in `src/utils/kinematics.py` pins that literal, and every pipeline that
+# reproduces a committed artifact asks for the published form by name. The rollout predicate's
+# thresholds are still "implemented, not default", because no bound the console respects exists
+# to make the default.
 CLAIMS: Dict[str, Dict[str, Any]] = {
     "4.1_integration_identity_carried_velocity": {
         "readme_marker": "### 4.1 Fixed-Point Arithmetic",
@@ -85,7 +89,7 @@ CLAIMS: Dict[str, Dict[str, Any]] = {
             ("src/models/analytical_kinematics.py", "if self.position_velocity == CARRIED else"),
         ],
         "corrected_in": 'position_velocity="carried" in four shells',
-        "corrected_by_default": False,
+        "corrected_by_default": True,
     },
     "4.1_violation_defined_with_carried_velocity": {
         "readme_marker": "### 4.1 Fixed-Point Arithmetic",
@@ -95,17 +99,11 @@ CLAIMS: Dict[str, Dict[str, Any]] = {
         "sites": [
             ("src/losses/physics_losses.py", "expected_dx = vx_t / self.subpixels_per_pixel"),
             ("src/evaluation/rollout_evaluator.py", "curr_state[0, 2].item() / 16.0"),
-        ],
-        # The four shells still default to the next-frame form; the literal that makes it the
-        # default is the constructor argument, which is precisely what a caller inherits.
-        "disagrees_with": [
-            ("src/models/residual_dynamics.py", "position_velocity: str = NEXT"),
-            ("src/models/output_projection.py", "position_velocity: str = NEXT"),
-            ("src/models/pinn_hard_residual.py", "position_velocity: str = NEXT"),
-            ("src/models/analytical_kinematics.py", "position_velocity: str = NEXT"),
+            # The four shells default to this constant, which is what a caller inherits.
+            ("src/utils/kinematics.py", "DEFAULT_POSITION_VELOCITY = CARRIED"),
         ],
         "corrected_in": 'position_velocity="carried"',
-        "corrected_by_default": False,
+        "corrected_by_default": True,
     },
     "4.2.1_jump_impulse_range": {
         "readme_marker": "### 4.2 Vertical Dynamics",
@@ -173,25 +171,19 @@ CLAIMS: Dict[str, Dict[str, Any]] = {
         "readme_marker": "### 4.3 Horizontal Dynamics",
         "claim": r"v_{y, t+1} = v_{y, t} + g \cdot (1 - c_{t, \text{ground}})",
         "asserts": "grounded_frames_are_never_stopped",
-        # The rule now has an implementation in both places it matters - the closed-form engine
-        # rules and the composite penalty - but neither is what a caller gets by default, because
-        # every published artifact was recorded with the retracted rest-state form.
+        # The rule has an implementation in both places it matters - the closed-form engine
+        # rules and the composite penalty - and it is what both give by default; the retracted
+        # rest-state form is reached only as `PUBLISHED_CONTACT_RULE`.
         "sites": [
             ("src/models/analytical_kinematics.py", "vy_next = torch.where(grounded, vy, vy_next)"),
             (
                 "src/losses/physics_losses.py",
                 "ground_vy = ground_vy - current_state[stationary_ground_mask, 3]",
             ),
-        ],
-        "disagrees_with": [
-            (
-                "src/losses/physics_losses.py",
-                "def __init__(self, rule: str = CONTACT_ZERO_VELOCITY)",
-            ),
-            ("src/models/analytical_kinematics.py", "ground_rule: str = CONTACT_ZERO_VELOCITY"),
+            ("src/utils/kinematics.py", "DEFAULT_CONTACT_RULE = CONTACT_ZERO_INCREMENT"),
         ],
         "corrected_in": 'contact_rule="zero_increment" / ground_rule="zero_increment"',
-        "corrected_by_default": False,
+        "corrected_by_default": True,
     },
 }
 
@@ -543,16 +535,16 @@ def _verdict(report: Dict[str, Any], telemetry: Dict[str, Any]) -> Dict[str, Any
             f"file declared to implement them ({unimplemented or 'none missing'}), "
             f"{len(report) - len(unsatisfied)} of {len(report)} are satisfied by the recorded "
             f"transitions as the section now states them ({unsatisfied or 'none failing'}), and "
-            f"{len(disagreements)} are still disagreed with by {dissent_files} default code paths: "
-            f"the identity is written with the carried velocity "
-            f"({carried['exact_to_half_a_subpixel_rate']:.2%} of frames exact, median "
-            f"{carried['median_abs_residual_px']:.4f} px) while the shells advance position with "
-            f"the predicted next velocity by default "
-            f"(median {following['median_abs_residual_px']:.4f} px). The state of the fix is now "
-            f"part of the record: {len(with_correction)} of {len(report)} claims have a corrected "
-            f"form reachable in the same class or penalty, and "
-            f"{len(with_correction) - len(default_correction)} of those are not the default, "
-            f"because every artifact in this repository was recorded with the published form. "
+            f"{len(disagreements)} are still disagreed with by {dissent_files} default code paths "
+            f"({[d['claim'] for d in disagreements] or 'none'}). The identity is written with the "
+            f"carried velocity ({carried['exact_to_half_a_subpixel_rate']:.2%} of frames exact, "
+            f"median {carried['median_abs_residual_px']:.4f} px against "
+            f"{following['median_abs_residual_px']:.4f} px for the predicted next velocity), and "
+            f"the shells now advance position with it by default. The state of the fix is part "
+            f"of the record: {len(with_correction)} of {len(report)} claims have a corrected form "
+            f"reachable in the same class or penalty, {len(default_correction)} of those are the "
+            f"default, and the pipelines that reproduce a committed artifact pass the published "
+            f"form by name, because every artifact in this repository was recorded with it. "
             f"10.57 measures what the difference costs per family."
         ),
     }
@@ -682,9 +674,9 @@ def render_section_4_qualifiers(payload: Dict[str, Any]) -> List[str]:
         rf"exactly zero on {ground['claimed_rate_vy_next_exactly_zero']:.2%} (median "
         rf"$|v_y| = {ground['claimed_median_abs_vy_next']:.1f}$, under all three ways of "
         rf"conditioning the stratum). The flag gates the gravity step; it does not stop the body. "
-        rf"`GroundContactConsistencyLoss` and `AnalyticalKinematicsDynamics` both implement the "
-        rf"retracted form, and the artifact records that as an open prose-and-code disagreement "
-        rf"rather than smoothing it over.*",
+        rf"`GroundContactConsistencyLoss` and `AnalyticalKinematicsDynamics` both implement "
+        rf"this rule by default; the retracted form is reached only as `PUBLISHED_CONTACT_RULE`, "
+        rf"which the pipelines that reproduce a committed artifact pass by name.*",
     ]
     return [unemphasise_math(demath_typographic(row)) for row in rows]
 
@@ -708,7 +700,10 @@ def run_physics_claim_audit(
             "telemetry_dataset": dataset_path,
             "telemetry_scope": "training split of the canonical gameplay recording",
             "emulator_required": False,
-            "section_4_prose_state": "corrected to the measured rules, with the dissenting code recorded",
+            "section_4_prose_state": (
+                "corrected to the measured rules; the integration identity and the ground rule "
+                "are the code defaults, the rollout thresholds are recorded as dissenting code"
+            ),
             "satisfaction_tests": sorted(SATISFACTION_TESTS),
         },
         "claims": report,

@@ -52,6 +52,7 @@ from src.evaluation.evaluate_full_level_clearance import (  # noqa: E402
 from src.models.pinn_hard_residual import HardResidualPINNDynamics  # noqa: E402
 from src.models.pinn_multi_entity import MultiEntityPINNDynamics  # noqa: E402
 from src.planning.mpc_planner import ModelPredictiveController, TrajectoryObjective  # noqa: E402
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger  # noqa: E402
 from src.utils.paths import (  # noqa: E402
     CORE_PATH,
@@ -80,7 +81,9 @@ OPERATOR_LIMIT = 240
 
 def build_mpc(device: torch.device) -> ModelPredictiveController:
     """The published clearance controller, built the way 10.37 builds it."""
-    base_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=6)
+    base_pinn = HardResidualPINNDynamics(
+        state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+    )
     world_model = MultiEntityPINNDynamics(base_pinn=base_pinn).to(device)
     ckpt = checkpoint_file("pinn_multi_entity_best.pt")
     world_model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=True))

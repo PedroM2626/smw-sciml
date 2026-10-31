@@ -42,6 +42,7 @@ from src.planning.mpc_planner import (  # noqa: E402
     TrajectoryObjective,
     action_vector_to_joypad,
 )
+from src.utils.kinematics import PUBLISHED_CONTACT_RULE, PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger  # noqa: E402
 from src.utils.paths import ROM_PATH, STATE_YOSHI_ISLAND_1  # noqa: E402
 from src.utils.seed import set_global_seed  # noqa: E402
@@ -85,7 +86,9 @@ def _joypad(action: np.ndarray) -> dict:
 def build_recording_controller(device: torch.device) -> ModelPredictiveController:
     """The established engine rules of 10.37, grid-fitted on the canonical training split."""
     data = load_and_preprocess_data(seed=42)
-    model = AnalyticalKinematicsDynamics().to(device)
+    model = AnalyticalKinematicsDynamics(
+        position_velocity=PUBLISHED_POSITION_VELOCITY, ground_rule=PUBLISHED_CONTACT_RULE
+    ).to(device)
     model.fit_engine_rules(*_to_tensors(data, "train", device), device=device)
     return ModelPredictiveController(
         world_model=model,

@@ -20,6 +20,7 @@ from src.environment.pinn_sim_env import PINNVectorEnv
 from src.models.pinn_hard_residual import HardResidualPINNDynamics
 from src.models.pinn_multi_entity import MultiEntityPINNDynamics
 from src.training.dyna_ppo import ActorCritic, DynaPPOTrainer
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CHECKPOINTS_DIR,
@@ -98,7 +99,9 @@ def train_multi_entity_dyna_ppo(
     os.makedirs(figures_dir, exist_ok=True)
 
     # 1. Instantiate Multi-Entity World Model
-    base_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=6).to(device)
+    base_pinn = HardResidualPINNDynamics(
+        state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
     base_ckpt = os.path.join(checkpoint_dir, "pinn_hard_best.pt")
     if os.path.exists(base_ckpt):
         base_pinn.load_state_dict(torch.load(base_ckpt, map_location=device, weights_only=True))

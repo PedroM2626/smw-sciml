@@ -17,6 +17,7 @@ import torch
 import torch.nn as nn
 
 from src.models.pinn_hard_residual import HardResidualPINNDynamics
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 
 
 class SetMultiEntityPINNDynamics(nn.Module):
@@ -48,7 +49,9 @@ class SetMultiEntityPINNDynamics(nn.Module):
         if base_pinn is not None:
             self.mario_pinn = base_pinn
         else:
-            self.mario_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=action_dim)
+            self.mario_pinn = HardResidualPINNDynamics(
+                state_dim=8, action_dim=action_dim, position_velocity=PUBLISHED_POSITION_VELOCITY
+            )
 
         # Entity encoder: projects 5D sprite telemetry to hidden_dim
         self.entity_encoder = nn.Sequential(

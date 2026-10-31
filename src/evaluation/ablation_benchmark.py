@@ -31,6 +31,7 @@ from src.planning.mpc_planner import (
     ModelPredictiveController,
     TrajectoryObjective,
 )
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     DATASET_GAMEPLAY,
@@ -101,7 +102,9 @@ def run_clamping_ablation(device: torch.device, dataset_path: str = DATASET_GAME
     test_targets = torch.tensor(next_states[split:], dtype=torch.float32).to(device)
 
     # Train Unclamped Model
-    unclamped_model = UnclampedHardResidualPINNDynamics(state_dim=8, action_dim=6).to(device)
+    unclamped_model = UnclampedHardResidualPINNDynamics(
+        state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
     opt = torch.optim.AdamW(unclamped_model.parameters(), lr=1e-3, weight_decay=1e-4)
     loss_fn = nn.SmoothL1Loss()
 
@@ -122,7 +125,9 @@ def run_clamping_ablation(device: torch.device, dataset_path: str = DATASET_GAME
         unclamped_max_vx = torch.max(torch.abs(unclamped_pred[:, 2])).item()
 
     # Load Clamped Model
-    clamped_model = HardResidualPINNDynamics(state_dim=8, action_dim=6).to(device)
+    clamped_model = HardResidualPINNDynamics(
+        state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
     if os.path.exists(checkpoint_file("pinn_hard_best.pt")):
         clamped_model.load_state_dict(
             torch.load(checkpoint_file("pinn_hard_best.pt"), map_location=device, weights_only=True)
@@ -168,7 +173,9 @@ def run_horizon_degradation_ablation(
         "Statistical MLP": StatisticalMLPDynamics(state_dim=8, action_dim=6).to(device),
         "Statistical LSTM": StatisticalLSTMDynamics(state_dim=8, action_dim=6).to(device),
         "Soft-Constrained PINN": SoftPINNDynamics(state_dim=8, action_dim=6).to(device),
-        "Hard Residual PINN": HardResidualPINNDynamics(state_dim=8, action_dim=6).to(device),
+        "Hard Residual PINN": HardResidualPINNDynamics(
+            state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+        ).to(device),
     }
 
     ckpt_map = {
@@ -248,7 +255,9 @@ def run_horizon_degradation_ablation(
 
 def run_mpc_sensitivity_ablation(device: torch.device) -> Dict:
     logger.info("\n--- ABLATION 3: CEM MPC CANDIDATE SENSITIVITY (N in 32..512) ---")
-    base_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=6)
+    base_pinn = HardResidualPINNDynamics(
+        state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+    )
     world_model = MultiEntityPINNDynamics(base_pinn=base_pinn).to(device)
     if os.path.exists(checkpoint_file("pinn_multi_entity_best.pt")):
         world_model.load_state_dict(

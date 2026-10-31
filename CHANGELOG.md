@@ -9,7 +9,26 @@ numbers* - those are reported here and in README Section 12, never applied silen
 
 ## [Unreleased]
 
-_No changes yet._
+### Changed
+
+- **The corrected physics of Section 4 is now the code default** (README 10.54, 10.57, Section 12).
+  `ResidualDynamics`, `ProjectedDynamics`, `HardResidualPINNDynamics` and
+  `AnalyticalKinematicsDynamics` default to `position_velocity="carried"` - position advances with
+  the velocity the frame starts with, as §4.1 states it and as the telemetry measures it - and
+  `GroundContactConsistencyLoss`, `CompositePINNLoss` and the closed-form rules default to the
+  `zero_increment` ground rule of §4.3.5. The names live in `src/utils/kinematics.py` as
+  `DEFAULT_POSITION_VELOCITY` / `DEFAULT_CONTACT_RULE`. **No published number moves:** every
+  pipeline that reproduces a committed artifact or loads a committed checkpoint - the benchmarks,
+  the closed-loop evaluators, the trainers, the multi-entity / ensemble / multimodal wrappers and
+  the recording scripts - passes the published form by name (`PUBLISHED_POSITION_VELOCITY`,
+  `PUBLISHED_CONTACT_RULE`), because every artifact was recorded with it. Code that constructs one
+  of these classes without naming a convention now gets the corrected physics; to reproduce the
+  published arithmetic, pass the `PUBLISHED_*` constant.
+- `physics_claim_audit` pins the two default constants as implementation sites and no longer
+  lists the four shells, the contact penalty or the closed-form rules as dissenters; the 10.54
+  table, the §4.3.5 qualifier and Section 12 are regenerated and rewritten to match. The rollout
+  predicate's `|v_x| <= 72` / `v_y <= 64` thresholds are still the default and still recorded as
+  dissenting code, because the console respects no velocity bound that could replace them.
 
 ## [0.2.0] - 2026-10-24
 

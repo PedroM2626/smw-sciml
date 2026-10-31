@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from src.models.pinn_hard_residual import HardResidualPINNDynamics
 from src.models.tilemap_pinn import TilemapPINNDynamics
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CHECKPOINTS_DIR,
@@ -71,7 +72,9 @@ def train_tilemap_model(
 
     # 2. Instantiate Tilemap-PINN and Baseline Blind-PINN
     tilemap_model = TilemapPINNDynamics().to(device)
-    blind_model = HardResidualPINNDynamics(state_dim=8, action_dim=6).to(device)
+    blind_model = HardResidualPINNDynamics(
+        state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
 
     # Loss functions
     state_loss_fn = nn.SmoothL1Loss()

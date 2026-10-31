@@ -44,6 +44,7 @@ from src.planning.mpc_planner import (
     TrajectoryObjective,
     action_vector_to_joypad,
 )
+from src.utils.kinematics import PUBLISHED_CONTACT_RULE, PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     DATASET_GAMEPLAY,
@@ -86,7 +87,9 @@ def evaluate_engine_rules(
     test = _to_tensors(data, "test", device)
     test_states, test_actions, test_next = test
 
-    model = AnalyticalKinematicsDynamics().to(device)
+    model = AnalyticalKinematicsDynamics(
+        position_velocity=PUBLISHED_POSITION_VELOCITY, ground_rule=PUBLISHED_CONTACT_RULE
+    ).to(device)
     prior_guess = EngineRuleParameters.from_dict(model.params.as_dict())  # snapshot before fitting
     trace = model.fit_engine_rules(*train, sweeps=sweeps, device=device)
 
@@ -257,10 +260,14 @@ def run_oracle_mpc_comparison(
             f"{pinn_ckpt} missing: run `python -m src.training.benchmark_experiment` first."
         )
 
-    hard_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=6).to(device)
+    hard_pinn = HardResidualPINNDynamics(
+        state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
     hard_pinn.load_state_dict(torch.load(pinn_ckpt, map_location=device, weights_only=True))
     hard_pinn.eval()
-    analytical = AnalyticalKinematicsDynamics().to(device)
+    analytical = AnalyticalKinematicsDynamics(
+        position_velocity=PUBLISHED_POSITION_VELOCITY, ground_rule=PUBLISHED_CONTACT_RULE
+    ).to(device)
     data = load_and_preprocess_data(seed=seed)
     analytical.fit_engine_rules(*_to_tensors(data, "train", device), device=device)
 

@@ -40,6 +40,7 @@ from src.evaluation.operator_physics_injection_benchmark import (
 from src.evaluation.rollout_evaluator import RolloutEvaluator
 from src.models import ProjectedDynamics
 from src.utils.config import parse_args_with_config
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import DATASET_GAMEPLAY, RESULTS_DIR
 from src.utils.provenance import read_metrics, write_metrics
@@ -92,6 +93,7 @@ def build_projected(
         terminal_vy=TERMINAL_VY,
         min_vy=MIN_VY,
         subpixels_per_pixel=SUBPIXELS_PER_PIXEL,
+        position_velocity=PUBLISHED_POSITION_VELOCITY,
     )
 
 

@@ -12,7 +12,7 @@ import torch.nn.functional as F
 
 from src.utils.kinematics import (
     CONTACT_ZERO_INCREMENT,
-    CONTACT_ZERO_VELOCITY,
+    DEFAULT_CONTACT_RULE,
     check_contact_rule,
 )
 
@@ -99,16 +99,16 @@ class GroundContactConsistencyLoss(nn.Module):
 
     ``rule`` selects which statement of §4.3.5 the penalty enforces:
 
-    * ``"zero_velocity"`` (default, the form every published artifact was trained with)
-      asks ``hat_vy_next = 0`` on those frames;
-    * ``"zero_increment"`` asks ``hat_vy_next = vy_t``, which is the rule README 4.3.5 now
-      states after 10.54 measured the console: the ground flag suppresses the gravity
-      *step* and does not stop the body.
+    * ``"zero_increment"`` (default) asks ``hat_vy_next = vy_t``, which is the rule README
+      4.3.5 now states after 10.54 measured the console: the ground flag suppresses the
+      gravity *step* and does not stop the body;
+    * ``"zero_velocity"`` (the form every published artifact was trained with, passed by
+      name as ``PUBLISHED_CONTACT_RULE``) asks ``hat_vy_next = 0`` on those frames.
 
     §10.57 trains both against the same data.
     """
 
-    def __init__(self, rule: str = CONTACT_ZERO_VELOCITY):
+    def __init__(self, rule: str = DEFAULT_CONTACT_RULE):
         super().__init__()
         self.rule = check_contact_rule(rule)
 
@@ -153,7 +153,7 @@ class CompositePINNLoss(nn.Module):
         lambda_bound: float = 0.5,
         lambda_contact: float = 0.5,
         use_huber: bool = True,
-        contact_rule: str = CONTACT_ZERO_VELOCITY,
+        contact_rule: str = DEFAULT_CONTACT_RULE,
     ):
         super().__init__()
         self.lambda_kin = lambda_kin

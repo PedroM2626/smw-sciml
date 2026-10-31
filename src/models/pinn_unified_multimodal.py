@@ -20,6 +20,7 @@ import torch.nn as nn
 
 from src.models.pinn_hard_residual import HardResidualPINNDynamics
 from src.models.tilemap_pinn import TilemapEncoder
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 
 
 class UnifiedMultimodalPINNDynamics(nn.Module):
@@ -45,7 +46,9 @@ class UnifiedMultimodalPINNDynamics(nn.Module):
         if base_pinn is not None:
             self.mario_pinn = base_pinn
         else:
-            self.mario_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=6)
+            self.mario_pinn = HardResidualPINNDynamics(
+                state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+            )
 
         # 2. Spatial Terrain Encoder
         if tilemap_encoder is not None:

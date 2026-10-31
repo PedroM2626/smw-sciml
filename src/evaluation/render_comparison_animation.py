@@ -20,6 +20,7 @@ import torch
 
 from src.environment.dataset_loader import load_and_preprocess_data
 from src.models import HardResidualPINNDynamics, StatisticalMLPDynamics
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CHECKPOINTS_DIR,
@@ -60,7 +61,9 @@ def generate_comparison_animation(
     gt_s = np.array(gt_s)  # [horizon + 1, 8]
 
     # 2. Load Models
-    hard_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=6).to(device)
+    hard_pinn = HardResidualPINNDynamics(
+        state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
     hard_pinn.load_state_dict(
         torch.load(
             os.path.join(checkpoints_dir, "pinn_hard_best.pt"),

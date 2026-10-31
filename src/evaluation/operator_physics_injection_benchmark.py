@@ -58,7 +58,7 @@ from src.models import (
 )
 from src.training.trainer import DynamicsTrainer
 from src.utils.config import parse_args_with_config
-from src.utils.kinematics import CONTACT_ZERO_VELOCITY, NEXT
+from src.utils.kinematics import CONTACT_ZERO_VELOCITY, NEXT, PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import DATASET_GAMEPLAY, RESULTS_DIR
 from src.utils.provenance import write_metrics
@@ -160,7 +160,11 @@ def training_plan() -> List[Tuple[str, str, Optional[str], str, str]]:
 def _build_reference_arm(name: str, state_dim: int, action_dim: int, latent_dim: int) -> nn.Module:
     """Construct one published shell model from its original class."""
     if name == "hard_pinn":
-        return HardResidualPINNDynamics(state_dim=state_dim, action_dim=action_dim)
+        return HardResidualPINNDynamics(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            position_velocity=PUBLISHED_POSITION_VELOCITY,
+        )
     if name == "pc_deeponet":
         return PhysicsConstrainedDeepONetDynamics(
             state_dim=state_dim, action_dim=action_dim, latent_dim=latent_dim

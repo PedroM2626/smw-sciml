@@ -30,6 +30,7 @@ from src.models import (
     PhysicsConstrainedDeepONetDynamics,
     StatisticalMLPDynamics,
 )
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 
 STATE_DIM = 8
 ACTION_DIM = 6
@@ -61,7 +62,12 @@ def test_hard_shell_saturates_velocity_and_integrates_position_exactly() -> None
     state = _states()
     action = torch.zeros(state.shape[0], ACTION_DIM)
     residual = torch.tensor([[200.0, 300.0, 1.0, 0.0, 0.0, 0.0]])
-    model = ResidualDynamics(_StubBase(residual), state_dim=STATE_DIM, hard=True)
+    model = ResidualDynamics(
+        _StubBase(residual),
+        state_dim=STATE_DIM,
+        hard=True,
+        position_velocity=PUBLISHED_POSITION_VELOCITY,
+    )
 
     out = model(state, action)
     assert torch.all(out[:, 2] == MAX_VX), out[:, 2]
@@ -74,7 +80,12 @@ def test_unbounded_mode_keeps_position_consistent_but_not_velocity() -> None:
     state = _states()
     action = torch.zeros(state.shape[0], ACTION_DIM)
     residual = torch.tensor([[200.0, -300.0, 0.0, 0.0, 0.0, 0.0]])
-    model = ResidualDynamics(_StubBase(residual), state_dim=STATE_DIM, hard=False)
+    model = ResidualDynamics(
+        _StubBase(residual),
+        state_dim=STATE_DIM,
+        hard=False,
+        position_velocity=PUBLISHED_POSITION_VELOCITY,
+    )
 
     out = model(state, action)
     assert torch.all(out[:, 2] == state[:, 2] + 200.0), "no saturation without the shell"
@@ -96,7 +107,12 @@ def test_wrapper_integration_path_equals_the_published_physics_constrained_deepo
         coefficients = pc.branch(sensors)
         basis = pc.trunk(pc.residual_query_coords)
         aux = torch.einsum("bp,qp->bq", coefficients, basis) + pc.output_bias
-        wrapped = ResidualDynamics(_StubBase(aux), state_dim=STATE_DIM, hard=True)
+        wrapped = ResidualDynamics(
+            _StubBase(aux),
+            state_dim=STATE_DIM,
+            hard=True,
+            position_velocity=PUBLISHED_POSITION_VELOCITY,
+        )
         expected = pc(state, action)
         got = wrapped(state, action)
 
@@ -108,8 +124,15 @@ def test_hard_shell_matches_the_published_hard_pinn_invariant() -> None:
     state = _states(seed=5)
     action = torch.zeros(state.shape[0], ACTION_DIM)
     aux = torch.zeros(1, STATE_DIM - 2)
-    hard_wrapper = ResidualDynamics(_StubBase(aux), state_dim=STATE_DIM, hard=True)
-    published = HardResidualPINNDynamics(state_dim=STATE_DIM, action_dim=ACTION_DIM)
+    hard_wrapper = ResidualDynamics(
+        _StubBase(aux),
+        state_dim=STATE_DIM,
+        hard=True,
+        position_velocity=PUBLISHED_POSITION_VELOCITY,
+    )
+    published = HardResidualPINNDynamics(
+        state_dim=STATE_DIM, action_dim=ACTION_DIM, position_velocity=PUBLISHED_POSITION_VELOCITY
+    )
 
     for model in (hard_wrapper, published):
         out = model(state, action)
@@ -182,8 +205,18 @@ def test_velocity_compliance_sees_an_unbounded_output_as_violating() -> None:
     device = torch.device("cpu")
     aux = torch.tensor([[MAX_VX * 3.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
 
-    unbounded = ResidualDynamics(_StubBase(aux), state_dim=STATE_DIM, hard=False)
-    bounded = ResidualDynamics(_StubBase(aux), state_dim=STATE_DIM, hard=True)
+    unbounded = ResidualDynamics(
+        _StubBase(aux),
+        state_dim=STATE_DIM,
+        hard=False,
+        position_velocity=PUBLISHED_POSITION_VELOCITY,
+    )
+    bounded = ResidualDynamics(
+        _StubBase(aux),
+        state_dim=STATE_DIM,
+        hard=True,
+        position_velocity=PUBLISHED_POSITION_VELOCITY,
+    )
     assert _velocity_compliance(unbounded, state, action, device)["out_of_bounds_rate"] == 1.0
     assert _velocity_compliance(bounded, state, action, device)["out_of_bounds_rate"] == 0.0
     assert _velocity_compliance(bounded, state, action, device)["max_abs_vx_predicted"] == MAX_VX

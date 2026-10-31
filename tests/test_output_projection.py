@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 
 from src.models import ProjectedDynamics
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 
 MAX_VX = 72.0
 TERMINAL_VY = 64.0
@@ -33,7 +34,7 @@ def _state(batch: int = 4) -> torch.Tensor:
 
 def test_projection_caps_an_adversarial_proposal_and_rederives_position() -> None:
     base = _ConstantBase(torch.tensor([[999.0, 999.0, 500.0, -900.0, 1.0, 0.0, 1.0, 0.0]]))
-    model = ProjectedDynamics(base=base, state_dim=8)
+    model = ProjectedDynamics(base=base, state_dim=8, position_velocity=PUBLISHED_POSITION_VELOCITY)
     state = _state()
     out = model(state, torch.zeros(4, 6))
 
@@ -49,7 +50,9 @@ def test_projection_leaves_an_admissible_and_consistent_output_untouched() -> No
     proposal = torch.tensor(
         [[float(state[0, 0]) + vx / 16.0, 100.0 + vy / 16.0, vx, vy, 1.0, 0.0, 0.0, 0.0]]
     )
-    model = ProjectedDynamics(base=_ConstantBase(proposal), state_dim=8)
+    model = ProjectedDynamics(
+        base=_ConstantBase(proposal), state_dim=8, position_velocity=PUBLISHED_POSITION_VELOCITY
+    )
     out = model(state, torch.zeros(1, 6))
     assert torch.allclose(out, proposal, atol=1e-6)
 
@@ -57,7 +60,9 @@ def test_projection_leaves_an_admissible_and_consistent_output_untouched() -> No
 def test_projection_repairs_a_position_the_network_derived_from_a_clipped_velocity() -> None:
     # The network advanced x by 300/16 - a velocity the engine cannot have.
     proposal = torch.tensor([[50.0, 100.0, 300.0, 10.0, 0.0, 0.0, 0.0, 0.0]])
-    model = ProjectedDynamics(base=_ConstantBase(proposal), state_dim=8)
+    model = ProjectedDynamics(
+        base=_ConstantBase(proposal), state_dim=8, position_velocity=PUBLISHED_POSITION_VELOCITY
+    )
     state = _state(1)
     out = model(state, torch.zeros(1, 6))
     assert float(out[0, 2]) == MAX_VX
@@ -67,11 +72,17 @@ def test_projection_repairs_a_position_the_network_derived_from_a_clipped_veloci
 
 def test_contact_channels_pass_through_unprojected() -> None:
     proposal = torch.tensor([[0.0, 0.0, 10.0, 10.0, 1.0, 1.0, 0.0, 1.0]])
-    model = ProjectedDynamics(base=_ConstantBase(proposal), state_dim=8)
+    model = ProjectedDynamics(
+        base=_ConstantBase(proposal), state_dim=8, position_velocity=PUBLISHED_POSITION_VELOCITY
+    )
     out = model(_state(1), torch.zeros(1, 6))
     assert torch.allclose(out[0, 4:], proposal[0, 4:])
 
 
 def test_projection_reports_its_guarantee_as_structural() -> None:
-    model = ProjectedDynamics(base=_ConstantBase(torch.zeros(1, 8)), state_dim=8)
+    model = ProjectedDynamics(
+        base=_ConstantBase(torch.zeros(1, 8)),
+        state_dim=8,
+        position_velocity=PUBLISHED_POSITION_VELOCITY,
+    )
     assert model.bounds_imposed_by_construction is True

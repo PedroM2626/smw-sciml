@@ -34,6 +34,7 @@ from src.models import (
 from src.training.trainer import DynamicsTrainer
 from src.utils.config import parse_args_with_config
 from src.utils.experiment import ExperimentLogger
+from src.utils.kinematics import PUBLISHED_CONTACT_RULE, PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     DATASET_GAMEPLAY,
@@ -151,7 +152,11 @@ def run_comprehensive_benchmark(
         "Statistical_MLP": StatisticalMLPDynamics(state_dim=state_dim, action_dim=action_dim),
         "Statistical_LSTM": StatisticalLSTMDynamics(state_dim=state_dim, action_dim=action_dim),
         "Soft_PINN": SoftPINNDynamics(state_dim=state_dim, action_dim=action_dim),
-        "Hard_Residual_PINN": HardResidualPINNDynamics(state_dim=state_dim, action_dim=action_dim),
+        "Hard_Residual_PINN": HardResidualPINNDynamics(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            position_velocity=PUBLISHED_POSITION_VELOCITY,
+        ),
     }
     if matched_baseline:
         # Parameter-parity ablation: compact ~10k-param pair (MLP vs Hard PINN).
@@ -159,7 +164,10 @@ def run_comprehensive_benchmark(
             state_dim=state_dim, action_dim=action_dim
         )
         models["Hard_Residual_PINN_compact"] = HardResidualPINNDynamics(
-            state_dim=state_dim, action_dim=action_dim, hidden_dims=list(MATCHED_HIDDEN_DIMS)
+            state_dim=state_dim,
+            action_dim=action_dim,
+            hidden_dims=list(MATCHED_HIDDEN_DIMS),
+            position_velocity=PUBLISHED_POSITION_VELOCITY,
         )
         log.info("Parameter-matched compact baselines enabled (~10k params each).")
 
@@ -311,7 +319,12 @@ def run_comprehensive_benchmark(
     # SmoothL1 evaluator as every other model here (README section 10.37).
     if analytical_baseline and state_dim == 8:
         log.info("\n[extra] Fitting and evaluating the Analytical Engine-Rules baseline...")
-        analytical = AnalyticalKinematicsDynamics(state_dim=state_dim, action_dim=action_dim)
+        analytical = AnalyticalKinematicsDynamics(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            position_velocity=PUBLISHED_POSITION_VELOCITY,
+            ground_rule=PUBLISHED_CONTACT_RULE,
+        )
         analytical_train = (
             torch.tensor(data_dict["train_states"], dtype=torch.float32),
             torch.tensor(data_dict["train_actions"], dtype=torch.float32),

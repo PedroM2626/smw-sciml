@@ -31,6 +31,7 @@ from src.evaluation.effective_velocity_benchmark import (
 )
 from src.evaluation.rollout_diagnostics import TOLERANCE_LADDER, violation_rate_at_tolerance
 from src.models import EffectiveVelocityDynamics, ResidualDynamics, StatisticalMLPDynamics
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 
 STATE_DIM = 8
 ACTION_DIM = 6
@@ -70,7 +71,9 @@ def test_next_mode_is_bit_identical_to_the_published_residual_shell() -> None:
     state, action = _states(), _actions()
     for hard in (False, True):
         base = _StubBase(torch.tensor([[12.0, -30.0, 1.0, 0.0, 0.0, 0.0]]))
-        shell = ResidualDynamics(base=base, state_dim=STATE_DIM, hard=hard)
+        shell = ResidualDynamics(
+            base=base, state_dim=STATE_DIM, hard=hard, position_velocity=PUBLISHED_POSITION_VELOCITY
+        )
         rebuilt = _wrapped(base, mode="next", hard=hard)
         assert torch.equal(shell(state, action), rebuilt(state, action))
 

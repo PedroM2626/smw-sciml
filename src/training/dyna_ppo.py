@@ -16,6 +16,7 @@ from torch.distributions import Categorical
 
 from src.environment.pinn_sim_env import PINNVectorEnv
 from src.models import HardResidualPINNDynamics, StatisticalMLPDynamics
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CHECKPOINTS_DIR,
@@ -323,7 +324,13 @@ def train_dyna_ppo_agents(
     trained_policies = {}
 
     world_model_configs = [
-        ("pinn_hard", HardResidualPINNDynamics(state_dim=8, action_dim=6), "pinn_hard_best.pt"),
+        (
+            "pinn_hard",
+            HardResidualPINNDynamics(
+                state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+            ),
+            "pinn_hard_best.pt",
+        ),
         ("mlp", StatisticalMLPDynamics(state_dim=8, action_dim=6), "mlp_best.pt"),
     ]
 

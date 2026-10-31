@@ -13,6 +13,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 from src.losses.physics_losses import CompositePINNLoss
+from src.utils.kinematics import PUBLISHED_CONTACT_RULE
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -61,6 +62,7 @@ class DynamicsTrainer:
                 lambda_kin=1.0,
                 lambda_bound=0.5,
                 lambda_contact=0.5,
+                contact_rule=PUBLISHED_CONTACT_RULE,
             )
         else:
             self.loss_fn = nn.SmoothL1Loss()

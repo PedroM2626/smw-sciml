@@ -36,6 +36,7 @@ from src.planning.mpc_planner import (
     TrajectoryObjective,
 )
 from src.training.distill_mpc_policy import DistilledActorPolicy, extract_12d_vector
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CORE_PATH,
@@ -145,7 +146,9 @@ def evaluate_single_controller(
         )
 
     elif controller_type == "MPC_Hard_PINN":
-        wm = HardResidualPINNDynamics(state_dim=8, action_dim=6).to(device)
+        wm = HardResidualPINNDynamics(
+            state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+        ).to(device)
         if os.path.exists(checkpoint_file("pinn_hard_best.pt")):
             wm.load_state_dict(
                 torch.load(

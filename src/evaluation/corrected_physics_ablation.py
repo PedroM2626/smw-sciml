@@ -8,9 +8,11 @@ Section 4 now states what the telemetry measures: position advances with the vel
 speed class and an unenforced parameter rather than bounds the console respects (§4.2.5/§4.3.3,
 left by real recordings at 49.0 and 70.0). Four classes can now be built that way -
 `ResidualDynamics`, `ProjectedDynamics`, `HardResidualPINNDynamics`,
-`AnalyticalKinematicsDynamics` - behind flags, with the published form still the default, because
-every artifact in this repository was recorded with it. This study is the measurement that choice
-needs: what does implementing §4 literally cost or buy, per family, paired over seeds?
+`AnalyticalKinematicsDynamics` - behind flags. The published form was the default when this
+study ran, because every artifact in this repository was recorded with it; the corrected form is
+the default now, and every arm here names its convention, so the study builds the same objects
+either way. It is the measurement that choice needed: what does implementing §4 literally cost
+or buy, per family, paired over seeds?
 
 Three contrasts, one changed thing each:
 
@@ -66,6 +68,7 @@ from src.utils.kinematics import (
     CONTACT_ZERO_INCREMENT,
     CONTACT_ZERO_VELOCITY,
     NEXT,
+    PUBLISHED_CONTACT_RULE,
     set_position_velocity,
 )
 from src.utils.logging import get_logger
@@ -184,12 +187,15 @@ def _build(
     mode: str,
     dims: Tuple[int, int, int],
 ) -> nn.Module:
-    """Construct one arm. The default convention is never passed explicitly, so "next" is the
-    same object the published grid built."""
+    """Construct one arm. Every convention is passed by name, so a "next" arm is the same
+    object the published grid built whatever the constructors default to."""
     state_dim, action_dim, latent_dim = dims
     if kind == "closed":
         return AnalyticalKinematicsDynamics(
-            state_dim=state_dim, action_dim=action_dim, position_velocity=mode
+            state_dim=state_dim,
+            action_dim=action_dim,
+            position_velocity=mode,
+            ground_rule=PUBLISHED_CONTACT_RULE,
         )
     if kind == "reference":
         model = HardResidualPINNDynamics(state_dim=state_dim, action_dim=action_dim)

@@ -11,7 +11,14 @@ on every accelerating frame and is what §10.53 measures as a whole prediction t
 
 Because both forms are legitimate objects of study and several classes can be built either
 way, the mode names live here: a typo raises at construction rather than silently training
-the other model. ``NEXT`` is the default every published artifact was recorded with.
+the other model.
+
+Two pairs of names say which form a caller gets. ``DEFAULT_*`` is what a constructor gives
+when nobody asks - the corrected physics of section 4 as it is now written, ``CARRIED`` and
+``CONTACT_ZERO_INCREMENT``. ``PUBLISHED_*`` is the form every committed artifact and
+checkpoint was recorded with, ``NEXT`` and ``CONTACT_ZERO_VELOCITY``; every code path that
+reproduces one of those artifacts passes it by name, so the published numbers do not move
+when the default does.
 """
 
 from typing import Tuple
@@ -24,6 +31,14 @@ POSITION_VELOCITY_MODES: Tuple[str, ...] = (NEXT, CARRIED)
 CONTACT_ZERO_VELOCITY = "zero_velocity"
 CONTACT_ZERO_INCREMENT = "zero_increment"
 CONTACT_RULES: Tuple[str, ...] = (CONTACT_ZERO_VELOCITY, CONTACT_ZERO_INCREMENT)
+
+# What a constructor gives without being asked: section 4 as the telemetry measures it.
+DEFAULT_POSITION_VELOCITY = CARRIED
+DEFAULT_CONTACT_RULE = CONTACT_ZERO_INCREMENT
+
+# What every committed artifact and checkpoint was recorded with.
+PUBLISHED_POSITION_VELOCITY = NEXT
+PUBLISHED_CONTACT_RULE = CONTACT_ZERO_VELOCITY
 
 
 def check_position_velocity(mode: str) -> str:

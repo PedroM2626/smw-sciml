@@ -21,6 +21,7 @@ from src.models.analytical_kinematics import (
     EngineRuleParameters,
     velocity_prediction_mse,
 )
+from src.utils.kinematics import PUBLISHED_CONTACT_RULE, PUBLISHED_POSITION_VELOCITY
 
 
 def _state(x=100.0, y=300.0, vx=0.0, vy=0.0, ground=1.0, ceil=0.0, left=0.0, right=0.0):
@@ -39,8 +40,18 @@ def test_model_has_no_learnable_weights():
 
 
 def test_position_update_is_the_exact_kinematic_identity():
-    """X_{t+1} = X_t + vx_{t+1}/16 to float32 precision (section 4.1)."""
+    """X_{t+1} = X_t + vx_t/16 to float32 precision (section 4.1, the default)."""
     model = AnalyticalKinematicsDynamics()
+    state = _state(x=512.0, y=200.0, vx=40.0, vy=-12.0)
+    action = _action(run=1.0, right=1.0)
+    nxt = model(state, action)
+    assert float(nxt[0, 0] - (512.0 + 40.0 / 16.0)) == pytest.approx(0.0, abs=1e-4)
+    assert float(nxt[0, 1] - (200.0 - 12.0 / 16.0)) == pytest.approx(0.0, abs=1e-4)
+
+
+def test_published_position_update_uses_the_predicted_velocity():
+    """X_{t+1} = X_t + vx_{t+1}/16, the form every committed artifact was recorded with."""
+    model = AnalyticalKinematicsDynamics(position_velocity=PUBLISHED_POSITION_VELOCITY)
     state = _state(x=512.0, y=200.0, vx=40.0, vy=-12.0)
     action = _action(run=1.0, right=1.0)
     nxt = model(state, action)
@@ -65,9 +76,16 @@ def test_vertical_saturation_is_clamped():
     assert model(rocket, _action(jump=1.0))[0, 3].item() == pytest.approx(-80.0)
 
 
-def test_ground_rest_rule_zeroes_downward_velocity():
-    """Section 4.3.5: solid floor, no jump command -> vy_{t+1} = 0."""
+def test_ground_rule_skips_the_gravity_step():
+    """Section 4.3.5 as measured: solid floor, no jump command -> vy_{t+1} = vy_t."""
     model = AnalyticalKinematicsDynamics()
+    resting = _state(vy=25.0, ground=1.0)
+    assert model(resting, _action())[0, 3].item() == pytest.approx(25.0)
+
+
+def test_published_ground_rest_rule_zeroes_downward_velocity():
+    """The retracted form the committed artifacts used: vy_{t+1} = 0 on a resting frame."""
+    model = AnalyticalKinematicsDynamics(ground_rule=PUBLISHED_CONTACT_RULE)
     resting = _state(vy=25.0, ground=1.0)
     assert model(resting, _action())[0, 3].item() == pytest.approx(0.0)
 
@@ -108,6 +126,11 @@ def _synthetic_transitions(n: int = 600, seed: int = 0):
     The input mix deliberately exercises every branch of the rule set (traction,
     friction to rest, skidding by reversing while moving, repeated takeoffs),
     otherwise unexercised parameters are legitimately unidentifiable.
+
+    The contact channels persist (the rules never update them), so the generator keeps the
+    published rest rule: under the corrected one a body that stays "grounded" never comes back
+    down and the trajectory degenerates. The fits below use the same rule, which is the
+    identification recipe 10.37 published.
     """
     gen = np.random.default_rng(seed)
     params = EngineRuleParameters(
@@ -118,7 +141,7 @@ def _synthetic_transitions(n: int = 600, seed: int = 0):
         jump_impulse=-70.0,
         jump_run_gain=0.25,
     )
-    model = AnalyticalKinematicsDynamics(params=params)
+    model = AnalyticalKinematicsDynamics(params=params, ground_rule=PUBLISHED_CONTACT_RULE)
     states, actions, next_states = [], [], []
     s = _state(x=100.0, vx=0.0, vy=0.0, ground=1.0)
     for _ in range(n):
@@ -139,7 +162,7 @@ def _synthetic_transitions(n: int = 600, seed: int = 0):
 def test_identification_recovers_the_generating_scalars():
     """System identification inside the graph, not beside it: it must converge back."""
     states, actions, next_states = _synthetic_transitions()
-    model = AnalyticalKinematicsDynamics()  # starts from INITIAL_GUESS
+    model = AnalyticalKinematicsDynamics(ground_rule=PUBLISHED_CONTACT_RULE)  # INITIAL_GUESS
     before = velocity_prediction_mse(model, states, actions, next_states, torch.device("cpu"))
     trace = model.fit_engine_rules(states, actions, next_states, device=torch.device("cpu"))
     after = velocity_prediction_mse(model, states, actions, next_states, torch.device("cpu"))
@@ -186,7 +209,7 @@ def test_unexercised_parameters_are_not_fabricated():
 
 def test_identification_stays_inside_published_ranges():
     states, actions, next_states = _synthetic_transitions(seed=7)
-    model = AnalyticalKinematicsDynamics()
+    model = AnalyticalKinematicsDynamics(ground_rule=PUBLISHED_CONTACT_RULE)
     model.fit_engine_rules(states, actions, next_states, sweeps=2, device=torch.device("cpu"))
     for name, (lo, hi, _) in IDENTIFIABLE.items():
         value = getattr(model.params, name)
@@ -197,7 +220,7 @@ def test_identification_is_deterministic():
     states, actions, next_states = _synthetic_transitions(seed=3)
     runs = []
     for _ in range(2):
-        model = AnalyticalKinematicsDynamics()
+        model = AnalyticalKinematicsDynamics(ground_rule=PUBLISHED_CONTACT_RULE)
         model.fit_engine_rules(states, actions, next_states, sweeps=2, device=torch.device("cpu"))
         runs.append(model.params.as_dict())
     assert runs[0] == runs[1]

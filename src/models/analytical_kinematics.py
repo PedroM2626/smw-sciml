@@ -49,7 +49,8 @@ from src.environment import wram
 from src.utils.kinematics import (
     CARRIED,
     CONTACT_ZERO_VELOCITY,
-    NEXT,
+    DEFAULT_CONTACT_RULE,
+    DEFAULT_POSITION_VELOCITY,
     check_contact_rule,
     check_position_velocity,
 )
@@ -131,8 +132,8 @@ class AnalyticalKinematicsDynamics(nn.Module):
         params: EngineRuleParameters | None = None,
         max_vx: float = VX_SPRINT,
         subpixels_per_pixel: float = SUBPIXELS_PER_PIXEL,
-        position_velocity: str = NEXT,
-        ground_rule: str = CONTACT_ZERO_VELOCITY,
+        position_velocity: str = DEFAULT_POSITION_VELOCITY,
+        ground_rule: str = DEFAULT_CONTACT_RULE,
     ):
         super().__init__()
         if state_dim != 8:
@@ -222,7 +223,7 @@ class AnalyticalKinematicsDynamics(nn.Module):
         c_ground: torch.Tensor,
         jump: torch.Tensor,
         p: EngineRuleParameters,
-        ground_rule: str = CONTACT_ZERO_VELOCITY,
+        ground_rule: str = DEFAULT_CONTACT_RULE,
     ) -> torch.Tensor:
         """Asymmetric gravity, momentum-modulated takeoff, and the resting rule."""
         takeoff = (jump > 0.5) & (c_ground > 0.5) & (vy > -1.0)
@@ -233,9 +234,10 @@ class AnalyticalKinematicsDynamics(nn.Module):
         vy_next = torch.where(takeoff, impulse, vy + g)
 
         # Section 4.3.5 as the telemetry reads it: on solid ground, not jumping, the gravity
-        # increment is suppressed rather than the velocity being zeroed. This implementation
-        # still zeroes the downward motion, which is the retracted form - 10.54 records it as a
-        # prose-and-code disagreement, and `physics_claim_audit` fails if this line moves.
+        # increment is suppressed rather than the velocity being zeroed - the default rule.
+        # The published form zeroes the downward motion, which is the retracted statement;
+        # it stays reachable by name because every committed artifact was recorded with it,
+        # and `physics_claim_audit` fails if either branch's line moves.
         resting = (c_ground > 0.5) & (jump <= 0.5) & (vy >= 0.0)
         if ground_rule == CONTACT_ZERO_VELOCITY:
             vy_next = torch.where(resting, torch.zeros_like(vy_next), vy_next)

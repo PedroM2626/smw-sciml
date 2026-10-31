@@ -24,6 +24,7 @@ from src.planning.global_planner import (
 )
 from src.planning.mpc_planner import action_vector_to_joypad
 from src.planning.terminal_value import TerminalValueNet, TerminalValueObjective
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CORE_PATH,
@@ -52,7 +53,7 @@ def run_hierarchical(
     set_global_seed(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    pinn = HardResidualPINNDynamics().to(device)
+    pinn = HardResidualPINNDynamics(position_velocity=PUBLISHED_POSITION_VELOCITY).to(device)
     pinn.load_state_dict(torch.load(pinn_ckpt, map_location=device, weights_only=True))
     if value_ckpt is not None:
         payload = torch.load(value_ckpt, map_location=device, weights_only=False)

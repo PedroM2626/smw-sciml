@@ -30,6 +30,7 @@ from src.models import (
     StatisticalMLPDynamics,
 )
 from src.models.neural_ode_dynamics import FIELD_EVALUATIONS, SOLVERS
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 
 STATE_DIM = 8
 ACTION_DIM = 6
@@ -73,12 +74,16 @@ def test_symplectic_is_the_published_shell_bit_for_bit() -> None:
     state, action = _states(seed=3), _action()
     accel = torch.tensor([3.0, -4.0])
     symplectic = NeuralODEDynamics(base=_ConstantField(accel), solver="symplectic")
-    shell = ResidualDynamics(base=_ConstantField(accel), hard=False)
+    shell = ResidualDynamics(
+        base=_ConstantField(accel), hard=False, position_velocity=PUBLISHED_POSITION_VELOCITY
+    )
     assert torch.equal(symplectic(state, action), shell(state, action))
 
     big = torch.tensor([900.0, 900.0])
     bounded = NeuralODEDynamics(base=_ConstantField(big), solver="symplectic", bounded=True)
-    hard_shell = ResidualDynamics(base=_ConstantField(big), hard=True)
+    hard_shell = ResidualDynamics(
+        base=_ConstantField(big), hard=True, position_velocity=PUBLISHED_POSITION_VELOCITY
+    )
     assert torch.equal(bounded(state, action), hard_shell(state, action))
 
 

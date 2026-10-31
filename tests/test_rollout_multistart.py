@@ -46,8 +46,9 @@ def test_multistart_single_start_matches_single_rollout():
 
 def test_hard_pinn_zero_violation_multistart():
     # Structural guarantee: predicted position always equals input position plus
-    # *predicted* velocity / 16, by graph construction, on every rollout step
-    # from every start (independent of weights or training).
+    # the frame's *carried* velocity / 16 (the default convention), by graph
+    # construction, on every rollout step from every start (independent of weights
+    # or training).
     model = HardResidualPINNDynamics(hidden_dims=[16, 16])
     model.eval()
     states, actions, _ = _fake_test_set()
@@ -58,8 +59,8 @@ def test_hard_pinn_zero_violation_multistart():
             for t in range(s, s + 30):
                 act = torch.tensor(actions[t], dtype=torch.float32).unsqueeze(0)
                 nxt = model(curr, act)
-                assert torch.allclose(nxt[:, 0], curr[:, 0] + nxt[:, 2] / 16.0, atol=1e-6)
-                assert torch.allclose(nxt[:, 1], curr[:, 1] + nxt[:, 3] / 16.0, atol=1e-6)
+                assert torch.allclose(nxt[:, 0], curr[:, 0] + curr[:, 2] / 16.0, atol=1e-6)
+                assert torch.allclose(nxt[:, 1], curr[:, 1] + curr[:, 3] / 16.0, atol=1e-6)
                 curr = nxt
 
 

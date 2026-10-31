@@ -10,6 +10,7 @@ statistics for adequate power of paired comparisons.
 import json
 import os
 import time
+from functools import partial
 from typing import Dict, List
 
 import numpy as np
@@ -28,6 +29,7 @@ from src.models import (
 )
 from src.training.trainer import DynamicsTrainer
 from src.utils.config import parse_args_with_config
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     DATASET_GAMEPLAY,
@@ -76,7 +78,10 @@ def run_multiseed_benchmark(
     model_classes = {
         "Statistical_MLP": (StatisticalMLPDynamics, "mlp"),
         "Soft_PINN": (SoftPINNDynamics, "pinn_soft"),
-        "Hard_Residual_PINN": (HardResidualPINNDynamics, "pinn_hard"),
+        "Hard_Residual_PINN": (
+            partial(HardResidualPINNDynamics, position_velocity=PUBLISHED_POSITION_VELOCITY),
+            "pinn_hard",
+        ),
     }
 
     # Tracking per seed

@@ -23,6 +23,7 @@ import torch.nn as nn
 from src.environment.dataset_loader import create_dataloaders, load_and_preprocess_data
 from src.models.pinn_hard_residual import HardResidualPINNDynamics
 from src.utils.config import parse_args_with_config
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     RESULTS_DIR,
@@ -56,6 +57,7 @@ class DeepPINNEnsemble(nn.Module):
                     state_dim=state_dim,
                     action_dim=action_dim,
                     hidden_dims=hidden_dims,
+                    position_velocity=PUBLISHED_POSITION_VELOCITY,
                 )
                 for _ in range(num_models)
             ]

@@ -4,10 +4,10 @@ Hard Inductive Bias Neural Network / Kinematic Residual PINN.
 Embeds discrete kinematics directly into the computational graph, guaranteeing by construction:
     hat_X_{t+1} = X_t + v_x / 16.0
     hat_Y_{t+1} = Y_t + v_y / 16.0
-for whichever velocity `position_velocity` selects: "next" (the default, and the one every
-published artifact of this class was recorded with) uses the velocity just predicted,
-"carried" uses the velocity the frame starts with, which is how README 4.1 states the
-identity and how 10.54 measures the console.
+for whichever velocity `position_velocity` selects: "carried" (the default) uses the velocity
+the frame starts with, which is how README 4.1 states the identity and how 10.54 measures the
+console; "next" (the one every published artifact of this class was recorded with, passed by
+name as `PUBLISHED_POSITION_VELOCITY`) uses the velocity just predicted.
 The neural network only parameterizes non-linear accelerations, friction, and contact forces.
 """
 
@@ -16,7 +16,7 @@ from typing import List
 import torch
 import torch.nn as nn
 
-from src.utils.kinematics import CARRIED, NEXT, check_position_velocity
+from src.utils.kinematics import CARRIED, DEFAULT_POSITION_VELOCITY, check_position_velocity
 
 
 class HardResidualPINNDynamics(nn.Module):
@@ -35,7 +35,7 @@ class HardResidualPINNDynamics(nn.Module):
         terminal_vy: float = 64.0,
         min_vy: float = -80.0,
         subpixels_per_pixel: float = 16.0,
-        position_velocity: str = NEXT,
+        position_velocity: str = DEFAULT_POSITION_VELOCITY,
     ):
         super().__init__()
         self.state_dim = state_dim
@@ -87,10 +87,11 @@ class HardResidualPINNDynamics(nn.Module):
         hat_vy_next = torch.clamp(vy_t + delta_vy, self.min_vy, self.terminal_vy)
 
         # 2. Exact analytical position integration (Zero Kinematic Residual)
-        #    "next" advances with the velocity just predicted - what every published
-        #    artifact of this class was recorded with. "carried" implements README 4.1 as
-        #    the section now states it and as 10.54 measures the console: position advances
-        #    with v_t, so the increment shapes velocity only. 10.57 prices the difference.
+        #    "carried" (the default) implements README 4.1 as the section now states it and
+        #    as 10.54 measures the console: position advances with v_t, so the increment
+        #    shapes velocity only. "next" advances with the velocity just predicted - what
+        #    every published artifact of this class was recorded with. 10.57 prices the
+        #    difference.
         use_vx, use_vy = (
             (vx_t, vy_t) if self.position_velocity == CARRIED else (hat_vx_next, hat_vy_next)
         )

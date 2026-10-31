@@ -22,6 +22,7 @@ from src.planning.mpc_planner import (
     ModelPredictiveController,
     TrajectoryObjective,
 )
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CORE_PATH,
@@ -112,7 +113,9 @@ def collect_mpc_expert_demonstrations(
     """Collects expert (state, action) pairs by executing the CEM MPC on the live SNES emulator."""
     logger.info("\n--- PHASE 1: COLLECTING MPC EXPERT DEMONSTRATIONS ON LIVE SNES ---")
 
-    base_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=6)
+    base_pinn = HardResidualPINNDynamics(
+        state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+    )
     world_model = MultiEntityPINNDynamics(base_pinn=base_pinn).to(device)
     if os.path.exists(model_checkpoint):
         world_model.load_state_dict(

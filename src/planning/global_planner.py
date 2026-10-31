@@ -23,6 +23,7 @@ import torch
 
 from src.models import HardResidualPINNDynamics
 from src.planning.mpc_planner import ModelPredictiveController, TrajectoryObjective
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -247,7 +248,9 @@ class HierarchicalMPCController:
         objective: Optional[WaypointObjective] = None,
     ):
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.world_model = world_model or HardResidualPINNDynamics()
+        self.world_model = world_model or HardResidualPINNDynamics(
+            position_velocity=PUBLISHED_POSITION_VELOCITY
+        )
         self.objective = objective or WaypointObjective()
         self.mpc = ModelPredictiveController(
             world_model=self.world_model,

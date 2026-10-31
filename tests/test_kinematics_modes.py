@@ -36,7 +36,11 @@ from src.utils.kinematics import (
     CARRIED,
     CONTACT_ZERO_INCREMENT,
     CONTACT_ZERO_VELOCITY,
+    DEFAULT_CONTACT_RULE,
+    DEFAULT_POSITION_VELOCITY,
     NEXT,
+    PUBLISHED_CONTACT_RULE,
+    PUBLISHED_POSITION_VELOCITY,
     check_contact_rule,
     check_position_velocity,
 )
@@ -109,19 +113,34 @@ def test_carried_mode_changes_position_only() -> None:
     assert torch.all(lag > 0) and torch.allclose(lag, (nxt[:, 2] - state[:, 2]).abs() / SUBPIXELS)
 
 
-def test_default_construction_is_the_published_arithmetic() -> None:
-    """No flag passed: the three shells must match the next-frame formula exactly."""
+def test_default_construction_is_the_corrected_arithmetic() -> None:
+    """No flag passed: every shell advances position with the velocity the frame starts with."""
     state, action = _states(), _actions()
     residual = ResidualDynamics(base=_ConstantAux())(state, action)
-    assert torch.allclose(residual[:, 0], state[:, 0] + residual[:, 2] / SUBPIXELS)
+    assert torch.allclose(residual[:, 0], state[:, 0] + state[:, 2] / SUBPIXELS)
     projected = ProjectedDynamics(base=_StateNet())(state, action)
-    assert torch.allclose(projected[:, 0], state[:, 0] + projected[:, 2] / SUBPIXELS)
+    assert torch.allclose(projected[:, 0], state[:, 0] + state[:, 2] / SUBPIXELS)
     torch.manual_seed(42)
     flagship = HardResidualPINNDynamics()
-    named = HardResidualPINNDynamics(position_velocity="next")
+    named = HardResidualPINNDynamics(position_velocity=CARRIED)
     named.load_state_dict(flagship.state_dict())
     with torch.no_grad():
         assert torch.equal(flagship(state, action), named(state, action))
+    closed = AnalyticalKinematicsDynamics()
+    assert (closed.position_velocity, closed.ground_rule) == (CARRIED, CONTACT_ZERO_INCREMENT)
+    assert (DEFAULT_POSITION_VELOCITY, DEFAULT_CONTACT_RULE) == (CARRIED, CONTACT_ZERO_INCREMENT)
+
+
+def test_the_published_names_reproduce_the_published_arithmetic() -> None:
+    """``PUBLISHED_*`` is what every committed artifact was recorded with: the next-frame form."""
+    assert (PUBLISHED_POSITION_VELOCITY, PUBLISHED_CONTACT_RULE) == (NEXT, CONTACT_ZERO_VELOCITY)
+    state, action = _states(), _actions()
+    residual = ResidualDynamics(base=_ConstantAux(), position_velocity=PUBLISHED_POSITION_VELOCITY)
+    out = residual(state, action)
+    assert torch.allclose(out[:, 0], state[:, 0] + out[:, 2] / SUBPIXELS)
+    projected = ProjectedDynamics(base=_StateNet(), position_velocity=PUBLISHED_POSITION_VELOCITY)
+    out = projected(state, action)
+    assert torch.allclose(out[:, 0], state[:, 0] + out[:, 2] / SUBPIXELS)
 
 
 class _StateNet(torch.nn.Module):
@@ -145,20 +164,20 @@ def test_ground_rule_zero_increment_keeps_the_velocity_it_had() -> None:
     """The §4.3.5 rule as measured: on the ground the gravity *step* is skipped."""
     state = torch.tensor([[0.0, 0.0, 0.0, 6.0, 1.0, 0.0, 0.0, 0.0]])  # grounded, falling slowly
     action = torch.zeros(1, 6)
-    published = AnalyticalKinematicsDynamics()(state, action)
-    corrected = AnalyticalKinematicsDynamics(ground_rule=CONTACT_ZERO_INCREMENT)(state, action)
+    published = AnalyticalKinematicsDynamics(ground_rule=PUBLISHED_CONTACT_RULE)(state, action)
+    corrected = AnalyticalKinematicsDynamics()(state, action)
     assert published[0, 3].item() == pytest.approx(0.0)  # the retracted rest state
     assert corrected[0, 3].item() == pytest.approx(6.0)  # the step was not applied
     assert torch.allclose(published[:, 2], corrected[:, 2])  # horizontal rule is shared
 
 
-def test_contact_penalty_default_is_the_published_square_and_the_other_is_the_step() -> None:
+def test_contact_penalty_default_is_the_step_and_the_published_one_is_the_square() -> None:
     state, action = _states(), _actions()
     state[:, 4] = 1.0
     predicted = state.clone()
     predicted[:, 3] = 6.0
-    published = GroundContactConsistencyLoss()(state, action, predicted)
-    increment = GroundContactConsistencyLoss(rule=CONTACT_ZERO_INCREMENT)(state, action, predicted)
+    published = GroundContactConsistencyLoss(rule=PUBLISHED_CONTACT_RULE)(state, action, predicted)
+    increment = GroundContactConsistencyLoss()(state, action, predicted)
     assert torch.allclose(
         published, torch.tensor(36.0)
     )  # mean of hat_vy**2 over the two grounded frames

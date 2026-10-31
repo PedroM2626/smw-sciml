@@ -58,6 +58,7 @@ from src.models.residual_dynamics import ResidualDynamics
 from src.models.statistical_mlp import StatisticalMLPDynamics
 from src.planning.mpc_planner import ModelPredictiveController, TrajectoryObjective
 from src.utils.config import parse_args_with_config
+from src.utils.kinematics import PUBLISHED_CONTACT_RULE, PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import PINN_HARD_CKPT, ROM_PATH, STATE_YOSHI_ISLAND_1, hardware_present
 from src.utils.provenance import write_metrics
@@ -92,6 +93,7 @@ def _residual_fno(hard: bool) -> nn.Module:
         terminal_vy=TERMINAL_VY,
         min_vy=MIN_VY,
         subpixels_per_pixel=SUBPIXELS_PER_PIXEL,
+        position_velocity=PUBLISHED_POSITION_VELOCITY,
     )
 
 
@@ -105,6 +107,7 @@ def _residual_deeponet() -> nn.Module:
         ),
         state_dim=STATE_DIM,
         hard=False,
+        position_velocity=PUBLISHED_POSITION_VELOCITY,
     )
 
 
@@ -115,6 +118,7 @@ def _residual_mlp() -> nn.Module:
         ),
         state_dim=STATE_DIM,
         hard=False,
+        position_velocity=PUBLISHED_POSITION_VELOCITY,
     )
 
 
@@ -155,7 +159,9 @@ PUBLISHED_CHECKPOINTS: Dict[str, Tuple[str, Callable[[], nn.Module]]] = {
     ),
     "published_hard_pinn_10_27": (
         os.path.basename(PINN_HARD_CKPT),
-        lambda: HardResidualPINNDynamics(state_dim=8, action_dim=6),
+        lambda: HardResidualPINNDynamics(
+            state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+        ),
     ),
 }
 
@@ -379,7 +385,9 @@ def build_contenders(
     data = load_and_preprocess_data(seed=seed)
     models: Dict[str, nn.Module] = {}
 
-    analytical = AnalyticalKinematicsDynamics().to(device)
+    analytical = AnalyticalKinematicsDynamics(
+        position_velocity=PUBLISHED_POSITION_VELOCITY, ground_rule=PUBLISHED_CONTACT_RULE
+    ).to(device)
     analytical.fit_engine_rules(*_to_tensors(data, "train", device), device=device)
     models[REFERENCE] = analytical
 

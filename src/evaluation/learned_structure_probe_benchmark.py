@@ -70,6 +70,7 @@ from src.models.pinn_hard_residual import HardResidualPINNDynamics  # noqa: E402
 from src.models.pinn_soft import SoftPINNDynamics  # noqa: E402
 from src.models.statistical_mlp import StatisticalMLPDynamics  # noqa: E402
 from src.utils.config import parse_args_with_config  # noqa: E402
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger  # noqa: E402
 from src.utils.provenance import write_metrics  # noqa: E402
 from src.utils.seed import set_global_seed  # noqa: E402
@@ -101,7 +102,9 @@ MODEL_REGISTRY: Tuple[Tuple[str, str, Callable[[], torch.nn.Module], bool, float
     (
         "hard_pinn",
         "pinn_hard_best.pt",
-        lambda: HardResidualPINNDynamics(state_dim=8, action_dim=6),
+        lambda: HardResidualPINNDynamics(
+            state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+        ),
         True,
         72.0,
     ),

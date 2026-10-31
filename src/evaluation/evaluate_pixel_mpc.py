@@ -23,6 +23,7 @@ from src.planning.mpc_planner import (
     TrajectoryObjective,
     action_vector_to_joypad,
 )
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CORE_PATH,
@@ -56,7 +57,7 @@ def run_pixel_mpc(
     estimator.eval()
     normalizer = StateNormalizer.from_dict(est_payload["normalizer"])
 
-    pinn = HardResidualPINNDynamics().to(device)
+    pinn = HardResidualPINNDynamics(position_velocity=PUBLISHED_POSITION_VELOCITY).to(device)
     pinn.load_state_dict(torch.load(pinn_ckpt, map_location=device, weights_only=True))
     mpc = ModelPredictiveController(
         world_model=pinn,

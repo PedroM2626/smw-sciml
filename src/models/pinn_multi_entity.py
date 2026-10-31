@@ -14,6 +14,7 @@ import torch
 import torch.nn as nn
 
 from src.models.pinn_hard_residual import HardResidualPINNDynamics
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 
 
 class MultiEntityPINNDynamics(nn.Module):
@@ -40,7 +41,9 @@ class MultiEntityPINNDynamics(nn.Module):
         if base_pinn is not None:
             self.mario_pinn = base_pinn
         else:
-            self.mario_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=action_dim)
+            self.mario_pinn = HardResidualPINNDynamics(
+                state_dim=8, action_dim=action_dim, position_velocity=PUBLISHED_POSITION_VELOCITY
+            )
 
         # Hazard dynamic update head (parameterizes hazard acceleration / bounce if applicable)
         # Hazard input: [delta_x, delta_y, vx_hazard, active, mario_vx, mario_vy]

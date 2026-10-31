@@ -36,6 +36,7 @@ from src.environment.episode_hygiene import PlayerHold
 from src.environment.snes_emulator import SnesLibretroEmulator
 from src.models import HardResidualPINNDynamics, MultiEntityPINNDynamics
 from src.planning.mpc_planner import ModelPredictiveController, TrajectoryObjective
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CORE_PATH,
@@ -204,7 +205,9 @@ def run_ablation(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if controller is None:
-        base_pinn = HardResidualPINNDynamics(state_dim=8, action_dim=6)
+        base_pinn = HardResidualPINNDynamics(
+            state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+        )
         world_model = MultiEntityPINNDynamics(base_pinn=base_pinn).to(device)
         world_model.load_state_dict(
             torch.load(model_checkpoint, map_location=device, weights_only=True)
