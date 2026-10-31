@@ -19,6 +19,7 @@ import pytest
 
 from src.environment import wram
 from src.evaluation.forced_mode_buffer_study import column_ids, render_section
+from src.utils.document import full_document
 from src.utils.paths import CORE_PATH, ROM_PATH, STATE_YOSHI_ISLAND_1_LEVEL
 from tests.conftest import requires_emulator
 
@@ -39,7 +40,7 @@ def _arms(payload=None):
 
 
 def _readme() -> str:
-    return (REPO / "README.md").read_text(encoding="utf-8")
+    return full_document()
 
 
 def test_readme_10_64_is_the_generated_block() -> None:

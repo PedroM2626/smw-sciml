@@ -28,6 +28,7 @@ from src.evaluation.boundary_channel_study import (
     committed_repeat_report,
     render_section,
 )
+from src.utils.document import full_document
 
 REPO = Path(__file__).resolve().parents[1]
 ARTIFACT = REPO / "results" / "boundary_channel_metrics.json"
@@ -43,7 +44,7 @@ def _payload():
 
 
 def _readme():
-    return (REPO / "README.md").read_text(encoding="utf-8")
+    return full_document()
 
 
 def _recording():

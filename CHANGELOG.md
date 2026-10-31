@@ -9,7 +9,37 @@ numbers* - those are reported here and in README Section 12, never applied silen
 
 ## [Unreleased]
 
+### Added
+
+- **`0x29` is cleared, by a genetic algorithm under the simple potential-maximum reward**
+  (README 10.69, `make potential-ga`). `src/training/potential_reward_ga.py` pays only for a new
+  maximum of x (in tiles) plus a bonus on an engine-verified clear, ends the episode on death, and
+  searches a 2,344-weight MLP over a 64-number engine observation (velocities, ground flag, the
+  10.68 tile classes ahead of Mario, the three nearest running sprites). On the `0x29` savestate it
+  concludes the stage in generation 57 - 4808.0625 px, goal tape at frame 3288, `0x14` to `0x0C`
+  with no `0x0B` and the lives counter untouched - where the best earlier agent reached 406.4375 px.
+  On `0x27` it reaches 528.0625 px in 150 generations and does not clear: the crossing needs a
+  chained platform a single-start search does not find. Both artifacts are catalogued in
+  `results/MANIFEST.md`; `tests/test_potential_reward_ga.py` pins the reward, the verdict and
+  10.69's table to them. Section 12 withdraws 10.68's reading that the two sessions themselves
+  could not be concluded.
+
 ### Changed
+
+- **The README is split: a short landing page plus one page per section under `docs/paper/`.**
+  The 4,121-line README held about 1,760 math spans on one page, and GitHub stops rendering
+  math after roughly the first 1,368 (Section 12), so its second half was unreadable there. The
+  README now keeps the title, the hero, the direct answer, a contents list and the quickstart;
+  sections 1-9, 11 and 12 and every study section 10.N (with its 10.N.M subsections) are their
+  own pages, each well inside the budget, linked to their neighbours and to the contents.
+  `src/utils/document.py` reads the README plus every page as one document, with the pages'
+  links rebased to the repository root, and every gate that quotes the document -
+  `tests/test_results_manifest.py`, the per-study tests and `physics_claim_audit` - now reads it
+  through `full_document()`, so no check was dropped. The GitHub rendering gates run per page,
+  the contents gate checks that every page is linked from the README, a new gate checks every
+  link between pages lands on a real heading, and another keeps the site's nav listing every
+  page. The docs site renders `docs/paper/` directly (`scripts/mkdocs_hooks.py` re-points the
+  repository links), so `scripts/sync_docs.py` and the `docs/full-readme.md` stub are removed.
 
 - **The corrected physics of Section 4 is now the code default** (README 10.54, 10.57, Section 12).
   `ResidualDynamics`, `ProjectedDynamics`, `HardResidualPINNDynamics` and

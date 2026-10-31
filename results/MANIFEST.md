@@ -1,7 +1,7 @@
 # Results Manifest
 
-Every number quoted in `README.md` comes from one of the JSON artifacts in this
-directory. This file is the index that connects **artifact → the module that writes
+Every number quoted in the research document - `README.md` and the section pages under
+`docs/paper/` - comes from one of the JSON artifacts in this directory. This file is the index that connects **artifact → the module that writes
 it → the command that regenerates it → the README section that quotes it**, and
 `tests/test_results_manifest.py` fails CI if any of those four links is broken
 (an artifact with no owner, a command pointing at a module that never writes it, or
@@ -148,6 +148,8 @@ through the installed console script: `smw-pinn benchmark`, `smw-pinn multiseed`
 | `pixel_estimator_retrain_published_pair_metrics.json` | `src/evaluation/pixel_retrain_study.py` | no | 10.65 |
 | `pixel_estimator_retrain_level_single_metrics.json` | `src/evaluation/pixel_retrain_study.py` | no | 10.65 |
 | `pixel_estimator_retrain_level_pair_metrics.json` | `src/evaluation/pixel_retrain_study.py` | no | 10.65 |
+| `potential_ga_smw_map_node_68_135_t29_metrics.json` | `src/training/potential_reward_ga.py` | yes | 10.69 |
+| `potential_ga_smw_map_round_1_152_104_t27_metrics.json` | `src/training/potential_reward_ga.py` | yes | 10.69 |
 
 ## Input freshness
 

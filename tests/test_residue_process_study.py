@@ -23,6 +23,7 @@ from src.evaluation.residue_process_study import (
     KERNELS,
     render_section,
 )
+from src.utils.document import full_document
 
 REPO = Path(__file__).resolve().parents[1]
 ARTIFACT = REPO / "results" / "residue_process_metrics.json"
@@ -35,7 +36,7 @@ def _payload():
 
 
 def _readme():
-    return (REPO / "README.md").read_text(encoding="utf-8")
+    return full_document()
 
 
 def test_readme_10_58_is_the_generated_block() -> None:

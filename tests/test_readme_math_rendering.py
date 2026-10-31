@@ -12,8 +12,9 @@ that is a LaTeX error - the markup is valid KaTeX and breaks only in the rendere
 README is read in, so no syntax checker outside GitHub itself catches it.
 
 `violations()` re-checks the four properties that make the difference over a whole
-document, the first test runs it on the README, and the second proves it fires on the
-three defects it exists to catch.
+document, the first test runs it on every page of the document - the README and each section
+page under docs/paper, because GitHub renders each file on its own - and the second proves it
+fires on the three defects it exists to catch.
 
 Emulator-free, CPU-only, no artifacts.
 
@@ -21,10 +22,22 @@ Run:  pytest tests/test_readme_math_rendering.py -q
 """
 
 import re
-from pathlib import Path
 from typing import Dict, List, Tuple
 
-README = Path(__file__).resolve().parent.parent / "README.md"
+from src.utils.document import README_PATH, document_files, full_document, paper_pages
+
+README = README_PATH
+
+
+def _documents() -> List[Tuple[str, str]]:
+    """Every file GitHub renders as one page of the document, with its text."""
+    return [(path.name, path.read_text(encoding="utf-8")) for path in document_files()]
+
+
+def _per_page(check) -> List[str]:
+    """Run a line-numbered check on each page and prefix its reports with the file name."""
+    return [f"{name}: {defect}" for name, text in _documents() for defect in check(text)]
+
 
 DISPLAY_LINE = re.compile(r"^(\s*)\$\$([^$]*)\$\$(\s*)$")
 CODE_SPAN = re.compile(r"`[^`]*`")
@@ -83,8 +96,8 @@ def violations(text: str) -> List[str]:
 
 
 def test_readme_has_no_expression_github_cannot_render() -> None:
-    broken = violations(README.read_text(encoding="utf-8"))
-    assert not broken, "README expressions GitHub will not render:\n" + "\n".join(broken)
+    broken = _per_page(violations)
+    assert not broken, "expressions GitHub will not render:\n" + "\n".join(broken)
 
 
 def test_the_detector_fires_on_each_defect_it_exists_to_catch() -> None:
@@ -101,8 +114,8 @@ def test_the_detector_fires_on_each_defect_it_exists_to_catch() -> None:
         assert expected in violations(document), f"{expected!r} was not detected"
 
 
-def test_readme_stays_inside_githubs_math_budget() -> None:
-    """GitHub renders a bounded number of math expressions per document, then stops.
+def test_every_page_stays_inside_githubs_math_budget() -> None:
+    """GitHub renders a bounded number of math expressions per page, then stops.
 
     Measured on this repository's own page rather than assumed: the README held 1,759 spans,
     the first 1,368 rendered as formulas and every one of the remaining 300 came back as the
@@ -116,27 +129,30 @@ def test_readme_stays_inside_githubs_math_budget() -> None:
     cap; if a future section needs more, the answer is de-math something else, not to raise
     this number.
     """
-    spans = math_spans(README.read_text(encoding="utf-8"))
-    assert len(spans) <= 1300, (
-        f"README holds {len(spans)} math expressions; GitHub stops rendering near 1,368 and "
-        "everything past that shows as 'Unable to render expression.' Convert typographic "
+    over = {
+        name: len(math_spans(text)) for name, text in _documents() if len(math_spans(text)) > 1300
+    }
+    assert not over, (
+        f"pages over the math budget: {over}; GitHub stops rendering near 1,368 and everything "
+        "past that shows as 'Unable to render expression.' Split the page or convert typographic "
         "spans with src.utils.typography.demath_typographic instead of raising this bound."
     )
 
 
 def test_display_math_is_never_a_paragraph_continuation() -> None:
     """A `$$…$$` line that follows text is inline math to GitHub, and `$…$` inside it errors."""
-    lines = README.read_text(encoding="utf-8").split("\n")
-    in_fence = False
     joined = []
-    for number, line in enumerate(lines, 1):
-        if line.strip().startswith("```"):
-            in_fence = not in_fence
-            continue
-        if in_fence:
-            continue
-        if DISPLAY_LINE.match(line) and number > 1 and lines[number - 2].strip():
-            joined.append(f"line {number}: display math continues the previous paragraph")
+    for name, text in _documents():
+        lines = text.split("\n")
+        in_fence = False
+        for number, line in enumerate(lines, 1):
+            if line.strip().startswith("```"):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                continue
+            if DISPLAY_LINE.match(line) and number > 1 and lines[number - 2].strip():
+                joined.append(f"{name}: line {number}: display math continues the paragraph")
     assert not joined, "\n".join(joined)
 
 
@@ -150,8 +166,9 @@ def test_no_macro_githubs_katex_build_refuses() -> None:
     """
     forbidden = ("\\operatorname", "\\middle", "\\bigl(", "\\relax", "\\\\[")
     found = [
-        f"line {span['line']}: {token}"
-        for span in math_spans(README.read_text(encoding="utf-8"))
+        f"{name}: line {span['line']}: {token}"
+        for name, text in _documents()
+        for span in math_spans(text)
         for token in forbidden
         if token in str(span["content"])
     ]
@@ -186,19 +203,11 @@ def _slug(heading: str) -> str:
     return text.strip().replace(" ", "-")
 
 
-def test_every_table_of_contents_link_lands_on_a_heading() -> None:
-    """A link that points at nothing is a broken expression of a different kind.
-
-    Headings carrying math are excluded from the exact check, not because they can be
-    computed but because their slug is taken from the *rendered* text and one renderer's
-    `$\\to$` contributes a space while another contributes the command's letters. Their
-    link is still required to start with the heading's math-free prefix, so a link that
-    was retargeted at a renamed section is caught.
-    """
-    lines = README.read_text(encoding="utf-8").split("\n")
+def _headings(text: str) -> Tuple[set, set]:
+    """Exact slugs of the math-free headings, and slug prefixes of the ones carrying math."""
     in_fence = False
     slugs, math_prefixes = set(), set()
-    for line in lines:
+    for line in text.split("\n"):
         if line.strip().startswith("```"):
             in_fence = not in_fence
             continue
@@ -214,14 +223,38 @@ def test_every_table_of_contents_link_lands_on_a_heading() -> None:
                 math_prefixes.add(prefix)
         else:
             slugs.add(_slug(title))
+    return slugs, math_prefixes
+
+
+LOCAL_LINK = re.compile(r"\]\((?!https?:|mailto:)([^)\s#]*\.md)?(?:#([a-z0-9\-]+))?\)")
+
+
+def test_every_link_between_pages_lands_on_a_heading() -> None:
+    """A link that points at nothing is a broken expression of a different kind.
+
+    The document is one README and one page per section, so a link now names a file and,
+    optionally, a heading in it. The file must exist and the heading must be one of its own.
+    Headings carrying math are excluded from the exact check, not because they can be
+    computed but because their slug is taken from the *rendered* text and one renderer's
+    `$\\to$` contributes a space while another contributes the command's letters. Their
+    link is still required to start with the heading's math-free prefix, so a link that
+    was retargeted at a renamed section is caught.
+    """
     broken = []
-    for link in re.findall(r"\]\(#([a-z0-9\-]+)\)", "\n".join(lines)):
-        if link in slugs:
-            continue
-        if any(link.startswith(prefix) for prefix in math_prefixes if prefix):
-            continue
-        broken.append(link)
-    assert not broken, f"table-of-contents links with no heading to land on: {broken}"
+    for source in document_files():
+        text = source.read_text(encoding="utf-8")
+        for target, anchor in LOCAL_LINK.findall(text):
+            path = (source.parent / target).resolve() if target else source
+            if not path.is_file():
+                broken.append(f"{source.name}: {target} does not exist")
+                continue
+            if not anchor:
+                continue
+            slugs, prefixes = _headings(path.read_text(encoding="utf-8"))
+            if anchor in slugs or any(anchor.startswith(p) for p in prefixes):
+                continue
+            broken.append(f"{source.name}: {target}#{anchor} lands on no heading")
+    assert not broken, "links with nothing to land on:\n" + "\n".join(broken[:12])
 
 
 def test_the_readme_ranges_its_own_study_sections_correctly() -> None:
@@ -229,7 +262,7 @@ def test_the_readme_ranges_its_own_study_sections_correctly() -> None:
     section it is printed in is a claim about a document that has already grown. This is the same
     class of error as the retired weight counts - not a wrong digit, an unstopped sentence.
     """
-    text = README.read_text(encoding="utf-8")
+    text = full_document()
     sections = [int(m.group(1)) for m in re.finditer(r"^### 10\.(\d+)\b", text, re.M)]
     assert sections, "the README has no 10.x sections to range over"
     last = max(sections)
@@ -243,41 +276,29 @@ def test_the_readme_ranges_its_own_study_sections_correctly() -> None:
     )
 
 
-def test_every_study_section_has_a_table_of_contents_entry() -> None:
-    """The other direction of the anchor check: a heading with no link is invisible.
+def test_every_section_page_has_a_table_of_contents_entry() -> None:
+    """The other direction of the link check: a page nobody links to is invisible.
 
-    A 10.57 ToC entry meant for the list was pasted onto the prose of Section 12 instead, which
-    left Section 12 with a stray bullet and the table of contents without a section. A link that
-    lands on nothing is caught by the anchor test; a heading nobody links to, and an entry that
-    sits in the body rather than in the contents, were caught by nothing at all.
+    A 10.57 ToC entry meant for the list was once pasted onto the prose of Section 12 instead, which
+    left Section 12 with a stray bullet and the table of contents without a section. Now that each
+    section is its own page, the README's contents list is the only way in: every page must be
+    linked from it, every study page must start with its own 10.N heading, and no page may carry a
+    second one.
     """
-    text = README.read_text(encoding="utf-8")
-    toc_end = text.index("## 1. Project Overview")
-    in_fence = False
-    offset = 0
-    headings: List[str] = []
-    entries: List[Tuple[str, bool]] = []
-    for line in text.split("\n"):
-        if line.strip().startswith("```"):
-            in_fence = not in_fence
-        elif not in_fence:
-            heading = HEADING.match(line)
-            if heading and heading.group(1) == "###" and "$" not in heading.group(2):
-                title = heading.group(2)
-                if re.match(r"10\.\d+\s", title):
-                    headings.append(_slug(title))
-            entry = re.fullmatch(r"\s+\* \[[^\]]+\]\(#([a-z0-9\-]+)\)", line)
-            if entry:
-                entries.append((entry.group(1), offset < toc_end))
-        offset += len(line) + 1
-    assert len(headings) > 20, (
-        f"only {len(headings)} study headings parsed: the check is not running"
-    )
-    linked = {anchor for anchor, in_toc in entries if in_toc}
-    missing = [h for h in headings if h not in linked]
-    assert not missing, f"study sections with no table-of-contents entry: {missing[:6]}"
-    stray = [anchor for anchor, in_toc in entries if not in_toc]
-    assert not stray, f"table-of-contents entries pasted into the body: {stray[:4]}"
+    readme = README_PATH.read_text(encoding="utf-8")
+    contents = readme[readme.index("## Contents") :]
+    pages = paper_pages()
+    assert len(pages) > 20, f"only {len(pages)} section pages found: the check is not running"
+    missing = [page.name for page in pages if f"(docs/paper/{page.name})" not in contents]
+    assert not missing, f"section pages with no table-of-contents entry: {missing[:6]}"
+    study_pages = [page for page in pages if page.name.startswith("10-")]
+    misfiled = []
+    for page in study_pages:
+        number = int(page.name.split("-")[1])
+        heads = re.findall(r"^### (10\.\d+)\s", page.read_text(encoding="utf-8"), re.M)
+        if heads != [f"10.{number}"]:
+            misfiled.append(f"{page.name}: {heads}")
+    assert not misfiled, f"study pages holding the wrong 10.N headings: {misfiled[:4]}"
 
 
 def unformable_spans(text: str) -> List[str]:
@@ -321,7 +342,7 @@ def unformable_spans(text: str) -> List[str]:
 
 def test_no_span_is_written_where_github_cannot_form_it() -> None:
     """Raw LaTeX with no error box - the defect neither the budget nor the tokenizer rules saw."""
-    defects = unformable_spans(README.read_text(encoding="utf-8"))
+    defects = _per_page(unformable_spans)
     assert not defects, "spans GitHub leaves as raw LaTeX:\n" + "\n".join(defects[:12])
 
 
@@ -341,8 +362,9 @@ OPENABLE_UNDERSCORE = re.compile(r"[}{)\]]_")
 def test_no_math_span_holds_an_underscore_that_can_open_emphasis() -> None:
     """Every subscript in the README hangs on a letter, so no `_` in a span can start emphasis."""
     defects = [
-        f"line {span['line']}: ${span['content']}$"
-        for span in math_spans(README.read_text(encoding="utf-8"))
+        f"{name}: line {span['line']}: ${span['content']}$"
+        for name, text in _documents()
+        for span in math_spans(text)
         if OPENABLE_UNDERSCORE.search(str(span["content"]))
     ]
     assert not defects, "emphasis openers inside math:\n" + "\n".join(defects[:12])
@@ -397,10 +419,10 @@ def test_no_two_separators_are_adjacent() -> None:
     above the first section of the page a reader reaches first. This is the check that keeps the
     splice honest rather than the fix that has to be noticed.
     """
-    text = README.read_text(encoding="utf-8")
-    pairs = adjacent_rule_pairs(text)
+    pairs = {name: adjacent_rule_pairs(text) for name, text in _documents()}
+    pairs = {name: found for name, found in pairs.items() if found}
     assert not pairs, (
-        f"separators with nothing between them at lines {pairs}; a generated block must end "
+        f"separators with nothing between them: {pairs}; a generated block must end "
         "before the rule that closes it, not after it"
     )
 
@@ -410,3 +432,14 @@ def test_the_adjacent_separator_check_fires_on_the_defect_it_exists_for() -> Non
     assert adjacent_rule_pairs("prose\n\n---\n\n\n---\n\nmore") == [(3, 6)]
     assert adjacent_rule_pairs("prose\n\n---\n\ntext\n\n---\n\nmore") == []
     assert adjacent_rule_pairs("```\n---\n\n---\n```") == [], "a rule inside a fence is content"
+
+
+def test_the_site_nav_lists_every_section_page() -> None:
+    """The site's sidebar is written out in mkdocs.yml; a page missing from it is unreachable there."""
+    config = (README_PATH.parent / "mkdocs.yml").read_text(encoding="utf-8")
+    listed = set(re.findall(r"paper/([\w\-]+\.md)", config))
+    pages = {page.name for page in paper_pages()}
+    assert listed == pages, (
+        f"in docs/paper but not in the nav: {sorted(pages - listed)[:4]}; "
+        f"in the nav but not on disk: {sorted(listed - pages)[:4]}"
+    )

@@ -24,6 +24,8 @@ from typing import Any, Dict
 
 import pytest
 
+from src.utils.document import full_document
+
 REPO = Path(__file__).resolve().parents[1]
 RESULTS = REPO / "results"
 PUBLISHED = RESULTS / "world_map_survey.json"
@@ -74,7 +76,7 @@ def test_readme_10_67_is_the_generated_block() -> None:
 
     payload = _load(METRICS)
     lines = render_section(payload)
-    text = (REPO / "README.md").read_text(encoding="utf-8")
+    text = full_document()
     missing = [line for line in lines if line and line not in text]
     assert not missing, "README 10.67 disagrees with the generator:\n" + "\n".join(missing[:4])
     assert lines[0].startswith("### 10.67 "), "the generator must start at the section heading"
@@ -185,7 +187,7 @@ def test_the_walk_distances_the_section_prints_are_the_ones_the_probes_measured(
     assert moved == {(56, 136): (15.8125, 17.0625), (68, 135): (15.8125, 17.0625)}, moved
     for first, second in moved.values():
         assert first > 6.0 and second > 6.0, "both routes still clear the walkability gate"
-    text = (REPO / "README.md").read_text(encoding="utf-8")
+    text = full_document()
     for first, second in moved.values():
         assert f"{first} against {second}" in text, "the pair must be printed as measured"
 
@@ -209,7 +211,7 @@ def test_only_the_published_survey_keeps_the_states_it_names() -> None:
     assert kept == metrics["protocol"]["capture_files_kept"]
     assert kept["published"] == len(published["nodes"])
     assert kept["replay"] == 0 and kept["opened"] == 0
-    assert "0 of them are on disk" in (REPO / "README.md").read_text(encoding="utf-8")
+    assert "0 of them are on disk" in full_document()
 
 
 def test_the_replay_reports_no_field_difference_and_the_opened_route_only_three() -> None:

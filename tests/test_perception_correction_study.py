@@ -18,6 +18,7 @@ import pytest
 
 from src.environment import wram
 from src.evaluation.perception_correction_study import gather, render_section
+from src.utils.document import full_document
 
 REPO = Path(__file__).resolve().parents[1]
 TILE_PROBE = REPO / "results" / "tile_behavior_probe_metrics.json"
@@ -32,7 +33,7 @@ def _load(path: Path) -> dict:
 
 
 def _readme() -> str:
-    return (REPO / "README.md").read_text(encoding="utf-8")
+    return full_document()
 
 
 def test_readme_10_68_is_the_generated_block() -> None:

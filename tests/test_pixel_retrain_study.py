@@ -22,6 +22,7 @@ import torch
 from src.evaluation.pixel_retrain_study import render_section
 from src.perception.pixel_encoder import PixelStateEstimator
 from src.perception.vision_dataset import stack_consecutive_frames
+from src.utils.document import full_document
 from src.utils.paths import REPO_ROOT, RESULTS_DIR
 
 ARTIFACT = REPO_ROOT / "results" / "pixel_retrain_metrics.json"
@@ -36,7 +37,7 @@ def _payload():
 
 
 def _readme() -> str:
-    return (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    return full_document()
 
 
 def test_readme_10_65_is_the_generated_block() -> None:

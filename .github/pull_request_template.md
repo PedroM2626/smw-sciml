@@ -6,7 +6,7 @@
 
 - [ ] `make lint` passes
 - [ ] `make test-cov` passes
-- [ ] `results/*.json` / README tables updated, if training or eval code changed
+- [ ] `results/*.json` / `docs/paper/` tables updated, if training or eval code changed
 
 ## Checklist
 

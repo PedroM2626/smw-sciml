@@ -20,6 +20,7 @@ import numpy as np
 import pytest
 
 from src.evaluation.pixel_level_recheck import render_section
+from src.utils.document import full_document
 from src.utils.paths import DATASET_PIXEL, DATASET_PIXEL_LEVEL
 
 REPO = Path(__file__).resolve().parents[1]
@@ -33,7 +34,7 @@ def _payload():
 
 
 def _readme() -> str:
-    return (REPO / "README.md").read_text(encoding="utf-8")
+    return full_document()
 
 
 def _new_recording():

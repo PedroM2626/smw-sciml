@@ -1,0 +1,19 @@
+[← 10.62](10-62-the-pixel-recording-re-made-from-a-level.md) · [Contents](../../README.md#contents) · [10.64 →](10-64-the-buffer-the-telemetry-reads-is-the.md)
+
+### 10.63 The Held Player Has Two Mechanisms, and the Recordings Mostly Show the Other One
+
+10.59 found that most exceptions to §4.1 are frames where the whole player record repeats while WRAM keeps changing, and recommended stopping the recorder there. 10.60 named one mechanism - the engine's message box, which asks for a button no policy in this repository has - and cleared it. Three recordings of one instrument separate what that leaves tangled.
+
+| arm | hygiene | transitions | §4.1 exact | held frames | of them the death apex | exact without holds | frames inside a hold |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `published_forced_mode` | no | 13,951 | 92.80% | 864 | 100.00% | 98.93% | 864 |
+| `level_entry_no_hygiene` | no | 18,780 | 96.09% | 689 | 96.95% | 99.75% | 668 |
+| `level_entry_hygiene` | yes | 18,780 | 96.09% | 689 | 96.95% | 99.75% | 668 |
+
+The split is not subtle: 100.00% of the published recording's held frames, and 96.95% of the entered level's, are frozen at v_y = -112.0 sub-pixels per frame - the apex of the death jump, where the engine holds the body for tens of frames and nothing releases it because the episode is already over. The message box of 10.60 is a different signature: it holds him mid-arc at another value, and it releases when somebody answers it. The 21 held frames here are not the apex, and they are not boxes either - the third arm pulsed A for 524 frames across all 689 holds and released none of them, which the next paragraph makes precise.
+
+That reorders 10.59's recommendation rather than cancelling it. Stopping an episode at a held player is free when the hold is a death - the 668 frames sitting inside a long hold in the unhygienic level arm are data the recorder was never going to get - and wrong when the hold is a box, because there the level continues the moment somebody answers it. The identity itself is what moves: dropping the held frames lifts §4.1 from 96.09% to 99.75%, a 3.66 pp gain, which is the same operation 10.59 performed after the fact on the committed files and now the recorder can perform at capture.
+
+**The hygiene changed nothing about the body, and that is a result.** The second and third arms differ only in the `--clear-boxes` flag, and every channel of the simulation - state, next state, action, camera, mode byte, tile patch, episode id, the hold flag itself - is element-for-element identical across 18,780 transitions. Exactly one channel disagrees: the WRAM CRC, on 268 frames, because the joypad latch the 524 A pulses wrote lives inside the 128 KB the hash covers. The operator pressed a button and the only thing that changed in the console was the record that a button was pressed - these holds are deaths, and deaths do not answer to a button. The box is not absent from the entered level: the dashboard episode of 10.60 met it at 1034.1250 px and the operator cleared it in 23 frames. It is absent from *this* behaviour vocabulary, because random forward and retreat patterns fall into a pit long before the tutorial asks anybody for anything.
+
+**What this changes, and what it does not.** The published recordings stay published and §10.58/§10.59's numbers remain measurements of the files they name; the two level arms are new files, and the recorder's default behaviour was verified element-for-element against the committed arrays before this section was written. What survives is the residue 10.59 could not explain with the camera and 10.60 could not explain with the pause: 46 exceptions on 18,780 transitions (0.24%) that are neither a boundary nor a hold. The session is worth +3.28 pp of the identity on its own, which is the number 10.61's terrain result predicts: a different level is a different set of walls to be repositioned against.

@@ -1,0 +1,32 @@
+[← 10.44](10-44-closed-loop-control-with-inverse-problem-world-models.md) · [Contents](../../README.md#contents) · [10.46 →](10-46-do-learned-dynamics-models-contain-the-engine.md)
+
+### 10.45 Does the Velocity Ceiling Become Measurable Under Targeted Excitation?
+
+Section 10.43.9 closed on a statement about the data: on the published gameplay recording, **zero** held-out transitions reach 90% of the training speed support, so the frames a rigid clamp could be identified from do not exist in the evaluation split. That is a claim about the collection policy, and the collection rig lives in this repository, so the claim can be tested instead of inherited: `scripts/record_sprint_gameplay.py` records a second dataset whose only purpose is to run Mario fast and far, and `src/evaluation/sprint_excitation_benchmark.py` measures the ceiling twice, on both recordings, with the same split, the same design matrices and the same three engines.
+
+The recording policy is the Section 10.37 established-rules MPC with the velocity term of the objective raised from 0.5 to 8.0 (at the published weight the planner's own peak speed was 37 - it covers distance without covering speed). The policy decides which states are *visited*; every transition is read back from WRAM after the frame, so the dynamics in the file are the console's, not the planner's opinion. Twelve episodes at 800 frames each yield 7,253 transitions with 8 pit deaths; the published dataset contributes 8,077.
+
+| | published gameplay | sprint-targeted |
+| :--- | :---: | :---: |
+| observed $\max \lvert v_x\rvert$ (train) | 49.00 | 37.00 |
+| 99th percentile of $\lvert v_x\rvert$ | 37.00 | 37.00 |
+| held-out frames $\geq 90\%$ of support | **0.00%** | **85.88%** |
+| held-out frames $\geq 99\%$ of support | 0.00% | 15.52% |
+| clamp recovered by the template engine | 47.775 | 36.075 |
+| BIC pick / tail pick | $H6_{\text{contact}}$ / $H5_{\text{coast}}$ (disagree) | $H4_{\text{clamped}}$ / $H4_{\text{clamped}}$ (agree) |
+| held-jump gravity gate recovered | no | **yes** |
+| PySR: held-out R² / fixed point found | 0.430 / 34.193 | 0.360 / **35.757** |
+| gplearn: held-out R² / fixed point found | -0.0002 / none | 0.000 / none |
+
+1. **Measurability was a property of the recording, exactly as 10.43.9 claimed - and it is fixable.** The binding fraction goes from 0.00% to 85.88%, and with it goes the ambiguity: on the published recording BIC and the tail criterion disagree about which structure to report, while on the targeted recording both pick the *same* plain rigid clamp ($H4_{\text{clamped}}$, without even the coast deadband), the horizontal and vertical criteria agree, and the held-jump gravity gate - unrecoverable from the old data by any of the three engines - is recovered. Excitation did not change the console; it changed what can be said about it.
+2. **A free search and a posited structure now agree on the number, which partially reverses 10.43.9.** The clamp template returns 36.075 and PySR's fixed-point probe returns 35.757 - 0.9% apart. Section 10.43.9's "no free tree search finds the bound in 0 of 3 replicates" was measured on data that never approaches the bound, and on saturated data PySR does find one and finds the same one. What survives of that section is the narrower and still unfavourable statement: gplearn's mean-error tree search returns $R^2 = 0$ and no fixed point on *either* recording, so its failure is not a coverage problem.
+3. **The number is not the reference, and the old estimate was a support artifact.** The measured plateau is 36.1 sub-pixels/frame against the WRAM constant of 72.0 - 50% off, further from the reference than the published recording's 47.775 was. The mechanism of that older, larger value is visible in the first two rows of the table: the published dataset's 99th percentile is 37.0, the same figure the sprint recording saturates at, and its 49.0 maximum comes from 22 frames in a single episode around $x \approx 957$. A clamp fitted to a support set by that tail reports the tail, not a dynamical ceiling - which is precisely the failure mode Section 10.43 warns about by refusing to display "no fixed point" as a data maximum, now demonstrated on real data instead of argued.
+4. **An open discrepancy, stated plainly.** $72.0 / 36.075 = 1.995$, a factor of two to within a fifth of a percent, and the repository's own hidden world uses 48.0. This study does not resolve whether the WRAM constant is a different speed class (a shell boost, a slope, a P-switch), a different unit convention, or simply wrong for this register - it records the coincidence so the next person does not have to rediscover it. What it can say is that no estimator, on either recording, has ever reproduced 72.0 from telemetry.
+
+![Excitation-targeted ceiling measurement](../../results/figures/sprint_excitation_profile.png)
+
+*Left:* the $|v_x|$ histogram of both recordings - the targeted one piles up at the plateau, while the published one is spread across the level with a thin tail above it. Right: the held-out binding fraction each recording provides, against the clamp level the template engine then reports.
+
+**Limitations.** The new recording covers one stage and one policy, and that policy never reached the region where the published dataset's fast frames live, so the $\gt37$ regime remains unmeasured rather than disproven - the study narrows the claim to *sustained flat-ground sprint*. The recording policy is itself a model-based controller, so coverage is chosen by a model even though the transitions are not; a human or random-walk recording would visit differently. The split is the canonical seeded episodic one for each file, which makes the two held-out sets different in size (1,356 vs 1,862 transitions) and means the binding fractions are comparable as fractions but not as counts. And $\sigma$ (sub-pixels per pixel) is not re-estimated here, so all speeds are in raw WRAM units - the factor-of-two observation in finding 4 is exactly the kind of thing a unit audit could dissolve.
+
+Regenerate: `python scripts/record_sprint_gameplay.py --episodes 12 --frames-per-episode 800` (~14 min, needs the core and ROM), then `python -m src.evaluation.sprint_excitation_benchmark` (~11 min CPU, emulator-free; `make record-sprint`, `make sprint-excitation`; `--gp-seeds`, `--pysr-iterations` and `--max-train` control the search budget). Without the sprint dataset the entry point exits with a diagnostic and writes nothing.

@@ -99,7 +99,7 @@ only `scripts/` bootstraps the repo root.
   artifacts whose checkpoints were regenerated after the artifact was recorded.
 - **Regression gate:** if you change training/eval code, check
   `tests/test_metrics_regression.py` still passes; regenerate `results/*.json`
-  on GPU and update the README tables that cite them (§8.1–§8.4 and §10.x).
+  on GPU and update the tables that cite them in `docs/paper/` (§8.1–§8.4 and §10.x).
 - **Pixel datasets are huge:** `scripts/record_pixel_gameplay.py` defaults to
   frame stride + downscale for a reason (full-res frames ≈ GBs). Keep frame
   `.npz` files in Git-LFS and never commit ROMs or smoke-test dirs.

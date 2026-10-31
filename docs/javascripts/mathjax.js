@@ -1,4 +1,4 @@
-/* MathJax configuration for the mkdocs-material site (docs/full-readme.md).
+/* MathJax configuration for the mkdocs-material site (docs/paper/*.md).
  *
  * pymdownx.arithmatex runs in generic mode, so the README's $...$ and $$...$$ spans
  * are emitted as \(...\) and \[...\] and typeset client-side. The ignore pattern

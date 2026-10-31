@@ -1,17 +1,14 @@
-# Documentation site: the full README rendered without GitHub's math budget.
+# Documentation site: the research document, one page per section, rendered with MathJax.
 #
-# GitHub fails every math expression after roughly the first 1,368 of them (README
-# section 12 measured the limit on this repository), so the document you are reading
-# there stops rendering halfway through section 10.5x no matter how valid the LaTeX
-# is. This site renders the same file through MathJax, which has no such budget.
-#
-# The README stays the single source of truth: docs/full-readme.md is generated from
-# it by scripts/sync_docs.py (run by the docs workflow before every build, and by
-# hand for local serving). Never edit the generated copy.
+# The document lives in docs/paper/ (one page per section, one per study section 10.N), which is
+# also what GitHub shows; the README is a short landing page that links into it. Splitting the
+# document is what keeps every page under GitHub's math budget (roughly 1,368 expressions per page,
+# measured in Section 12); the site renders the same files through MathJax, which has no budget.
+# scripts/mkdocs_hooks.py re-points the pages' repository-relative links for the site, and
+# tests/test_readme_math_rendering.py keeps the nav below listing every page.
 #
 # Local serving:
 #   pip install -r docs/requirements-docs.txt
-#   python scripts/sync_docs.py
 #   mkdocs serve
 
 site_name: smw-pinn
@@ -56,11 +53,11 @@ markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
 
-# The README links to repository paths (results/..., src/...) that are not pages of
-# this site; only the figures directory is copied into the build. Reporting the rest
-# as warnings would fail the strict build, so they are silenced deliberately: the
-# canonical links live in the GitHub rendering, which this site supplements. (Schema
-# of the pinned mkdocs 1.6 line: anchors is a string inside links.)
+# The pages link to repository paths (results/..., src/...) that are not pages of this
+# site; the hook turns them into GitHub links and only the figures directory is copied into
+# the build. Anchors are computed differently by GitHub and by the toc extension, so they
+# are not validated here - tests/test_readme_math_rendering.py checks them the way GitHub
+# reads them. (Schema of the pinned mkdocs 1.6 line: anchors is a string inside links.)
 validation:
   links:
     not_found: ignore
@@ -72,6 +69,90 @@ extra_javascript:
   - javascripts/mathjax.js
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
+hooks:
+  - scripts/mkdocs_hooks.py
+
 nav:
   - Home: index.md
-  - Full README (MathJax, no budget): full-readme.md
+  - Paper:
+      - '1. Project Overview & Abstract': paper/01-project-overview-abstract.md
+      - '2. Introduction and Scientific Motivation': paper/02-introduction-and-scientific-motivation.md
+      - '3. SNES Hardware Architecture & WRAM Reverse Engineering': paper/03-snes-hardware-architecture-wram-reverse-engineering.md
+      - '4. Mathematical Formulation of Super Mario World Physics': paper/04-mathematical-formulation-of-super-mario-world-physics.md
+      - '5. Evaluated Machine Learning Architectures': paper/05-evaluated-machine-learning-architectures.md
+      - '6. Loss Function Formulation and the Soft PINN Dilemma': paper/06-loss-function-formulation-and-the-soft-pinn.md
+      - '7. Experimental Protocol, Data Partitioning & Hyperparameters': paper/07-experimental-protocol-data-partitioning-hyperparameters.md
+      - '8. Empirical Results and Comparative Benchmark Tables': paper/08-empirical-results-and-comparative-benchmark-tables.md
+      - '9. Visual Analysis of Trajectories and Convergence': paper/09-visual-analysis-of-trajectories-and-convergence.md
+      - "10. In-Depth Academic Discussion & Critical Analysis":
+          - '10.1 Quantitative Answer: How Much Does Knowing the Physics Help?': paper/10-01-quantitative-answer-how-much-does-knowing-the.md
+          - '10.2 The Soft PINN Fallacy in Discrete Dynamical Systems': paper/10-02-the-soft-pinn-fallacy-in-discrete-dynamical.md
+          - '10.3 Analysis of LSTM Performance and the Markovian Hypothesis': paper/10-03-analysis-of-lstm-performance-and-the-markovian.md
+          - '10.4 Long-Horizon Rollout Dispersion (Frame 120 Drift)': paper/10-04-long-horizon-rollout-dispersion-frame-120-drift.md
+          - '10.5 Implications for Model-Based Reinforcement Learning (MBRL)': paper/10-05-implications-for-model-based-reinforcement-learning-mbrl.md
+          - '10.6 Closed-Loop Model-Based RL (MBRL) via Model Predictive Control (MPC)': paper/10-06-closed-loop-model-based-rl-mbrl-via-model-predictive.md
+          - '10.7 Amortized Policy Optimization (Dyna-PPO) & Zero-Shot Model-to-Real Transfer': paper/10-07-amortized-policy-optimization-dyna-ppo-zero-shot-model-to-real-transfer.md
+          - '10.8 Dynamic Hazard Perception (WRAM Sprites & Rex Evasion)': paper/10-08-dynamic-hazard-perception-wram-sprites-rex-evasion.md
+          - '10.9 Canonical Model-Free PPO Baseline vs. PINN-MBRL (Sample Efficiency Triad)': paper/10-09-canonical-model-free-ppo-baseline-vs-pinn-mbrl-sample.md
+          - '10.10 Deep Ensemble of Hard PINNs & Epistemic Uncertainty Quantification': paper/10-10-deep-ensemble-of-hard-pinns-epistemic-uncertainty.md
+          - '10.11 Spatial Translation-Invariant PINN Dynamics': paper/10-11-spatial-translation-invariant-pinn-dynamics.md
+          - '10.12 Closed-Loop Active Model-Based Policy Optimization (Online MBPO)': paper/10-12-closed-loop-active-model-based-policy-optimization-online-mbpo.md
+          - '10.13 Multi-Entity 12D PINN World Model & Autonomous Hazard Evasion': paper/10-13-multi-entity-12d-pinn-world-model-autonomous-hazard.md
+          - '10.14 Safe Model-Based Reinforcement Learning (Deep Ensemble Safe MBPO)': paper/10-14-safe-model-based-reinforcement-learning-deep-ensemble-safe.md
+          - '10.15 Comprehensive Hardware & Computational Efficiency Profiling': paper/10-15-comprehensive-hardware-computational-efficiency-profiling.md
+          - '10.16 Out-of-Distribution (OOD) Zero-Shot Cross-Stage Generalization (Stage A → Stage B)': paper/10-16-out-of-distribution-ood-zero-shot-cross-stage-generalization-stage-a.md
+          - '10.17 Synchronized Multi-Model Visualization (Real SNES vs. PINN vs. MLP)': paper/10-17-synchronized-multi-model-visualization-real-snes-vs-pinn.md
+          - '10.18 Genuine Multi-Entity Dataset & Supervised Hazard Dynamics Training': paper/10-18-genuine-multi-entity-dataset-supervised-hazard-dynamics-training.md
+          - '10.19 Autonomous Multi-Entity MPC Planning on Real SNES Console (782 px Rex Evasion)': paper/10-19-autonomous-multi-entity-mpc-planning-on-real-snes.md
+          - '10.20 Spatial Discrete Tilemap Perception via WRAM ($7E:C800) & Tilemap-PINN': paper/10-20-spatial-discrete-tilemap-perception-via-wram-7e.md
+          - '10.21 Empirical Grounding of Tilemap-PINN (WRAM $7E:C800 Dataset & 98.66% Contact Accuracy)': paper/10-21-empirical-grounding-of-tilemap-pinn-wram-7e-c800.md
+          - '10.22 Permutation-Invariant Set Multi-Entity World Model (Cross-Attention for N Sprites)': paper/10-22-permutation-invariant-set-multi-entity-world-model-cross-attention-for.md
+          - '10.23 Amortized Policy Distillation from Live MPC Decisions (2,900 FPS vs 23.7 FPS)': paper/10-23-amortized-policy-distillation-from-live-mpc-decisions.md
+          - '10.24 Autonomous Extended Level Navigation on Real SNES Hardware (1,016+ px Progress)': paper/10-24-autonomous-extended-level-navigation-on-real-snes.md
+          - '10.25 Multi-Iteration Interactive DAgger Policy (831 px Progress & 2,707 FPS)': paper/10-25-multi-iteration-interactive-dagger-policy-831-px-progress.md
+          - '10.26 Comprehensive Ablation Study (Clamping, Horizon Drift & CEM Sensitivity)': paper/10-26-comprehensive-ablation-study-clamping-horizon-drift-cem.md
+          - '10.27 Master Algorithm Comparison Table (World Models, MPC & Reactive Policies)': paper/10-27-master-algorithm-comparison-table-world-models-mpc.md
+          - '10.28 Frontier 2: Zero-Shot Closed-Loop Control on Unseen Stage B (*Yoshi''s House*)': paper/10-28-frontier-2-zero-shot-closed-loop-control-on-unseen.md
+          - '10.29 Consolidation of Frontiers A, B, C and D: Differentiable Optimization, PPO and Multimodal Rendering': paper/10-29-consolidation-of-frontiers-a-b-c-and.md
+          - '10.30 Scope, Limitations & Threats to Validity': paper/10-30-scope-limitations-threats-to-validity.md
+          - '10.31 End-to-End Pixel Perception (Pixel-to-Action Front-End)': paper/10-31-end-to-end-pixel-perception-pixel-to-action-front-end.md
+          - '10.32 Hierarchical Global + Local Planning (A* + CEM-MPC)': paper/10-32-hierarchical-global-local-planning-a-cem-mpc.md
+          - '10.33 MPC Reflex Ablation (Pure vs Reflexive) & TD-MPC Terminal Value': paper/10-33-mpc-reflex-ablation-pure-vs-reflexive-td-mpc.md
+          - '10.34 Connected Orphans: Tilemap Closed-Loop, Unified Joint Training, Set-12': paper/10-34-connected-orphans-tilemap-closed-loop-unified-joint-training.md
+          - '10.35 Formal Learning Curves & Spatial-Holdout OOD with Danger': paper/10-35-formal-learning-curves-spatial-holdout-ood-with-danger.md
+          - '10.36 Yoshi''s Island 2 Capture: Blocked with Full Diagnostics': paper/10-36-yoshi-s-island-2-capture-blocked-with.md
+          - '10.37 Analytical and Oracle-Model Baselines': paper/10-37-analytical-and-oracle-model-baselines.md
+          - '10.38 Closed-Loop Reproduction Audit and Preamble Probe': paper/10-38-closed-loop-reproduction-audit-and-preamble-probe.md
+          - '10.39 Physics-Informed Model-Free RL (PIML-MFRL)': paper/10-39-physics-informed-model-free-rl-piml-mfrl.md
+          - '10.40 Physics Parameter Identification: the Inverse Problem': paper/10-40-physics-parameter-identification-the-inverse-problem.md
+          - '10.41 Neural-Operator Baselines: DeepONet on Discrete Engine Dynamics': paper/10-41-neural-operator-baselines-deeponet-on-discrete-engine-dynamics.md
+          - '10.42 Physics-Constrained DeepONet and the Fourier Neural Operator': paper/10-42-physics-constrained-deeponet-and-the-fourier-neural-operator.md
+          - '10.43 Symbolic Regression as an Inverse-Problem Method: Discovering the Law': paper/10-43-symbolic-regression-as-an-inverse-problem-method-discovering.md
+          - '10.44 Closed-Loop Control with Inverse-Problem World Models': paper/10-44-closed-loop-control-with-inverse-problem-world-models.md
+          - '10.45 Does the Velocity Ceiling Become Measurable Under Targeted Excitation?': paper/10-45-does-the-velocity-ceiling-become-measurable-under.md
+          - '10.46 Do Learned Dynamics Models Contain the Engine''s Constraints?': paper/10-46-do-learned-dynamics-models-contain-the-engine.md
+          - '10.47 Is It the Shell or the Parameterisation? The Physics-Injection Grid': paper/10-47-is-it-the-shell-or-the-parameterisation.md
+          - '10.48 What the "Kinematic Violation" Figure Actually Measures': paper/10-48-what-the-kinematic-violation-figure-actually-measures.md
+          - '10.49 Which Documented Constant Does the Telemetry Actually Support?': paper/10-49-which-documented-constant-does-the-telemetry-actually.md
+          - '10.50 Is the Coincidence a Bound or the Support?': paper/10-50-is-the-coincidence-a-bound-or-the.md
+          - '10.51 The Excluded Cell: Bounds Projected onto a State-Output Network': paper/10-51-the-excluded-cell-bounds-projected-onto-a.md
+          - '10.52 Collecting the Missing Branch: the Gravity Gate Under Targeted Excitation': paper/10-52-collecting-the-missing-branch-the-gravity-gate.md
+          - '10.53 The Velocity the Engine Integrates With: a Prediction Target Nobody Trained': paper/10-53-the-velocity-the-engine-integrates-with-a.md
+          - '10.54 Auditing the Physics Prose of Section 4': paper/10-54-auditing-the-physics-prose-of-section-4.md
+          - '10.55 Which Numerical Method Does the Engine Use? The Solver as the Axis': paper/10-55-which-numerical-method-does-the-engine-use.md
+          - '10.56 Canonical Sparse Identification on Every Recording This Repository Has': paper/10-56-canonical-sparse-identification-on-every-recording-this.md
+          - '10.57 What Section 4 Costs: the Corrected Physics, Measured One Line at a Time': paper/10-57-what-section-4-costs-the-corrected-physics.md
+          - '10.58 The Residue of Section 4.1 Is a Clamp, Not a Noise Term': paper/10-58-the-residue-of-section-4-1-is.md
+          - '10.59 The Boundary Channel 10.58 Predicted, Built, and Refuted': paper/10-59-the-boundary-channel-10-58-predicted-built.md
+          - '10.60 The Dashboard at the Top of This File, and the Two Instruments It Needed': paper/10-60-the-dashboard-at-the-top-of-this.md
+          - '10.61 Which Level the Committed Recordings Actually Walk': paper/10-61-which-level-the-committed-recordings-actually-walk.md
+          - '10.62 The Pixel Recording, Re-made From a Level That Is Really Entered': paper/10-62-the-pixel-recording-re-made-from-a-level.md
+          - '10.63 The Held Player Has Two Mechanisms, and the Recordings Mostly Show the Other One': paper/10-63-the-held-player-has-two-mechanisms-and.md
+          - '10.64 The Buffer the Telemetry Reads Is the Title Screen''s Own': paper/10-64-the-buffer-the-telemetry-reads-is-the.md
+          - '10.65 Velocity From Frames That Actually Move': paper/10-65-velocity-from-frames-that-actually-move.md
+          - '10.66 The Same Dashboard on Every Stage the Map Will Actually Give, and What Clears Mean': paper/10-66-the-same-dashboard-on-every-stage-the.md
+          - '10.67 Re-running the Map Survey, and the Map a Clear Opens': paper/10-67-re-running-the-map-survey-and-the-map.md
+          - '10.68 The Tile Map Read the Way the Engine Reads It, and a Stage Finished on Screen': paper/10-68-the-tile-map-read-the-way-the.md
+          - '10.69 The Simple Reward, and a Stage No Agent Had Cleared': paper/10-69-the-simple-reward-a-stage-no-agent-had.md
+      - '11. Complete Reproducibility Guide': paper/11-complete-reproducibility-guide.md
+      - '12. Scientific Integrity Statement': paper/12-scientific-integrity-statement.md

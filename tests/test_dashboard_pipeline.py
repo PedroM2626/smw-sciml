@@ -37,6 +37,7 @@ from src.evaluation.dashboard_video import (
     window_view,
 )
 from src.planning.mpc_planner import ACTION_BUTTONS, ACTION_MATRIX
+from src.utils.document import full_document
 
 REPO = Path(__file__).resolve().parents[1]
 STUDY_ARTIFACT = REPO / "results" / "dashboard_study_metrics.json"
@@ -54,7 +55,7 @@ def _payload():
 
 
 def _readme() -> str:
-    return (REPO / "README.md").read_text(encoding="utf-8")
+    return full_document()
 
 
 def _recording():

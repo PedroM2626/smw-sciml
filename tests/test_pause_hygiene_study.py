@@ -29,6 +29,7 @@ from src.evaluation.pause_hygiene_study import (
     frames_in_holds,
     render_section,
 )
+from src.utils.document import full_document
 from src.utils.paths import REPO_ROOT
 
 ARTIFACT = REPO_ROOT / "results" / "pause_hygiene_metrics.json"
@@ -47,7 +48,7 @@ def _arms(payload=None):
 
 
 def _readme() -> str:
-    return (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    return full_document()
 
 
 def test_readme_10_63_is_the_generated_block() -> None:

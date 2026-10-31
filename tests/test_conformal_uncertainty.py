@@ -26,6 +26,7 @@ from src.inverse.conformal_uncertainty import (
     gaussian_half_width,
     mean_null_quantile,
 )
+from src.utils.document import full_document
 
 REPO = Path(__file__).resolve().parents[1]
 ARTIFACT = REPO / "results" / ARTIFACT_NAME
@@ -126,7 +127,7 @@ def test_readme_coverage_table_rows_are_generated_from_the_artifact():
     payload = _payload()
     rows = render_coverage_table(payload["results"])
     assert rows, "the coverage table rendered no rows"
-    text = README.read_text(encoding="utf-8")
+    text = full_document()
     missing = [row for row in rows if row not in text]
     assert not missing, (
         "README 10.56.1 no longer quotes the artifact rows it claims to be "
@@ -137,7 +138,7 @@ def test_readme_coverage_table_rows_are_generated_from_the_artifact():
 def test_readme_quotes_the_verdict_of_the_selected_level():
     payload = _payload()
     verdict = payload["verdict"]["0.1"]
-    text = README.read_text(encoding="utf-8")
+    text = full_document()
     bounded = verdict["cells"] - verdict["unbounded_cells"]
     quoted = [
         f"{verdict['conformal_cells_at_or_above_target']} of {bounded}",

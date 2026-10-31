@@ -14,6 +14,8 @@ Run:  pytest tests/test_level_entry.py -q
 import json
 from pathlib import Path
 
+from src.utils.document import full_document
+
 REPO = Path(__file__).resolve().parents[1]
 ARTIFACT = REPO / "results" / "level_entry_verification.json"
 STATE = REPO / "data" / "raw" / "smw_yoshi_island_1_level.state"
@@ -26,7 +28,7 @@ def _payload():
 
 
 def _readme():
-    return (REPO / "README.md").read_text(encoding="utf-8")
+    return full_document()
 
 
 def test_the_artifact_and_the_readme_agree_on_both_arms() -> None:

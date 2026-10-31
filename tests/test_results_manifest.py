@@ -22,6 +22,7 @@ from typing import Any, Dict
 
 import pytest
 
+from src.utils.document import full_document
 from src.utils.typography import demath_typographic as _plain
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -599,7 +600,7 @@ def test_readme_quotes_the_committed_numbers(artifact: str, keypath: list[str], 
         assert isinstance(node, dict) and key in node, f"{artifact} has no key {key!r}"
         node = node[key]
     rendered = fmt.format(node)
-    text = README.read_text(encoding="utf-8")
+    text = full_document()
     assert _plain(rendered) in text, (
         f"README.md no longer contains {rendered!r} "
         f"({artifact}:{'/'.join(keypath)} = {node!r}). Either the artifact was "
@@ -609,7 +610,7 @@ def test_readme_quotes_the_committed_numbers(artifact: str, keypath: list[str], 
 
 
 def _readme() -> str:
-    return README.read_text(encoding="utf-8")
+    return full_document()
 
 
 def test_readme_10_47_prediction_table_is_the_artifact() -> None:

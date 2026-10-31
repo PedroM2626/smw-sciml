@@ -17,6 +17,7 @@ import numpy as np
 import pytest
 
 from src.evaluation.pixel_frame_probe import BAND_TOP_PX, best_shift, render_probe
+from src.utils.document import full_document
 
 REPO = Path(__file__).resolve().parents[1]
 ARTIFACT = REPO / "results" / "pixel_frame_probe_metrics.json"
@@ -29,7 +30,7 @@ def _payload():
 
 
 def _readme():
-    return (REPO / "README.md").read_text(encoding="utf-8")
+    return full_document()
 
 
 def test_the_readme_paragraph_is_the_generated_one() -> None:

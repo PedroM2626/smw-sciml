@@ -19,7 +19,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-SCANNED_DIRS = ["src", "tests", "scripts", "configs", ".github"]
+SCANNED_DIRS = ["src", "tests", "scripts", "configs", ".github", "docs/paper"]
 SCANNED_FILES = [
     "README.md",
     "CONTRIBUTING.md",
@@ -91,6 +91,8 @@ def test_file_is_english_only(path: Path) -> None:
 def test_the_guard_scans_the_repository() -> None:
     """A guard that silently scans nothing is worse than no guard."""
     assert len(FILES) > 120, f"only {len(FILES)} files are covered"
-    covered = {p.relative_to(REPO_ROOT).parts[0] for p in FILES}
+    covered = {p.relative_to(REPO_ROOT).as_posix() for p in FILES}
     for folder in SCANNED_DIRS:
-        assert folder in covered, f"{folder}/ is not covered by the English-only guard"
+        assert any(path.startswith(folder + "/") for path in covered), (
+            f"{folder}/ is not covered by the English-only guard"
+        )

@@ -4,12 +4,14 @@
 discrete dynamics modeling without computer vision, from genuine WRAM telemetry of a
 real SNES, with closed-loop control flown on the console itself.
 
-This is the landing page of the documentation site. The research document lives in the
-[Full README](full-readme.md), rendered here through MathJax so every formula typesets -
-GitHub stops rendering math after roughly its first 1,368 expressions on a page, which
-the README's own Section 12 measured, and this site exists so the tail of that document
-is readable. The canonical repository, with the issues, the releases and the artifacts
-behind every number, is [PedroM2626/smw-sciml](https://github.com/PedroM2626/smw-sciml).
+This is the landing page of the documentation site. The research document is split into
+one page per section - start at [Section 1](paper/01-project-overview-abstract.md), and the
+navigation lists every study section of Section 10 - rendered here through MathJax so every
+formula typesets. The same pages are what GitHub shows under `docs/paper/`, each one small
+enough to stay inside GitHub's math budget (roughly 1,368 expressions per page, measured in
+[Section 12](paper/12-scientific-integrity-statement.md)). The canonical repository, with the
+issues, the releases and the artifacts behind every number, is
+[PedroM2626/smw-sciml](https://github.com/PedroM2626/smw-sciml).
 
 ## The headline result
 
@@ -48,7 +50,7 @@ the operator benchmarks, the conformal intervals of Section 10.56.1 - runs witho
 
 ## Where things are
 
-- [Full README (MathJax, no budget)](full-readme.md) - the research document.
+- [The research document](paper/01-project-overview-abstract.md) - one page per section.
 - [results/MANIFEST.md](https://github.com/PedroM2626/smw-sciml/blob/master/results/MANIFEST.md) -
   every published number, indexed artifact-first, enforced by CI.
 - [CHANGELOG.md](https://github.com/PedroM2626/smw-sciml/blob/master/CHANGELOG.md) -

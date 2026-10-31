@@ -155,9 +155,9 @@ def test_the_renderers_emit_one_block_per_claim(renderer: str) -> None:
         )
 
 
-def test_the_audit_reads_the_readme_it_documents() -> None:
-    """A guard against the audit scoring a copy: the file it quotes is the one in the repo."""
+def test_the_audit_reads_the_document_it_documents() -> None:
+    """A guard against the audit scoring a copy: section 4 is the page in the repo's docs/paper."""
     from src.evaluation.physics_claim_audit import README_PATH
 
-    assert README_PATH.replace("\\", "/").endswith("/README.md")
+    assert "/docs/paper/04-" in README_PATH.replace("\\", "/")
     assert "### 4.3 Horizontal Dynamics" in _read(README_PATH)

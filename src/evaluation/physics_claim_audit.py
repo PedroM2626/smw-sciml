@@ -41,6 +41,7 @@ from typing import Any, Callable, Dict, List, Tuple
 import numpy as np
 
 from src.environment.dataset_loader import load_and_preprocess_data
+from src.utils.document import PAPER_DIR, full_document
 from src.utils.logging import get_logger
 from src.utils.paths import DATASET_GAMEPLAY, RESULTS_DIR
 from src.utils.provenance import write_metrics
@@ -51,7 +52,9 @@ logger = get_logger(__name__)
 SUBPIXELS_PER_PIXEL = 16.0
 PUBLISHED_TOLERANCE_PX = 0.2
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-README_PATH = os.path.join(REPO_ROOT, "README.md")
+# Section 4 lives on its own page of the split document; the claims are quoted from the whole of
+# it (README plus every section page), so a sentence moved between pages is still found.
+README_PATH = str(PAPER_DIR / "04-mathematical-formulation-of-super-mario-world-physics.md")
 
 # Claims of README section 4, as the section now states them. `sites` are (file, literal)
 # pairs: the literal is the piece of source that makes that file an implementation of the
@@ -209,7 +212,7 @@ def _section(text: str, marker: str) -> str:
 
 def audit_claims(claims: Dict[str, Dict[str, Any]] = CLAIMS) -> Dict[str, Any]:
     """Check each claim's README text, its declared implementation sites and its dissenters."""
-    readme = _read(README_PATH)
+    readme = full_document()
     sources: Dict[str, str] = {}
     report: Dict[str, Any] = {}
     for name, spec in claims.items():
@@ -694,7 +697,7 @@ def run_physics_claim_audit(
             "it and against the recorded transitions it describes."
         ),
         "protocol": {
-            "readme": "README.md",
+            "readme": "docs/paper (src.utils.document.full_document)",
             "published_tolerance_px": PUBLISHED_TOLERANCE_PX,
             "subpixels_per_pixel": SUBPIXELS_PER_PIXEL,
             "telemetry_dataset": dataset_path,

@@ -22,6 +22,7 @@ from src.evaluation.stage_identity_study import (
     profile_from_npz,
     render_section,
 )
+from src.utils.document import full_document
 from src.utils.paths import DATASET_TILEMAP
 
 REPO = Path(__file__).resolve().parents[1]
@@ -35,7 +36,7 @@ def _payload():
 
 
 def _readme() -> str:
-    return (REPO / "README.md").read_text(encoding="utf-8")
+    return full_document()
 
 
 def test_readme_10_61_is_the_generated_block() -> None:
