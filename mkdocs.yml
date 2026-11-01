@@ -20,9 +20,9 @@ site_url: https://pedrom2626.github.io/smw-sciml/
 repo_url: https://github.com/PedroM2626/smw-sciml
 repo_name: PedroM2626/smw-sciml
 
-# Pages live at the site root (index.html, full-readme.html) so the README's relative
-# links to results/figures/... resolve; the docs workflow copies that directory into
-# the built site for the same reason.
+# use_directory_urls is off, so each page keeps its file name under paper/. The pages link
+# results/figures/... through ../../, which scripts/mkdocs_hooks.py rewrites to the site root;
+# the docs workflow copies that directory into the built site for the same reason.
 use_directory_urls: false
 
 theme:

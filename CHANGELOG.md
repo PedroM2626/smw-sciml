@@ -18,8 +18,8 @@ numbers* - those are reported here and in README Section 12, never applied silen
   10.68 tile classes ahead of Mario, the three nearest running sprites). On the `0x29` savestate it
   concludes the stage in generation 57 - 4808.0625 px, goal tape at frame 3288, `0x14` to `0x0C`
   with no `0x0B` and the lives counter untouched - where the best earlier agent reached 406.4375 px.
-  On `0x27` it reaches 528.0625 px in 150 generations and does not clear: the crossing needs a
-  chained platform a single-start search does not find. Both artifacts are catalogued in
+  On `0x27` it reaches 528.0625 px in 150 generations and does not clear; the best run falls into
+  a pit at x = 544 px, and what the stage requires there is not yet measured. Both artifacts are catalogued in
   `results/MANIFEST.md`; `tests/test_potential_reward_ga.py` pins the reward, the verdict and
   10.69's table to them. Section 12 withdraws 10.68's reading that the two sessions themselves
   could not be concluded.
@@ -47,7 +47,7 @@ numbers* - those are reported here and in README Section 12, never applied silen
   the velocity the frame starts with, as §4.1 states it and as the telemetry measures it - and
   `GroundContactConsistencyLoss`, `CompositePINNLoss` and the closed-form rules default to the
   `zero_increment` ground rule of §4.3.5. The names live in `src/utils/kinematics.py` as
-  `DEFAULT_POSITION_VELOCITY` / `DEFAULT_CONTACT_RULE`. **No published number moves:** every
+  `DEFAULT_POSITION_VELOCITY` / `DEFAULT_CONTACT_RULE`. **The published pipelines keep their arithmetic:** every
   pipeline that reproduces a committed artifact or loads a committed checkpoint - the benchmarks,
   the closed-loop evaluators, the trainers, the multi-entity / ensemble / multimodal wrappers and
   the recording scripts - passes the published form by name (`PUBLISHED_POSITION_VELOCITY`,
