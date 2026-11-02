@@ -11,6 +11,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY requirements.txt pyproject.toml README.md ./
 COPY src/ src/
 COPY configs/ configs/
+COPY docs/paper/ docs/paper/
 COPY tests/ tests/
 
 RUN pip install --upgrade pip && \
