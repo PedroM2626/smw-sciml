@@ -82,20 +82,21 @@ def test_a_default_correction_leaves_no_dissenter() -> None:
     assert not contradicted, f"corrected by default yet still dissented from: {contradicted}"
 
 
-def test_every_diverging_claim_records_how_its_correction_is_reached() -> None:
-    """A disagreement without a named fix is a complaint; with one, it is a decision."""
+def test_every_corrected_form_is_the_default_and_nothing_dissents() -> None:
+    """Every claim with a corrected form now gives it by default, and no default path dissents.
+
+    The last dissenters were the rollout predicate's 72/64 thresholds. Section 4 measures neither
+    as a bound the console respects, so the evaluator's default scores no velocity bound and the
+    published pipelines pass the two constants by name. A future default that contradicts §4
+    has to be added here as a dissenter, with its correction named, rather than slip back in.
+    """
     report = audit_claims()
     diverging = [name for name, block in report.items() if block["dissenting_sites"]]
-    assert diverging, "the audit has stopped finding any default that diverges from section 4"
-    missing = [name for name in diverging if not report[name]["corrected_form"]]
-    assert not missing, (
-        f"claims the code diverges from, with no reachable correction named: {missing}"
-    )
-    # What is left on the list is the rollout predicate: no velocity bound the console respects
-    # exists to make its default, so its thresholds stay parameters.
-    assert {
-        path.split(":")[0] for name in diverging for path in report[name]["dissenting_sites"]
-    } == {"src/evaluation/rollout_evaluator.py"}
+    assert diverging == [], f"default code paths that contradict section 4: {diverging}"
+    corrected = [name for name, block in report.items() if block["corrected_form"]]
+    assert corrected, "the audit no longer records any corrected form"
+    not_default = [name for name in corrected if not report[name]["corrected_by_default"]]
+    assert not_default == [], f"corrected forms that are not the default: {not_default}"
 
 
 def test_the_identity_is_exact_where_no_collision_flag_is_set() -> None:

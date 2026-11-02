@@ -12,11 +12,13 @@ Features:
 import json
 import os
 import time
+from typing import Any, List, cast
 
 import imageio
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from src.utils.logging import get_logger
 from src.utils.paths import (
@@ -70,7 +72,7 @@ def render_dynamic_telemetry_video(
     )
 
     os.makedirs(os.path.dirname(output_mp4), exist_ok=True)
-    rendered_frames = []
+    rendered_frames: List[Any] = []
 
     # Setup 3-panel figure:
     # 1. Top: Dynamic Side-Scrolling World View (Follows Mario)
@@ -373,7 +375,7 @@ def render_dynamic_telemetry_video(
 
         # Render canvas to RGB buffer
         fig.canvas.draw()
-        rgba = np.asarray(fig.canvas.buffer_rgba())
+        rgba = np.asarray(cast(FigureCanvasAgg, fig.canvas).buffer_rgba())
         rgb = rgba[:, :, :3].copy()
         rendered_frames.append(rgb)
 

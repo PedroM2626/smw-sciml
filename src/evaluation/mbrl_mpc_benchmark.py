@@ -15,7 +15,7 @@ import os
 import statistics
 import time
 from functools import partial
-from typing import Dict
+from typing import Any, Callable, Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -213,7 +213,7 @@ def run_random_baseline(
             break
 
         survived_frames += 1
-        act = np.random.choice(actions_pool)
+        act = actions_pool[np.random.choice(len(actions_pool))]
         emu.set_input(act)
         emu.step_frame()
 
@@ -248,7 +248,7 @@ def load_world_models(
 ) -> Dict[str, torch.nn.Module]:
     """Restore the three 8D world models used by the published closed-loop protocol."""
     device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    specs = {
+    specs: Dict[str, Tuple[str, Callable[..., torch.nn.Module]]] = {
         "Hard_PINN_World_Model": (
             "pinn_hard_best.pt",
             partial(HardResidualPINNDynamics, position_velocity=PUBLISHED_POSITION_VELOCITY),
@@ -475,7 +475,7 @@ def run_reproduction_audit(
         initial_savestate = fh.read()
     models = load_world_models(checkpoints_dir, device)
 
-    runs = []
+    runs: List[Dict[str, Any]] = []
     emu = SnesLibretroEmulator(core_path)
     emu.load_rom(rom_path)
     try:

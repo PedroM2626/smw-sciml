@@ -17,6 +17,7 @@ import torch
 import torch.nn as nn
 
 from src.models.tilemap_pinn import TilemapPINNDynamics
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -27,7 +28,9 @@ class TilemapMPCWrapper(nn.Module):
 
     def __init__(self, tilemap_model: TilemapPINNDynamics | None = None):
         super().__init__()
-        self.model = tilemap_model or TilemapPINNDynamics()
+        self.model = tilemap_model or TilemapPINNDynamics(
+            position_velocity=PUBLISHED_POSITION_VELOCITY
+        )
         self._patch: torch.Tensor | None = None
 
     def set_patch(self, patch: np.ndarray) -> None:

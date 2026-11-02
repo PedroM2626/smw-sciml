@@ -11,10 +11,11 @@ import json
 import os
 import time
 from functools import partial
-from typing import Dict, List
+from typing import Any, Callable, Dict, List, Tuple
 
 import numpy as np
 import torch
+import torch.nn as nn
 from scipy import stats
 
 from src.environment.dataset_loader import (
@@ -29,7 +30,11 @@ from src.models import (
 )
 from src.training.trainer import DynamicsTrainer
 from src.utils.config import parse_args_with_config
-from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
+from src.utils.kinematics import (
+    PUBLISHED_MAX_VX,
+    PUBLISHED_POSITION_VELOCITY,
+    PUBLISHED_TERMINAL_VY,
+)
 from src.utils.logging import get_logger
 from src.utils.paths import (
     DATASET_GAMEPLAY,
@@ -75,7 +80,7 @@ def run_multiseed_benchmark(
     checkpoints_dir = os.path.join(output_dir, "checkpoints_multiseed")
     os.makedirs(checkpoints_dir, exist_ok=True)
 
-    model_classes = {
+    model_classes: Dict[str, Tuple[Callable[..., nn.Module], str]] = {
         "Statistical_MLP": (StatisticalMLPDynamics, "mlp"),
         "Soft_PINN": (SoftPINNDynamics, "pinn_soft"),
         "Hard_Residual_PINN": (
@@ -123,7 +128,9 @@ def run_multiseed_benchmark(
         action_seq = test_actions[:H]
         ground_truth = test_next_states[:H]
 
-        evaluator = RolloutEvaluator(device=device)
+        evaluator = RolloutEvaluator(
+            device=device, max_vx=PUBLISHED_MAX_VX, terminal_vy=PUBLISHED_TERMINAL_VY
+        )
 
         for model_name, (cls, m_type) in model_classes.items():
             model = cls(state_dim=state_dim, action_dim=action_dim).to(device)
@@ -193,7 +200,7 @@ def run_multiseed_benchmark(
     logger.info(f"\nAll {len(seeds)} seeds completed in {total_time:.2f}s!")
 
     # Compute descriptive statistics (mean and std)
-    summary_stats = {}
+    summary_stats: Dict[str, Dict[str, Any]] = {}
     for model_name, metrics in raw_results.items():
         summary_stats[model_name] = {}
         for metric_name, values in metrics.items():

@@ -208,7 +208,9 @@ def run_ablation(
         base_pinn = HardResidualPINNDynamics(
             state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
         )
-        world_model = MultiEntityPINNDynamics(base_pinn=base_pinn).to(device)
+        world_model = MultiEntityPINNDynamics(
+            base_pinn=base_pinn, position_velocity=PUBLISHED_POSITION_VELOCITY
+        ).to(device)
         world_model.load_state_dict(
             torch.load(model_checkpoint, map_location=device, weights_only=True)
         )

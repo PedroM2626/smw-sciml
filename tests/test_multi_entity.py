@@ -21,8 +21,9 @@ def test_multi_entity_forward_shapes():
 def test_multi_entity_exact_relative_kinematics():
     """
     Verifies that MultiEntityPINNDynamics maintains exact analytical kinematic
-    consistency for both Mario and the relative hazard position:
-    Delta X_h(t+1) - Delta X_h(t) == (vx_h - vx_m) / 16.0
+    consistency for both Mario and the relative hazard position, with the velocities the
+    frame starts with (the default convention):
+    Delta X_h(t+1) - Delta X_h(t) == (vx_h,t - vx_m,t) / 16.0
     """
     model = MultiEntityPINNDynamics(state_dim=12, action_dim=6)
     # Mario at (100, 300) with vx=16, vy=0
@@ -37,12 +38,12 @@ def test_multi_entity_exact_relative_kinematics():
 
     # Mario displacement
     m_dx = next_state[0, 0] - state[0, 0]
-    m_expected_dx = next_state[0, 2] / 16.0
+    m_expected_dx = state[0, 2] / 16.0
     assert torch.isclose(m_dx, m_expected_dx, atol=1e-5)
 
     # Relative hazard displacement
     h_ddx = next_state[0, 8] - state[0, 8]
-    expected_relative_vx = next_state[0, 10] - next_state[0, 2]
+    expected_relative_vx = state[0, 10] - state[0, 2]
     h_expected_ddx = expected_relative_vx / 16.0
     assert torch.isclose(h_ddx, h_expected_ddx, atol=1e-5)
 

@@ -90,7 +90,9 @@ def run_extended_navigation(
     base_pinn = HardResidualPINNDynamics(
         state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
     )
-    world_model = MultiEntityPINNDynamics(base_pinn=base_pinn).to(device)
+    world_model = MultiEntityPINNDynamics(
+        base_pinn=base_pinn, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
 
     if os.path.exists(model_checkpoint):
         world_model.load_state_dict(

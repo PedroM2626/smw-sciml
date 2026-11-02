@@ -22,6 +22,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from src.models.pinn_unified_multimodal import UnifiedMultimodalPINNDynamics
 from src.utils.config import parse_args_with_config
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     DATASET_MULTI_ENTITY,
@@ -94,7 +95,7 @@ def run_training(
     tile_train, tile_val = _tile_loaders(tilemap_path, batch_size, seed)
     multi_train, multi_val = _multi_loaders(multi_path, batch_size, seed)
 
-    model = UnifiedMultimodalPINNDynamics().to(device)
+    model = UnifiedMultimodalPINNDynamics(position_velocity=PUBLISHED_POSITION_VELOCITY).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-4)
     reg_loss, bce_loss = nn.SmoothL1Loss(), nn.BCEWithLogitsLoss()
 

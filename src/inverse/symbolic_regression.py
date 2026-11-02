@@ -548,7 +548,7 @@ def fit_law_bank(
     preset: str = "synthetic",
     seeds: Sequence[int] = (0,),
     eval_bank: Optional[TransitionBank] = None,
-    weights: Optional[Dict[str, np.ndarray]] = None,
+    weights: Optional[Dict[str, Optional[np.ndarray]]] = None,
     **gp_kwargs: Any,
 ) -> LawBank:
     """Fit every law of one preset, once per GP seed.

@@ -122,7 +122,7 @@ def live_profile(
     xs: List[float] = []
     ys: List[float] = []
     patches: List[np.ndarray] = []
-    prev: Tuple[float, float, float, float, float, float, float, float] | None = None
+    prev: Tuple[float, ...] | None = None
     paused = 0
     operator = 0
     boxes_cleared = 0

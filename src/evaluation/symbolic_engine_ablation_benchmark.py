@@ -399,8 +399,8 @@ def run_templates(
     )
     sh, sv = summarise(fh), summarise(fv)
 
-    def params(summary: Dict[str, object]) -> Dict[str, float]:
-        return {k: float(v) for k, v in dict(summary["tail_selected_parameters"]).items()}  # type: ignore[arg-type]
+    def params(summary: Dict[str, Any]) -> Dict[str, float]:
+        return {k: float(v) for k, v in dict(summary["tail_selected_parameters"]).items()}
 
     ph, pv = params(sh), params(sv)
     bound = ph.get("max_vx", float("nan"))

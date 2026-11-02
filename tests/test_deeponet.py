@@ -100,9 +100,10 @@ def test_build_mlp_structure():
 
 def test_physics_constrained_deeponet_exact_kinematic_guarantee():
     """
-    Physics-constrained DeepONet must STRICTLY satisfy the Section 4 identity:
-        hat_X = X_t + hat_vx / 16.0
-        hat_Y = Y_t + hat_vy / 16.0
+    Physics-constrained DeepONet must STRICTLY satisfy the Section 4 identity, with the
+    velocity the frame starts with (its default convention):
+        hat_X = X_t + vx_t / 16.0
+        hat_Y = Y_t + vy_t / 16.0
     The operator learns only forces/contacts; integration is analytical, so the
     kinematic residual is identically zero as in the Hard Residual PINN.
     """
@@ -117,8 +118,8 @@ def test_physics_constrained_deeponet_exact_kinematic_guarantee():
     pred = model(state, action)
     assert pred.shape == (B, state_dim)
 
-    expected_x = state[:, 0] + (pred[:, 2] / 16.0)
-    expected_y = state[:, 1] + (pred[:, 3] / 16.0)
+    expected_x = state[:, 0] + (state[:, 2] / 16.0)
+    expected_y = state[:, 1] + (state[:, 3] / 16.0)
     assert torch.allclose(pred[:, 0], expected_x, atol=1e-6)
     assert torch.allclose(pred[:, 1], expected_y, atol=1e-6)
 

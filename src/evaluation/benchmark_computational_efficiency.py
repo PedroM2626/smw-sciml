@@ -120,7 +120,12 @@ def run_profiling_suite(output_dir: str = RESULTS_DIR) -> Dict:
             ),
             8,
         ),
-        "Multi-Entity PINN (12D)": (MultiEntityPINNDynamics(state_dim=12, action_dim=6), 12),
+        "Multi-Entity PINN (12D)": (
+            MultiEntityPINNDynamics(
+                state_dim=12, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+            ),
+            12,
+        ),
         "Deep PINN Ensemble (E=5)": (DeepPINNEnsemble(num_models=5, state_dim=8, action_dim=6), 8),
     }
 

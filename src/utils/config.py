@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import argparse
 import warnings
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 
 try:
     import yaml
@@ -38,7 +38,7 @@ def load_config(path: Optional[str]) -> dict[str, Any]:
 
 
 def parse_args_with_config(
-    parser: argparse.ArgumentParser, args: list[str] | None = None
+    parser: argparse.ArgumentParser, args: Sequence[str] | None = None
 ) -> argparse.Namespace:
     """Two-pass parse: read --config first, apply as defaults, re-parse."""
     known, _ = parser.parse_known_args(args)

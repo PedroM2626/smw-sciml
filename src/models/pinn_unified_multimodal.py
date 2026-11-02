@@ -20,7 +20,7 @@ import torch.nn as nn
 
 from src.models.pinn_hard_residual import HardResidualPINNDynamics
 from src.models.tilemap_pinn import TilemapEncoder
-from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
+from src.utils.kinematics import CARRIED, DEFAULT_POSITION_VELOCITY, check_position_velocity
 
 
 class UnifiedMultimodalPINNDynamics(nn.Module):
@@ -36,9 +36,13 @@ class UnifiedMultimodalPINNDynamics(nn.Module):
         subpixels_per_pixel: float = 16.0,
         max_vx: float = 37.875,
         max_vy: float = 64.0,
+        position_velocity: str = DEFAULT_POSITION_VELOCITY,
     ):
         super().__init__()
         self.subpixels_per_pixel = subpixels_per_pixel
+        # Which velocities advance the hazard's relative position, and Mario's own when the
+        # base model is built here. A supplied base_pinn keeps its own convention for Mario.
+        self.position_velocity = check_position_velocity(position_velocity)
         self.max_vx = max_vx
         self.max_vy = max_vy
 
@@ -47,7 +51,7 @@ class UnifiedMultimodalPINNDynamics(nn.Module):
             self.mario_pinn = base_pinn
         else:
             self.mario_pinn = HardResidualPINNDynamics(
-                state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
+                state_dim=8, action_dim=6, position_velocity=position_velocity
             )
 
         # 2. Spatial Terrain Encoder
@@ -141,15 +145,23 @@ class UnifiedMultimodalPINNDynamics(nn.Module):
             next_vx_h = torch.where(active > 0.5, vx_h + h_acc[:, 0:1], torch.zeros_like(vx_h))
             next_vy_h = torch.where(active > 0.5, h_acc[:, 1:2], torch.zeros_like(vx_h))
 
-            # EXACT ANALYTICAL RELATIVE KINEMATICS:
+            # EXACT ANALYTICAL RELATIVE KINEMATICS, with the velocities position_velocity names.
+            if self.position_velocity == CARRIED:
+                # The frame's own velocities (README 4.1). The hazard's vertical velocity is not
+                # part of the 4D hazard state, so its value at t is the flat-terrain 0.
+                rel_vx = vx_h - mario_8d[:, 2:3]
+                rel_vy = -mario_8d[:, 3:4]
+            else:
+                rel_vx = next_vx_h - mario_vx_next
+                rel_vy = next_vy_h - mario_vy_next
             next_delta_x = torch.where(
                 active > 0.5,
-                delta_x + (next_vx_h - mario_vx_next) / self.subpixels_per_pixel,
+                delta_x + rel_vx / self.subpixels_per_pixel,
                 torch.full_like(delta_x, 999.0),
             )
             next_delta_y = torch.where(
                 active > 0.5,
-                delta_y + (next_vy_h - mario_vy_next) / self.subpixels_per_pixel,
+                delta_y + rel_vy / self.subpixels_per_pixel,
                 torch.zeros_like(delta_y),
             )
 

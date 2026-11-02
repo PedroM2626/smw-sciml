@@ -40,6 +40,14 @@ DEFAULT_CONTACT_RULE = CONTACT_ZERO_INCREMENT
 PUBLISHED_POSITION_VELOCITY = NEXT
 PUBLISHED_CONTACT_RULE = CONTACT_ZERO_VELOCITY
 
+# The rollout predicate's velocity thresholds. Section 4 measures 72 as a speed class the
+# telemetry never reaches and 64 as a documented parameter the console leaves (70.0 is
+# recorded), so neither is a bound on real states: a `RolloutEvaluator` built without them
+# scores no velocity bound at all, and the published artifacts, which scored these two, pass
+# them by name.
+PUBLISHED_MAX_VX = 72.0
+PUBLISHED_TERMINAL_VY = 64.0
+
 
 def check_position_velocity(mode: str) -> str:
     """Return `mode` when it names one of the two position-integration conventions."""

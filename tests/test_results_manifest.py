@@ -1138,23 +1138,14 @@ def test_readme_10_54_physics_claim_audit_table_is_generated() -> None:
     # every claim is implemented by the files that declare it. The findings are the dissenters.
     assert verdict["claims_the_telemetry_does_not_satisfy"] == []
     assert verdict["claims_with_a_missing_implementation"] == []
-    # The integration identity and the ground rule left the list when their corrected forms
-    # became the code defaults; what remains is the rollout predicate's two thresholds.
-    dissenters = verdict["prose_and_code_disagree"]
-    assert sorted(entry["claim"] for entry in dissenters) == [
-        "4.2.5_terminal_velocity",
-        "4.3.3_sprint_speed",
-    ]
-    files = {
-        site.split(":")[0].split("/")[-1]
-        for entry in dissenters
-        for site in entry["sites_implementing_a_different_rule"]
-    }
-    for name in sorted(files):
-        assert name in text, f"{name} disagrees with section 4 and the README does not say so"
+    # Every corrected form is now the code default - the integration identity, the ground rule
+    # and the rollout predicate's velocity thresholds - so no default path dissents from §4.
+    assert verdict["prose_and_code_disagree"] == []
     assert sorted(verdict["claims_whose_corrected_form_is_the_default"]) == [
         "4.1_integration_identity_carried_velocity",
         "4.1_violation_defined_with_carried_velocity",
+        "4.2.5_terminal_velocity",
+        "4.3.3_sprint_speed",
         "4.3.5_ground_flag_gates_gravity",
     ]
     ground = artifact["claims"]["4.3.5_ground_flag_gates_gravity"]

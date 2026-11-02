@@ -14,7 +14,7 @@ import torch
 import torch.nn as nn
 
 from src.models.pinn_hard_residual import HardResidualPINNDynamics
-from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
+from src.utils.kinematics import CARRIED, DEFAULT_POSITION_VELOCITY, check_position_velocity
 
 
 class MultiEntityPINNDynamics(nn.Module):
@@ -31,18 +31,22 @@ class MultiEntityPINNDynamics(nn.Module):
         state_dim: int = 12,
         action_dim: int = 6,
         subpixels_per_pixel: float = 16.0,
+        position_velocity: str = DEFAULT_POSITION_VELOCITY,
     ):
         super().__init__()
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.subpixels_per_pixel = subpixels_per_pixel
+        # Which velocities advance the relative position, and Mario's own when the base model
+        # is built here. A supplied base_pinn keeps its own convention for Mario.
+        self.position_velocity = check_position_velocity(position_velocity)
 
         # Base Mario physics model
         if base_pinn is not None:
             self.mario_pinn = base_pinn
         else:
             self.mario_pinn = HardResidualPINNDynamics(
-                state_dim=8, action_dim=action_dim, position_velocity=PUBLISHED_POSITION_VELOCITY
+                state_dim=8, action_dim=action_dim, position_velocity=position_velocity
             )
 
         # Hazard dynamic update head (parameterizes hazard acceleration / bounce if applicable)
@@ -93,10 +97,17 @@ class MultiEntityPINNDynamics(nn.Module):
         next_vx_h = torch.clamp(vx_h + delta_vx_h, -32.0, 32.0)
         next_vy_h = delta_vy_h  # typically 0 on flat terrain
 
-        # 4. Exact Relative Kinematic Integration:
-        # Delta X_{t+1} = Delta X_t + (vx_hazard, t+1 - vx_mario, t+1) / 16.0
-        relative_vx = next_vx_h - mario_vx_next
-        relative_vy = next_vy_h - mario_vy_next
+        # 4. Exact Relative Kinematic Integration, with the velocities position_velocity names:
+        # carried: Delta X_{t+1} = Delta X_t + (vx_hazard,t - vx_mario,t) / 16.0 (README 4.1)
+        # next:    Delta X_{t+1} = Delta X_t + (vx_hazard,t+1 - vx_mario,t+1) / 16.0 (published)
+        if self.position_velocity == CARRIED:
+            # The hazard's vertical velocity is not part of the 12D state, so its value at t is
+            # the flat-terrain 0 the hazard head itself assumes for the next frame.
+            relative_vx = vx_h - mario_state_8d[:, 2]
+            relative_vy = -mario_state_8d[:, 3]
+        else:
+            relative_vx = next_vx_h - mario_vx_next
+            relative_vy = next_vy_h - mario_vy_next
 
         next_dx_h = dx_h + (relative_vx / self.subpixels_per_pixel) * active_h
         next_dy_h = dy_h + (relative_vy / self.subpixels_per_pixel) * active_h

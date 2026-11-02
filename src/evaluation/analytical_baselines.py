@@ -25,7 +25,7 @@ import argparse
 import json
 import os
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import torch
@@ -44,7 +44,12 @@ from src.planning.mpc_planner import (
     TrajectoryObjective,
     action_vector_to_joypad,
 )
-from src.utils.kinematics import PUBLISHED_CONTACT_RULE, PUBLISHED_POSITION_VELOCITY
+from src.utils.kinematics import (
+    PUBLISHED_CONTACT_RULE,
+    PUBLISHED_MAX_VX,
+    PUBLISHED_POSITION_VELOCITY,
+    PUBLISHED_TERMINAL_VY,
+)
 from src.utils.logging import get_logger
 from src.utils.paths import (
     DATASET_GAMEPLAY,
@@ -64,7 +69,9 @@ HARD_PINN_CKPT = checkpoint_file("pinn_hard_best.pt")
 STATE_KEYS_8D = ["x", "y", "vx", "vy", "c_ground", "c_ceiling", "c_left", "c_right"]
 
 
-def _to_tensors(split: Dict[str, np.ndarray], keys: str, device: torch.device):
+def _to_tensors(
+    split: Dict[str, np.ndarray], keys: str, device: torch.device
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     return (
         torch.tensor(split[f"{keys}_states"], dtype=torch.float32).to(device),
         torch.tensor(split[f"{keys}_actions"], dtype=torch.float32).to(device),
@@ -105,7 +112,7 @@ def evaluate_engine_rules(
         .item()
     )
 
-    evaluator = RolloutEvaluator(device)
+    evaluator = RolloutEvaluator(device, max_vx=PUBLISHED_MAX_VX, terminal_vy=PUBLISHED_TERMINAL_VY)
     multistart = evaluator.evaluate_rollout_multistart(
         model=model,
         model_type="analytical",
@@ -384,7 +391,7 @@ def _nearest_primitive(action: np.ndarray) -> str:
     return min(diffs, key=lambda name: diffs[name])
 
 
-def _sequence_agreement(outcomes: Dict[str, Any]) -> Dict[str, float]:
+def _sequence_agreement(outcomes: Dict[str, Any]) -> Dict[str, Optional[float]]:
     sequences = [info["action_sequence"] for info in outcomes.values()]
     if len(sequences) < 2:
         return {"first": None, "overall": None}

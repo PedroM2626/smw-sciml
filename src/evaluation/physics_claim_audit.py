@@ -28,7 +28,9 @@ ground rule used to be on it, because the four shells advanced position with the
 next velocity and `GroundContactConsistencyLoss` penalised a vertical velocity of zero by
 default; both corrected forms are now the defaults (`src.utils.kinematics.DEFAULT_*`), and the
 published forms survive only as `PUBLISHED_*`, passed by name where a committed artifact is
-reproduced. What is left on the list is the rollout predicate's velocity thresholds.
+reproduced. The rollout predicate's velocity thresholds were the last entries: `RolloutEvaluator`
+now scores no velocity bound unless one is asked for, and the published pipelines pass 72 and 64
+as `PUBLISHED_MAX_VX` / `PUBLISHED_TERMINAL_VY`, so the list is empty.
 
 Writes ``results/physics_claim_audit_metrics.json``. Emulator-free.
 
@@ -36,7 +38,7 @@ Run:  python -m src.evaluation.physics_claim_audit
 """
 
 import os
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -69,8 +71,8 @@ README_PATH = str(PAPER_DIR / "04-mathematical-formulation-of-super-mario-world-
 # For the integration identity and the ground rule it now is: the constructors default to the
 # corrected form, a site in `src/utils/kinematics.py` pins that literal, and every pipeline that
 # reproduces a committed artifact asks for the published form by name. The rollout predicate's
-# thresholds are still "implemented, not default", because no bound the console respects exists
-# to make the default.
+# velocity thresholds follow the same rule: section 4 says the console respects no such bound,
+# so the evaluator's default scores none, and the published 72/64 are passed by name.
 CLAIMS: Dict[str, Dict[str, Any]] = {
     "4.1_integration_identity_carried_velocity": {
         "readme_marker": "### 4.1 Fixed-Point Arithmetic",
@@ -139,10 +141,11 @@ CLAIMS: Dict[str, Dict[str, Any]] = {
         "sites": [
             ("src/models/analytical_kinematics.py", "TERMINAL_VY = 64.0"),
             ("src/losses/physics_losses.py", "terminal_vy: float = 64.0"),
+            # The rollout predicate scores no terminal bound unless one is asked for.
+            ("src/evaluation/rollout_evaluator.py", "terminal_vy: Optional[float] = None"),
         ],
-        "disagrees_with": [("src/evaluation/rollout_evaluator.py", "terminal_vy: float = 64.0")],
-        "corrected_in": "RolloutEvaluator(terminal_vy=...)",
-        "corrected_by_default": False,
+        "corrected_in": "RolloutEvaluator() scores no terminal-velocity bound",
+        "corrected_by_default": True,
     },
     "4.3.1_walk_speed": {
         "readme_marker": "### 4.3 Horizontal Dynamics",
@@ -165,10 +168,11 @@ CLAIMS: Dict[str, Dict[str, Any]] = {
             ("src/models/residual_dynamics.py", "max_vx: float = 72.0"),
             ("src/models/output_projection.py", "max_vx: float = 72.0"),
             ("src/losses/physics_losses.py", "max_vx: float = 72.0"),
+            # The rollout predicate scores no horizontal bound unless one is asked for.
+            ("src/evaluation/rollout_evaluator.py", "max_vx: Optional[float] = None"),
         ],
-        "disagrees_with": [("src/evaluation/rollout_evaluator.py", "max_vx: float = 72.0")],
-        "corrected_in": "RolloutEvaluator(max_vx=48.0), the class 10.49 reaches",
-        "corrected_by_default": False,
+        "corrected_in": "RolloutEvaluator() scores no horizontal-velocity bound",
+        "corrected_by_default": True,
     },
     "4.3.5_ground_flag_gates_gravity": {
         "readme_marker": "### 4.3 Horizontal Dynamics",
@@ -217,12 +221,14 @@ def audit_claims(claims: Dict[str, Dict[str, Any]] = CLAIMS) -> Dict[str, Any]:
     report: Dict[str, Any] = {}
     for name, spec in claims.items():
         section = _section(readme, spec["readme_marker"])
-        found, missing = [], []
+        found: List[str] = []
+        missing: List[str] = []
         for path, literal in spec["sites"]:
             if path not in sources:
                 sources[path] = _read(path)
             (found if literal in sources[path] else missing).append(f"{path}: {literal}")
-        dissenters, dissent_missing = [], []
+        dissenters: List[str] = []
+        dissent_missing: List[str] = []
         for path, literal in spec.get("disagrees_with", []):
             if path not in sources:
                 sources[path] = _read(path)
@@ -415,7 +421,7 @@ def telemetry_satisfaction(dataset_path: str = DATASET_GAMEPLAY, seed: int = 42)
     }
 
 
-def _tier_table(step: np.ndarray) -> Dict[str, float]:
+def _tier_table(step: np.ndarray) -> Dict[str, Optional[float]]:
     """How one stratum's vertical steps distribute over the two documented tiers."""
     return {
         "n_frames": int(step.size),
@@ -428,7 +434,7 @@ def _tier_table(step: np.ndarray) -> Dict[str, float]:
 
 def _gravity_strata(
     states: np.ndarray, next_states: np.ndarray, actions: np.ndarray
-) -> Dict[str, Dict[str, float]]:
+) -> Dict[str, Dict[str, Optional[float]]]:
     r"""The four stratum §4.2 distinguishes, scored separately.
 
     Section 4.2.3/4 define the tiers by button state *and* by direction, so a single pooled
@@ -451,7 +457,7 @@ def _gravity_strata(
 
 def _ground_condition_rate(
     states: np.ndarray, actions: np.ndarray, next_states: np.ndarray
-) -> Dict[str, float]:
+) -> Dict[str, Optional[float]]:
     """How often the engine really forces $v_{y,t+1}=0$ on a grounded, un-jumping frame.
 
     Conditioned the way the penalty conditions it - the ground flag of the state the frame
@@ -463,7 +469,7 @@ def _ground_condition_rate(
     landed = (next_states[:, 4] > 0.5) & (actions[:, 0] < 0.5)
     vy_next = next_states[:, 3]
     step = next_states[:, 3] - states[:, 3]
-    out: Dict[str, float] = {"n_frames_claimed": int(commanded.sum())}
+    out: Dict[str, Optional[float]] = {"n_frames_claimed": int(commanded.sum())}
     for name, mask in (("claimed", commanded), ("landed_this_frame", landed)):
         out[f"{name}_rate_vy_next_exactly_zero"] = (
             float(np.mean(vy_next[mask] == 0.0)) if mask.any() else None
@@ -704,8 +710,8 @@ def run_physics_claim_audit(
             "telemetry_scope": "training split of the canonical gameplay recording",
             "emulator_required": False,
             "section_4_prose_state": (
-                "corrected to the measured rules; the integration identity and the ground rule "
-                "are the code defaults, the rollout thresholds are recorded as dissenting code"
+                "corrected to the measured rules; every corrected form is the code default, "
+                "and the published forms are passed by name where an artifact is reproduced"
             ),
             "satisfaction_tests": sorted(SATISFACTION_TESTS),
         },

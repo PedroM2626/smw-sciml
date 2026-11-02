@@ -137,7 +137,7 @@ git lfs install          # datasets, checkpoints, figures and savestates are LFS
 git lfs pull
 python -m venv .venv
 .venv\Scripts\activate   # Windows: the bundled Libretro core is a Windows DLL
-pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu121
+pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu126
 pip install -e ".[dev]"
 make test                # or: smw-pinn test-cov
 make reproduce           # the CPU benchmark of Section 8 in minutes

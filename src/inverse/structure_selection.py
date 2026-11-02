@@ -41,7 +41,7 @@ numpy-only, deterministic, no new dependency.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -616,9 +616,9 @@ def evaluate_templates(
             f.test_tail_rmse = float(np.sqrt(np.mean((target[tail] - pred[tail]) ** 2)))
 
 
-def summarise(fits: Sequence[TemplateFit]) -> Dict[str, object]:
+def summarise(fits: Sequence[TemplateFit]) -> Dict[str, Any]:
     """Tabulate templates and report what each criterion selects."""
-    table: Dict[str, object] = {}
+    table: Dict[str, Any] = {}
     for f in fits:
         table[f.name] = {
             "n_parameters": f.n_parameters,

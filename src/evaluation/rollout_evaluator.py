@@ -4,7 +4,7 @@ Rigorous long-horizon trajectory drift evaluator (Multi-step Autoregressive Roll
 Measures error accumulation (drift) against the ground-truth game trajectory across H frames.
 """
 
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
@@ -21,23 +21,29 @@ class RolloutEvaluator:
     def __init__(
         self,
         device: torch.device,
-        max_vx: float = 72.0,
-        terminal_vy: float = 64.0,
+        max_vx: Optional[float] = None,
+        terminal_vy: Optional[float] = None,
         tolerance_px: float = 0.2,
     ):
-        """The published predicate, with its two thresholds nameable.
+        """The rollout predicate, with its velocity thresholds optional.
 
-        ``max_vx=72.0`` and ``terminal_vy=64.0`` are the constants §8 and §10.27 onwards have
-        always scored against, and §10.49/§10.54 record that they are a speed *class* and an
-        unenforced engine parameter rather than bounds the console respects - the recordings
-        reach 49.0 and 70.0. They are therefore parameters here, not literals: 10.57 scores the
-        same rollouts against the reachable run class (48.0) to show what the published
-        violation column is measuring. Defaults keep every earlier number reproducible.
+        By default no velocity bound is scored: §10.49/§10.54 record that 72.0 is a speed *class*
+        the telemetry never reaches and 64.0 an engine parameter the console leaves (the
+        recordings reach 49.0 and 70.0), so neither is a bound a prediction can violate.
+        ``velocity_violations`` is then ``None`` rather than a zero that measured nothing.
+        The published artifacts scored ``max_vx=72.0`` and ``terminal_vy=64.0``; the pipelines
+        that reproduce them pass ``PUBLISHED_MAX_VX`` and ``PUBLISHED_TERMINAL_VY`` by name, and
+        10.57 scores the same rollouts against the reachable run class (48.0) as well.
         """
         self.device = device
         self.max_vx = max_vx
         self.terminal_vy = terminal_vy
         self.tolerance_px = tolerance_px
+
+    @property
+    def scores_velocity_bounds(self) -> bool:
+        """True when at least one velocity threshold was asked for."""
+        return self.max_vx is not None or self.terminal_vy is not None
 
     @torch.no_grad()
     def evaluate_rollout(
@@ -47,7 +53,7 @@ class RolloutEvaluator:
         initial_state: np.ndarray,  # [state_dim]
         action_sequence: np.ndarray,  # [H, action_dim]
         ground_truth_states: np.ndarray,  # [H, state_dim]
-    ) -> Dict[str, np.ndarray]:
+    ) -> Dict[str, Any]:
         """
         Executes a complete multi-step autoregressive rollout of length H.
 
@@ -100,10 +106,12 @@ class RolloutEvaluator:
             if abs((hat_x - prev_x) - (curr_state[0, 2].item() / 16.0)) > self.tolerance_px:
                 kin_violations += 1
 
-            # Velocity saturation boundary violation. 10.54 records this as a disagreement
-            # with section 4: 72 and 64 are a speed class and a documented clamp that the
-            # telemetry is observed to leave, so neither is an absolute bound on real states.
-            if abs(hat_vx) > self.max_vx or hat_vy > self.terminal_vy:
+            # Velocity threshold violation, scored only against the thresholds asked for:
+            # section 4 records 72 and 64 as a speed class and a documented clamp the telemetry
+            # leaves, so neither is an absolute bound on real states.
+            over_vx = self.max_vx is not None and abs(hat_vx) > self.max_vx
+            over_vy = self.terminal_vy is not None and hat_vy > self.terminal_vy
+            if over_vx or over_vy:
                 vel_violations += 1
 
             pred_traj[t] = next_state_pred[0].cpu().numpy()
@@ -121,7 +129,7 @@ class RolloutEvaluator:
             "mean_drift": float(np.mean(euclidean_drift)),
             "final_drift": float(euclidean_drift[-1]),
             "kinematic_violations": kin_violations,
-            "velocity_violations": vel_violations,
+            "velocity_violations": vel_violations if self.scores_velocity_bounds else None,
         }
 
     @torch.no_grad()
@@ -135,7 +143,7 @@ class RolloutEvaluator:
         horizon: int = 120,
         num_starts: int = 10,
         stride: int | None = None,
-    ) -> Dict[str, object]:
+    ) -> Dict[str, Any]:
         """Multi-start open-loop rollout: average drift over spread start indices.
 
         Single-start rollouts depend heavily on the chosen initial frame. This
@@ -179,7 +187,8 @@ class RolloutEvaluator:
             mean_drifts.append(float(res["mean_drift"]))
             final_drifts.append(float(res["final_drift"]))
             kin_rates.append(float(res["kinematic_violations"]) / horizon)
-            vel_rates.append(float(res["velocity_violations"]) / horizon)
+            if self.scores_velocity_bounds:
+                vel_rates.append(float(res["velocity_violations"]) / horizon)
 
         return {
             "starts": starts,
@@ -188,7 +197,7 @@ class RolloutEvaluator:
             "mean_drifts": mean_drifts,
             "final_drifts": final_drifts,
             "kinematic_violation_rates": kin_rates,
-            "velocity_violation_rates": vel_rates,
+            "velocity_violation_rates": vel_rates if self.scores_velocity_bounds else None,
             "mean_drift_mean": float(np.mean(mean_drifts)),
             "mean_drift_std": float(np.std(mean_drifts, ddof=1)) if len(mean_drifts) > 1 else 0.0,
             "final_drift_mean": float(np.mean(final_drifts)),
@@ -196,7 +205,9 @@ class RolloutEvaluator:
             if len(final_drifts) > 1
             else 0.0,
             "kinematic_violation_rate_mean": float(np.mean(kin_rates)),
-            "velocity_violation_rate_mean": float(np.mean(vel_rates)),
+            "velocity_violation_rate_mean": (
+                float(np.mean(vel_rates)) if self.scores_velocity_bounds else None
+            ),
         }
 
     def benchmark_all_models(
@@ -205,7 +216,7 @@ class RolloutEvaluator:
         initial_state: np.ndarray,
         action_sequence: np.ndarray,
         ground_truth_states: np.ndarray,
-    ) -> Dict[str, Dict[str, float]]:
+    ) -> Dict[str, Dict[str, Any]]:
         results = {}
         for name, model in models.items():
             model_type = "lstm" if "lstm" in name.lower() else "mlp"
@@ -220,6 +231,6 @@ class RolloutEvaluator:
                 "mean_drift_pixels": float(rollout_res["mean_drift"]),
                 "final_drift_pixels": float(rollout_res["final_drift"]),
                 "kin_violations": int(rollout_res["kinematic_violations"]),
-                "vel_violations": int(rollout_res["velocity_violations"]),
+                "vel_violations": rollout_res["velocity_violations"],
             }
         return results

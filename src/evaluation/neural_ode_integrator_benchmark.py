@@ -84,6 +84,7 @@ from src.models import (
 from src.models.neural_ode_dynamics import FIELD_EVALUATIONS, SOLVERS
 from src.training.trainer import DynamicsTrainer
 from src.utils.config import parse_args_with_config
+from src.utils.kinematics import PUBLISHED_MAX_VX, PUBLISHED_TERMINAL_VY
 from src.utils.logging import get_logger
 from src.utils.paths import DATASET_GAMEPLAY, RESULTS_DIR
 from src.utils.provenance import read_metrics, write_metrics
@@ -202,7 +203,7 @@ def build_arm(
 
 def second_order_coefficient(
     moved: np.ndarray, velocity: np.ndarray, accel: np.ndarray
-) -> Dict[str, float]:
+) -> Dict[str, Optional[float]]:
     r"""The slope $c$ in $\hat x = x + v/16 + c\,\hat a/16$, fitted without an intercept.
 
     `moved`, `velocity` and `accel` are $[N, 2]$: the position increment, the velocity the
@@ -215,7 +216,7 @@ def second_order_coefficient(
     velocity = np.asarray(velocity, dtype=np.float64)
     accel = np.asarray(accel, dtype=np.float64)
     residual = SUBPIXELS_PER_PIXEL * moved - velocity
-    out: Dict[str, float] = {}
+    out: Dict[str, Optional[float]] = {}
     for channel, name in ((0, "x"), (1, "y")):
         a = accel[:, channel]
         denominator = float(np.dot(a, a))
@@ -232,7 +233,7 @@ def second_order_coefficient(
 @torch.no_grad()
 def one_step_metrics(
     model: NeuralODEDynamics, data: Dict[str, Any], device: torch.device
-) -> Dict[str, float]:
+) -> Dict[str, Optional[float]]:
     """The shared held-out battery, plus the integrator's own measured coefficient."""
     model.eval()
     states = torch.as_tensor(data["test_states"], dtype=torch.float32, device=device)
@@ -241,13 +242,15 @@ def one_step_metrics(
     pred = model(states, actions).cpu()
     s = np.asarray(data["test_states"], dtype=np.float64)
     ns = np.asarray(data["test_next_states"], dtype=np.float64)
-    out = prediction_metrics(pred.numpy(), s, ns, compute_per_variable_metrics(pred, targets))
+    out: Dict[str, Optional[float]] = dict(
+        prediction_metrics(pred.numpy(), s, ns, compute_per_variable_metrics(pred, targets))
+    )
     accel = pred[:, 2:4].numpy() - s[:, 2:4]
     out.update(second_order_coefficient(pred[:, :2].numpy() - s[:, :2], s[:, 2:4], accel))
     return out
 
 
-def console_coefficient(data: Dict[str, Any]) -> Dict[str, float]:
+def console_coefficient(data: Dict[str, Any]) -> Dict[str, Optional[float]]:
     r"""The same estimator applied to the recorded transitions themselves.
 
     Reported with the exact-frame rate and with the contact-free subset, because the slope on
@@ -359,9 +362,15 @@ def _families_in(record_owner: Dict[str, Any]) -> Tuple[str, ...]:
     return tuple(f for f in FAMILIES if any(str(key).startswith(f + "/") for key in record_owner))
 
 
-def _mean_of_dicts(blocks: Sequence[Dict[str, float]]) -> Dict[str, float]:
+def _mean_of_dicts(blocks: Sequence[Dict[str, Optional[float]]]) -> Dict[str, float]:
     keys = list(blocks[0])
-    return {key: float(np.mean([block[key] for block in blocks])) for key in keys}
+    out: Dict[str, float] = {}
+    for key in keys:
+        values = [block[key] for block in blocks]
+        if any(value is None for value in values):
+            raise ValueError(f"{key} is undefined on at least one draw, so it has no mean")
+        out[key] = float(np.mean([value for value in values if value is not None]))
+    return out
 
 
 def _verdict(summary: Dict[str, Any], console: Dict[str, float]) -> Dict[str, Any]:
@@ -552,13 +561,15 @@ def run_neural_ode_integrator_benchmark(
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     os.makedirs(out_dir, exist_ok=True)
-    evaluator = RolloutEvaluator(device=device)
+    evaluator = RolloutEvaluator(
+        device=device, max_vx=PUBLISHED_MAX_VX, terminal_vy=PUBLISHED_TERMINAL_VY
+    )
     checkpoint_dir = os.path.join(out_dir, "checkpoints")
     scratch = os.path.join(tempfile.gettempdir(), f"mworld_neuralode_scratch_{os.getpid()}")
     os.makedirs(scratch, exist_ok=True)
 
     runs: Dict[int, Dict[str, Dict[str, Any]]] = {}
-    console_rows: List[Dict[str, float]] = []
+    console_rows: List[Dict[str, Optional[float]]] = []
     real_reference: Optional[np.ndarray] = None
     reference_data: Optional[Dict[str, Any]] = None
     for draw in draws:

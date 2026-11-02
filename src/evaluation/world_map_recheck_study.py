@@ -201,7 +201,8 @@ def gather() -> Dict[str, Any]:
     opened = _read(OPENED_SURVEY)
     stages = sorted(str(s["identity"]["translevel"]) for s in _read(STUDY)["stages"])
     opened_nodes = nodes_by_position(opened)
-    start = tuple(int(v) for v in opened["protocol"]["cursor_at_start"])
+    cursor = opened["protocol"]["cursor_at_start"]
+    start = (int(cursor[0]), int(cursor[1]))
     entered = opened_nodes.get(start, {})
     new = [
         opened_nodes[node]

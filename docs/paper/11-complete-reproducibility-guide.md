@@ -259,9 +259,9 @@ smw-pinn/
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
-# CUDA 12.1 build (RTX 4070 reference hardware):
+# CUDA 12.6 build (RTX 4070 reference hardware; the published runs used CUDA 12.1 + torch 2.5.1):
 pip install --upgrade pip
-pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu121
+pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu126
 # CPU-only fallback:
 # pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 # Editable install (enables `from src...` imports without sys.path hacks):
@@ -372,9 +372,13 @@ python -m src.evaluation.evaluate_cross_level_control
 # 23. Train Unified Dyna-PPO inside PINN GPU Simulator (>14,000 FPS):
 python -m src.training.train_unified_ppo
 
-# 24. Full Stage Clearance Benchmark on Live SNES Hardware (PPO vs. DAgger vs. MPC):
-python -m src.evaluation.evaluate_full_level_clearance --controller dagger
-python -m src.evaluation.evaluate_full_level_clearance --controller ppo
+# 24. Full Stage Clearance Benchmark on Live SNES Hardware (PPO vs. DAgger vs. MPC).
+#     The published artifact was flown without the message-box A pulse (10.60), which is now the
+#     evaluator's default, so reproducing it passes --no-message-box-hygiene (as `smw-pinn
+#     full-clearance` does):
+python -m src.evaluation.evaluate_full_level_clearance --controller mpc --no-message-box-hygiene
+python -m src.evaluation.evaluate_full_level_clearance --controller dagger --no-message-box-hygiene
+python -m src.evaluation.evaluate_full_level_clearance --controller ppo --no-message-box-hygiene
 
 # 25. Render High-Resolution Video (MP4) and Animated GIF with Telemetry HUD:
 python -m src.evaluation.render_level_clearance_video
@@ -722,7 +726,7 @@ python -m src.evaluation.conformal_uncertainty_benchmark
 # Canonical install (imports `from src...`) + shortcuts:
 pip install -e ".[dev]"
 make test        # 340+ unit/smoke/guard tests (emulator tests skip off-Windows)
-make test-cov    # with coverage gate (baseline 30%)
+make test-cov    # with coverage gate (fail under 44%)
 make lint        # ruff check src tests scripts
 make format      # ruff format src tests scripts
 make format-check # ruff format --check (what CI runs)
@@ -742,7 +746,7 @@ smw-pinn check-all # the same gate on Windows, where `make` is usually unavailab
 * **Per-variable metrics:** `benchmark_metrics.json` now also reports per-channel MSE/MAE/R² (`x, y, vx, vy`) and accuracy/F1 (`c_*`) plus `rollout_multistart` (mean ± std over N starts) — aggregate MSE is dominated by coordinate scale (e.g. 1-epoch smoke: Hard PINN `x`-MSE 0.14 vs MLP 106k).
 * **Stronger statistics:** multiseed defaults to K=10 seeds with paired t + Wilcoxon + Cohen's dz, evaluated on single-start *and* multi-start drift.
 * **Regression gate:** `tests/test_metrics_regression.py` fails CI if published numbers silently degrade (Hard MSE < 2.0, 0 kinematic violations, N=200 Hard beats N=5000 MLP).
-* **CI/Docker:** `.github/workflows/ci.yml` (ruff + mypy + pytest + coverage; uploads `pytest.log` on failure) and `Dockerfile` (CPU base, CUDA via build-arg). Dependabot stays inside the validated torch envelope (`torch<2.7`, `torchvision<0.22`, `numpy<2.1`); widen caps only with hardware re-validation.
+* **CI/Docker:** `.github/workflows/ci.yml` (ruff + mypy over all of `src/` + pytest + coverage on Python 3.10-3.13; uploads `pytest.log` on failure), `.github/workflows/hardware.yml` (the whole suite on a self-hosted Windows runner that holds a ROM dump, started by hand, with `SMW_REQUIRE_EMULATOR=1` turning a skipped emulator test into an error) and `Dockerfile` (CPU base, CUDA via build-arg). The dependency caps and why each exists are in CONTRIBUTING.md.
 * **Refreshed numbers:** `results/benchmark_metrics.json`, `sample_efficiency_metrics.json` and `multiseed_benchmark_metrics.json` were regenerated with deterministic seeded loaders (seed 42) and K=10 seeds; tables in §8.1–§8.4 match those files exactly (`tests/test_metrics_regression.py` enforces it).
 * **New frontiers (§10.31–§10.36):** pixel perception (`src/perception/`), hierarchical A\*+MPC (`src/planning/global_planner.py`), reflex ablation + TD-MPC value, connected orphans, spatial-holdout OOD. Emulator-dependent tests skip off-Windows via `@requires_emulator`; Yoshi's Island 2 capture is documented as blocked in §10.36 (with `results/yi2_capture_attempt.json` as the evidence artifact).
 * **Reference baselines and audit tooling (§10.37–§10.38):** the zero-parameter engine-rule model (`src/models/analytical_kinematics.py`), the oracle-MPC comparison (`src/evaluation/analytical_baselines.py --hardware`), the closed-loop reproduction audit and the episode-preamble probe (`src/evaluation/mbrl_mpc_benchmark.py --reproduction-check / --preamble-probe`).

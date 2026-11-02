@@ -10,7 +10,7 @@ and a mixed-language repository makes every search and quote ambiguous.
 python -m venv .venv
 .venv\Scripts\activate            # Windows
 # source .venv/bin/activate       # Linux/macOS
-pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cu121
+pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cu126
 # CPU-only fallback: ... --extra-index-url https://download.pytorch.org/whl/cpu
 git lfs install && git lfs pull   # datasets, checkpoints, videos
 ```
@@ -20,8 +20,13 @@ never commit ROMs, savestates with personal data, or API keys.
 
 ## Dependency envelope
 
-`torch>=2.5.1,<2.7`, `torchvision>=0.20.1,<0.22`, `numpy>=1.24.0,<2.1` are
-validated on RTX 4070 + CUDA 12.1. Dependabot is configured
+`torch>=2.5.1,<2.15`, `torchvision>=0.20.1,<0.30`, `numpy>=1.24.0,<2.6` are
+validated on RTX 4070 + CUDA 12.6 (torch 2.14.1, the newest release with a CUDA build) and on
+CPU with Python 3.13 + NumPy 2.5; the published artifacts themselves were recorded with torch
+2.5.1 + CUDA 12.1. Install the CUDA build from the `cu126` index: the older `cu121` index stops at
+torch 2.5.1, and with a wider cap pip would quietly take the CPU-only wheel from PyPI on Windows.
+`scikit-learn<1.6` is a hard requirement, not a validation cap: gplearn 0.4.2, the latest
+release, calls an estimator API that scikit-learn 1.6 removed. Dependabot is configured
 (`.github/dependabot.yml`) to stay inside these caps — widen them only with a
 full hardware re-validation (benchmarks + `make test-cov` on CUDA). CI uploads
 `pytest.log` as an artifact on failure; check it before re-running blindly.
@@ -38,9 +43,9 @@ requirements.lock` after re-validating, and do not install it as-is on other har
 make lint         # ruff check src tests scripts — must pass
 make format       # ruff format (the same version CI and pre-commit enforce)
 make format-check # ruff format --check — must pass
-make typecheck    # mypy on typed core modules — must pass
+make typecheck    # mypy on the whole src/ package — must pass
 make test         # fast unit tests
-make test-cov     # tests + coverage gate (baseline 30%)
+make test-cov     # tests + coverage gate (fail under 44%)
 make check-all    # lint + format-check + typecheck + test-cov, i.e. the CI gate
 make reproduce    # 2-epoch CPU smoke benchmark (configs/reproduce.yaml)
 make smoke-all    # seconds-scale runs of the slow studies -> results_smoke/
@@ -84,13 +89,9 @@ only `scripts/` bootstraps the repo root.
 - **Tests:** every new module gets a test file. Emulator-dependent tests must
   use `@requires_emulator` from `tests/conftest.py` (Windows DLL doesn't load
   on Linux CI — tests must skip, never error).
-- **Types:** the typed core is the whole reusable library - every module under
-  `src/models/`, `src/losses/`, `src/planning/`, `src/perception/` and `src/utils/`, plus
-  the environment data/vectorised-sim layer (`dataset_loader`, `pinn_sim_env`, `wram`,
-  `sprite_sets`), the trainer, and the per-variable / rollout evaluators (40+ files).
-  New/edited code there must pass `make typecheck`. The ctypes emulator wrapper and the
-  result-producing benchmark/evaluation CLI scripts are kept outside the strict set by
-  design. Pre-commit (`pre-commit install`) runs `ruff check --fix`
+- **Types:** `make typecheck` runs mypy over the whole `src/` package - the science
+  library, the ctypes emulator wrapper, and every study and training entry point (147
+  files). New or edited code anywhere under `src/` must pass it. Pre-commit (`pre-commit install`) runs `ruff check --fix`
   and `ruff format` with the same pinned version as CI.
 - **Result artifacts:** a new `results/*.json` must be written through
   `src/utils.provenance.write_metrics` (so it carries `_meta`) and registered in

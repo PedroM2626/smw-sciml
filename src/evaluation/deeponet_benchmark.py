@@ -26,6 +26,7 @@ from src.evaluation.rollout_evaluator import RolloutEvaluator
 from src.models import DeepONetDynamics
 from src.training.trainer import DynamicsTrainer
 from src.utils.config import parse_args_with_config
+from src.utils.kinematics import PUBLISHED_MAX_VX, PUBLISHED_TERMINAL_VY
 from src.utils.logging import get_logger
 from src.utils.paths import DATASET_GAMEPLAY, RESULTS_DIR
 from src.utils.provenance import read_metrics, write_metrics
@@ -144,7 +145,9 @@ def run_deeponet_benchmark(
 
     # Long-horizon autoregressive rollout evaluation (same protocol as the
     # canonical benchmark: single continuous track plus multi-start average).
-    evaluator = RolloutEvaluator(device=device)
+    evaluator = RolloutEvaluator(
+        device=device, max_vx=PUBLISHED_MAX_VX, terminal_vy=PUBLISHED_TERMINAL_VY
+    )
     test_states = data_dict["test_states"]
     test_actions = data_dict["test_actions"]
     test_next_states = data_dict["test_next_states"]

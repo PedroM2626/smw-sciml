@@ -36,6 +36,8 @@ from typing import List, Optional
 import torch
 import torch.nn as nn
 
+from src.utils.kinematics import CARRIED, DEFAULT_POSITION_VELOCITY, check_position_velocity
+
 
 def _build_mlp(
     in_dim: int,
@@ -167,8 +169,13 @@ class PhysicsConstrainedDeepONetDynamics(nn.Module):
 
         hat_vx = clamp(vx_t + delta_vx, -max_vx, max_vx)
         hat_vy = clamp(vy_t + delta_vy, min_vy, terminal_vy)
-        hat_X  = X_t + hat_vx / 16.0
-        hat_Y  = Y_t + hat_vy / 16.0
+        hat_X  = X_t + v_x / 16.0
+        hat_Y  = Y_t + v_y / 16.0
+
+    for whichever velocity ``position_velocity`` selects: ``"carried"`` (the default) uses the
+    velocity the frame starts with, as README 4.1 states it; ``"next"`` (what the published
+    10.42 checkpoint was trained with, passed by name as ``PUBLISHED_POSITION_VELOCITY``) uses
+    the velocity just predicted.
 
     The discrete kinematic consistency residual is therefore identically zero
     by construction: the operator learns forces, the engine rule integrates
@@ -192,11 +199,13 @@ class PhysicsConstrainedDeepONetDynamics(nn.Module):
         terminal_vy: float = 64.0,
         min_vy: float = -80.0,
         subpixels_per_pixel: float = 16.0,
+        position_velocity: str = DEFAULT_POSITION_VELOCITY,
     ):
         super().__init__()
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.latent_dim = latent_dim
+        self.position_velocity = check_position_velocity(position_velocity)
         self.max_vx = max_vx
         self.terminal_vy = terminal_vy
         self.min_vy = min_vy
@@ -245,8 +254,11 @@ class PhysicsConstrainedDeepONetDynamics(nn.Module):
         # Hard Section-4 kinematics: physical saturation, exact integration.
         hat_vx_next = torch.clamp(vx_t + delta_vx, -self.max_vx, self.max_vx)
         hat_vy_next = torch.clamp(vy_t + delta_vy, self.min_vy, self.terminal_vy)
-        hat_x_next = x_t + (hat_vx_next / self.subpixels_per_pixel)
-        hat_y_next = y_t + (hat_vy_next / self.subpixels_per_pixel)
+        use_vx, use_vy = (
+            (vx_t, vy_t) if self.position_velocity == CARRIED else (hat_vx_next, hat_vy_next)
+        )
+        hat_x_next = x_t + (use_vx / self.subpixels_per_pixel)
+        hat_y_next = y_t + (use_vy / self.subpixels_per_pixel)
 
         return torch.cat(
             [

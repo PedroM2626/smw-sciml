@@ -89,7 +89,9 @@ def train_multi_entity_model(
         )
         logger.info(f"Preloaded base Hard PINN from {base_checkpoint}")
 
-    model = MultiEntityPINNDynamics(base_pinn=base_pinn).to(device)
+    model = MultiEntityPINNDynamics(
+        base_pinn=base_pinn, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
 
     # Freeze base Mario PINN so hazard_net learns specifically the entity dynamics
     for param in model.mario_pinn.parameters():

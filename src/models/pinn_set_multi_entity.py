@@ -17,7 +17,7 @@ import torch
 import torch.nn as nn
 
 from src.models.pinn_hard_residual import HardResidualPINNDynamics
-from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
+from src.utils.kinematics import CARRIED, DEFAULT_POSITION_VELOCITY, check_position_velocity
 
 
 class SetMultiEntityPINNDynamics(nn.Module):
@@ -37,8 +37,12 @@ class SetMultiEntityPINNDynamics(nn.Module):
         action_dim: int = 6,
         num_heads: int = 2,
         subpixels_per_pixel: float = 16.0,
+        position_velocity: str = DEFAULT_POSITION_VELOCITY,
     ):
         super().__init__()
+        # Which velocities advance the relative positions, and Mario's own when the base model
+        # is built here. A supplied base_pinn keeps its own convention for Mario.
+        self.position_velocity = check_position_velocity(position_velocity)
         self.max_entities = max_entities
         self.entity_feature_dim = entity_feature_dim
         self.hidden_dim = hidden_dim
@@ -50,7 +54,7 @@ class SetMultiEntityPINNDynamics(nn.Module):
             self.mario_pinn = base_pinn
         else:
             self.mario_pinn = HardResidualPINNDynamics(
-                state_dim=8, action_dim=action_dim, position_velocity=PUBLISHED_POSITION_VELOCITY
+                state_dim=8, action_dim=action_dim, position_velocity=position_velocity
             )
 
         # Entity encoder: projects 5D sprite telemetry to hidden_dim
@@ -153,8 +157,13 @@ class SetMultiEntityPINNDynamics(nn.Module):
         curr_dx = entities[..., 0]
         curr_dy = entities[..., 1]
 
-        rel_vx = next_vx - mario_vx_next.unsqueeze(1)
-        rel_vy = next_vy - mario_vy_next.unsqueeze(1)
+        if self.position_velocity == CARRIED:
+            # The frame's own velocities, entity and Mario alike (README 4.1).
+            rel_vx = curr_vx - mario_state[:, 2].unsqueeze(1)
+            rel_vy = curr_vy - mario_state[:, 3].unsqueeze(1)
+        else:
+            rel_vx = next_vx - mario_vx_next.unsqueeze(1)
+            rel_vy = next_vy - mario_vy_next.unsqueeze(1)
 
         next_dx = curr_dx + (rel_vx / self.subpixels_per_pixel)
         next_dy = curr_dy + (rel_vy / self.subpixels_per_pixel)

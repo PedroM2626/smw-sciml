@@ -59,7 +59,7 @@ def run_hierarchical(
         payload = torch.load(value_ckpt, map_location=device, weights_only=False)
         value_net = TerminalValueNet().to(device)
         value_net.load_state_dict(payload["model"])
-        objective = TerminalValueObjective(
+        objective: TerminalValueObjective | WaypointObjective = TerminalValueObjective(
             value_net=value_net,
             target_mean=payload["stats"]["target_mean"],
             target_std=payload["stats"]["target_std"],

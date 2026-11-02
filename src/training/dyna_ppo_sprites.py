@@ -107,7 +107,9 @@ def train_multi_entity_dyna_ppo(
         base_pinn.load_state_dict(torch.load(base_ckpt, map_location=device, weights_only=True))
         logger.info(f"Preloaded base Hard PINN weights from {base_ckpt}.")
 
-    multi_world_model = MultiEntityPINNDynamics(base_pinn=base_pinn).to(device)
+    multi_world_model = MultiEntityPINNDynamics(
+        base_pinn=base_pinn, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
     multi_world_model.eval()
 
     # 2. Setup Vectorized Simulation Environment

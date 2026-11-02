@@ -69,6 +69,8 @@ from src.utils.kinematics import (
     CONTACT_ZERO_VELOCITY,
     NEXT,
     PUBLISHED_CONTACT_RULE,
+    PUBLISHED_MAX_VX,
+    PUBLISHED_TERMINAL_VY,
     set_position_velocity,
 )
 from src.utils.logging import get_logger
@@ -281,9 +283,18 @@ def _score(
     changes the convention has to be read against that as well, inside this study rather than by
     borrowing the number from another section.
     """
-    published = RolloutEvaluator(device=device)
-    run_class = RolloutEvaluator(device=device, max_vx=RUN_CLASS_VX)
-    tight = RolloutEvaluator(device=device, tolerance_px=TIGHT_TOLERANCE_PX)
+    published = RolloutEvaluator(
+        device=device, max_vx=PUBLISHED_MAX_VX, terminal_vy=PUBLISHED_TERMINAL_VY
+    )
+    run_class = RolloutEvaluator(
+        device=device, max_vx=RUN_CLASS_VX, terminal_vy=PUBLISHED_TERMINAL_VY
+    )
+    tight = RolloutEvaluator(
+        device=device,
+        tolerance_px=TIGHT_TOLERANCE_PX,
+        max_vx=PUBLISHED_MAX_VX,
+        terminal_vy=PUBLISHED_TERMINAL_VY,
+    )
     single = published.evaluate_rollout(
         model=model,
         model_type="operator_feedforward",

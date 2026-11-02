@@ -17,6 +17,7 @@ from src.environment.snes_emulator import SnesLibretroEmulator
 from src.models.tilemap_pinn import TilemapPINNDynamics
 from src.planning.mpc_planner import ModelPredictiveController, TrajectoryObjective
 from src.planning.tilemap_mpc import TilemapMPCWrapper
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CORE_PATH,
@@ -48,7 +49,7 @@ def run_tilemap_mpc(
     set_global_seed(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    tile_model = TilemapPINNDynamics().to(device)
+    tile_model = TilemapPINNDynamics(position_velocity=PUBLISHED_POSITION_VELOCITY).to(device)
     tile_model.load_state_dict(torch.load(tilemap_ckpt, map_location=device, weights_only=True))
     tile_model.eval()
     world_model = TilemapMPCWrapper(tile_model).to(device)

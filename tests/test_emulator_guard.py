@@ -34,3 +34,13 @@ def test_guard_fails_when_cdll_raises(monkeypatch):
     monkeypatch.setattr(ctypes, "CDLL", _boom)
     # Paths exist here, so only the CDLL failure drives the result.
     assert emulator_available() is False
+
+
+def test_a_required_emulator_that_is_missing_stops_the_run() -> None:
+    """SMW_REQUIRE_EMULATOR=1 turns the silent skip into an error; unset, nothing changes."""
+    from tests.conftest import missing_emulator_is_an_error
+
+    assert missing_emulator_is_an_error({"SMW_REQUIRE_EMULATOR": "1"}, available=False)
+    assert missing_emulator_is_an_error({"SMW_REQUIRE_EMULATOR": "1"}, available=True) is None
+    assert missing_emulator_is_an_error({}, available=False) is None
+    assert missing_emulator_is_an_error({"SMW_REQUIRE_EMULATOR": "0"}, available=False) is None

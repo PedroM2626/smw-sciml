@@ -71,7 +71,7 @@ def train_tilemap_model(
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     # 2. Instantiate Tilemap-PINN and Baseline Blind-PINN
-    tilemap_model = TilemapPINNDynamics().to(device)
+    tilemap_model = TilemapPINNDynamics(position_velocity=PUBLISHED_POSITION_VELOCITY).to(device)
     blind_model = HardResidualPINNDynamics(
         state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
     ).to(device)

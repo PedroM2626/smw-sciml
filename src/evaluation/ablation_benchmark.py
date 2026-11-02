@@ -13,7 +13,7 @@ Generates:
 import json
 import os
 import time
-from typing import Dict
+from typing import Any, Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -190,7 +190,9 @@ def run_horizon_degradation_ablation(
             m.load_state_dict(torch.load(ckpt_map[name], map_location=device, weights_only=True))
         m.eval()
 
-    horizon_results = {name: {h: [] for h in horizons} for name in models}
+    horizon_results: Dict[str, Dict[int, List[float]]] = {
+        name: {h: [] for h in horizons} for name in models
+    }
     kinematic_violations = {name: 0.0 for name in models}
 
     # Evaluate across multiple sub-trajectories
@@ -204,7 +206,7 @@ def run_horizon_degradation_ablation(
 
         for name, model in models.items():
             curr_s = torch.tensor(true_traj[0], dtype=torch.float32).unsqueeze(0).to(device)
-            sim_preds = []
+            sim_rows = []
             violations = 0
 
             # Autoregressive rollout
@@ -223,10 +225,10 @@ def run_horizon_degradation_ablation(
                 if abs(dx_pred - dx_phys) > 0.05:
                     violations += 1
 
-                sim_preds.append(next_s.cpu().numpy()[0])
+                sim_rows.append(next_s.cpu().numpy()[0])
                 curr_s = next_s
 
-            sim_preds = np.array(sim_preds)
+            sim_preds = np.array(sim_rows)
             kinematic_violations[name] += (violations / rollout_len) * 100.0
 
             # Compute error at each horizon
@@ -235,7 +237,7 @@ def run_horizon_degradation_ablation(
                 horizon_results[name][h].append(mse_h)
 
     # Average over trials
-    final_horizon_metrics = {}
+    final_horizon_metrics: Dict[str, Dict[str, Any]] = {}
     for name in models:
         final_horizon_metrics[name] = {
             "drift_by_horizon": {h: float(np.mean(horizon_results[name][h])) for h in horizons},
@@ -258,7 +260,9 @@ def run_mpc_sensitivity_ablation(device: torch.device) -> Dict:
     base_pinn = HardResidualPINNDynamics(
         state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
     )
-    world_model = MultiEntityPINNDynamics(base_pinn=base_pinn).to(device)
+    world_model = MultiEntityPINNDynamics(
+        base_pinn=base_pinn, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
     if os.path.exists(checkpoint_file("pinn_multi_entity_best.pt")):
         world_model.load_state_dict(
             torch.load(

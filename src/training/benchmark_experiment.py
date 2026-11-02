@@ -34,7 +34,12 @@ from src.models import (
 from src.training.trainer import DynamicsTrainer
 from src.utils.config import parse_args_with_config
 from src.utils.experiment import ExperimentLogger
-from src.utils.kinematics import PUBLISHED_CONTACT_RULE, PUBLISHED_POSITION_VELOCITY
+from src.utils.kinematics import (
+    PUBLISHED_CONTACT_RULE,
+    PUBLISHED_MAX_VX,
+    PUBLISHED_POSITION_VELOCITY,
+    PUBLISHED_TERMINAL_VY,
+)
 from src.utils.logging import get_logger
 from src.utils.paths import (
     DATASET_GAMEPLAY,
@@ -261,7 +266,9 @@ def run_comprehensive_benchmark(
 
     # 5. Long-Horizon Multi-Step Autoregressive Rollout Evaluation
     log.info("\n[5/5] Executing multi-step autoregressive rollouts (Drift Test)...")
-    evaluator = RolloutEvaluator(device=device)
+    evaluator = RolloutEvaluator(
+        device=device, max_vx=PUBLISHED_MAX_VX, terminal_vy=PUBLISHED_TERMINAL_VY
+    )
 
     # Select continuous rollout sequence (default 120 frames / 2s at 60 FPS) from test split
     test_states = data_dict["test_states"]

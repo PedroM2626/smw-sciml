@@ -53,12 +53,12 @@ def generate_comparison_animation(
 
     # Pick an active, continuous dynamic segment with jumps and running
     start_idx = 100
-    gt_s = [states[start_idx]]
+    gt_rows = [states[start_idx]]
     real_actions = actions[start_idx : start_idx + horizon]
 
     for t in range(horizon):
-        gt_s.append(next_states[start_idx + t])
-    gt_s = np.array(gt_s)  # [horizon + 1, 8]
+        gt_rows.append(next_states[start_idx + t])
+    gt_s = np.array(gt_rows)  # [horizon + 1, 8]
 
     # 2. Load Models
     hard_pinn = HardResidualPINNDynamics(
@@ -86,24 +86,24 @@ def generate_comparison_animation(
     act_tensor = torch.tensor(real_actions, dtype=torch.float32, device=device)
 
     # Hard PINN rollout
-    pinn_traj = [s0.cpu().numpy()[0]]
+    pinn_rows = [s0.cpu().numpy()[0]]
     curr_s = s0
     with torch.no_grad():
         for t in range(horizon):
             a_t = act_tensor[t : t + 1]
             curr_s = hard_pinn(curr_s, a_t)
-            pinn_traj.append(curr_s.cpu().numpy()[0])
-    pinn_traj = np.array(pinn_traj)
+            pinn_rows.append(curr_s.cpu().numpy()[0])
+    pinn_traj = np.array(pinn_rows)
 
     # Statistical MLP rollout
-    mlp_traj = [s0.cpu().numpy()[0]]
+    mlp_rows = [s0.cpu().numpy()[0]]
     curr_s = s0
     with torch.no_grad():
         for t in range(horizon):
             a_t = act_tensor[t : t + 1]
             curr_s = mlp(curr_s, a_t)
-            mlp_traj.append(curr_s.cpu().numpy()[0])
-    mlp_traj = np.array(mlp_traj)
+            mlp_rows.append(curr_s.cpu().numpy()[0])
+    mlp_traj = np.array(mlp_rows)
 
     # Calculate frame-by-frame drift errors
     drift_pinn = np.linalg.norm(pinn_traj[:, :2] - gt_s[:, :2], axis=-1)

@@ -58,7 +58,13 @@ from src.models import (
 )
 from src.training.trainer import DynamicsTrainer
 from src.utils.config import parse_args_with_config
-from src.utils.kinematics import CONTACT_ZERO_VELOCITY, NEXT, PUBLISHED_POSITION_VELOCITY
+from src.utils.kinematics import (
+    CONTACT_ZERO_VELOCITY,
+    NEXT,
+    PUBLISHED_MAX_VX,
+    PUBLISHED_POSITION_VELOCITY,
+    PUBLISHED_TERMINAL_VY,
+)
 from src.utils.logging import get_logger
 from src.utils.paths import DATASET_GAMEPLAY, RESULTS_DIR
 from src.utils.provenance import write_metrics
@@ -149,7 +155,7 @@ def training_plan() -> List[Tuple[str, str, Optional[str], str, str]]:
     this protocol, so the study can state whether the shared ``ResidualDynamics``
     integration reproduces them rather than asserting it.
     """
-    items = [
+    items: List[Tuple[str, str, Optional[str], str, str]] = [
         (arm_label(family, target, mechanism), "cell", family, target, mechanism)
         for family, target, mechanism in grid_cells()
     ]
@@ -167,7 +173,10 @@ def _build_reference_arm(name: str, state_dim: int, action_dim: int, latent_dim:
         )
     if name == "pc_deeponet":
         return PhysicsConstrainedDeepONetDynamics(
-            state_dim=state_dim, action_dim=action_dim, latent_dim=latent_dim
+            state_dim=state_dim,
+            action_dim=action_dim,
+            latent_dim=latent_dim,
+            position_velocity=PUBLISHED_POSITION_VELOCITY,
         )
     raise ValueError(f"unknown reference arm {name!r}")
 
@@ -233,7 +242,12 @@ def build_arm(
 def build_loss(mechanism: str, contact_rule: str = CONTACT_ZERO_VELOCITY) -> nn.Module:
     """One of the three training objectives; ``hard`` is a graph constraint, not a loss."""
     if mechanism == "soft":
-        return CompositePINNLoss(**SOFT_LAMBDAS, contact_rule=contact_rule)
+        return CompositePINNLoss(
+            lambda_kin=SOFT_LAMBDAS["lambda_kin"],
+            lambda_bound=SOFT_LAMBDAS["lambda_bound"],
+            lambda_contact=SOFT_LAMBDAS["lambda_contact"],
+            contact_rule=contact_rule,
+        )
     return nn.SmoothL1Loss()
 
 
@@ -435,7 +449,9 @@ def run_operator_physics_injection_benchmark(
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     os.makedirs(output_dir, exist_ok=True)
-    evaluator = RolloutEvaluator(device=device)
+    evaluator = RolloutEvaluator(
+        device=device, max_vx=PUBLISHED_MAX_VX, terminal_vy=PUBLISHED_TERMINAL_VY
+    )
     checkpoint_dir = os.path.join(output_dir, "checkpoints")
     scratch_dir = os.path.join(tempfile.gettempdir(), f"mworld_physinj_scratch_{os.getpid()}")
     os.makedirs(scratch_dir, exist_ok=True)

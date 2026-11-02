@@ -127,6 +127,9 @@ CONFIG_FLAGS: dict[str, str] = {
 #: The flags that say *which* run an artifact is, for targets that share a module and its defaults:
 #: without them `smw-pinn survey-opened-map` would survey the wrong map. Gated against the Makefile.
 COMMAND_FLAGS: dict[str, list[str]] = {
+    # The published clearance artifact was flown without the message-box A pulse, which is
+    # now the evaluator's default; the subcommand reproduces the artifact.
+    "full-clearance": ["--no-message-box-hygiene"],
     "survey-opened-map": [
         "--from-map-state",
         "data/raw/smw_world_map_after_round_0_152_136_t2a.state",
@@ -167,24 +170,11 @@ CHECK_COMMANDS: dict[str, list[str]] = {
     "format-check": ["ruff", "format", "--check", "src", "tests", "scripts"],
     "typecheck": [
         "mypy",
-        # Typed core = the reusable science/util library. Passed as directories so every
-        # module is covered: the model / loss / planning / perception / util layers. The
-        # ctypes emulator wrapper (src/environment/snes_emulator.py) and the thin CLI
-        # benchmark/evaluation scripts stay deliberately outside the strict set - the
-        # former is untyped FFI, the latter are result-producing orchestration wrappers.
-        "src/models",
-        "src/losses",
-        "src/planning",
-        "src/perception",
-        "src/inverse",
-        "src/utils",
-        "src/environment/wram.py",
-        "src/environment/dataset_loader.py",
-        "src/environment/pinn_sim_env.py",
-        "src/environment/sprite_sets.py",
-        "src/training/trainer.py",
-        "src/evaluation/per_variable_metrics.py",
-        "src/evaluation/rollout_evaluator.py",
+        # The whole package: the science library, the ctypes emulator wrapper and every
+        # study and training entry point. The entry points used to sit outside the checked
+        # set, and bringing them in found a loop that ignored its seed fallback and a file
+        # handle shadowed by a loop variable - so the boundary is the package, not a list.
+        "src",
     ],
     "test": ["pytest", "tests/", "-q", "-p", "no:cacheprovider"],
     "test-cov": [
@@ -195,7 +185,7 @@ CHECK_COMMANDS: dict[str, list[str]] = {
         "no:cacheprovider",
         "--cov=src",
         "--cov-report=term-missing",
-        "--cov-fail-under=30",
+        "--cov-fail-under=44",
     ],
 }
 
@@ -295,9 +285,9 @@ def main(argv: list[str] | None = None) -> int:
     if command in MODULE_COMMANDS:
         module = MODULE_COMMANDS[command]
         rest = list(args.rest)
-        config = CONFIG_FLAGS.get(command)
-        if config and not any(a.startswith("--config") for a in rest):
-            rest = ["--config", config, *rest]
+        config_flag = CONFIG_FLAGS.get(command)
+        if config_flag and not any(a.startswith("--config") for a in rest):
+            rest = ["--config", config_flag, *rest]
         fixed = COMMAND_FLAGS.get(command)
         if fixed and not any(a.startswith("--") for a in rest):
             rest = [*fixed, *rest]

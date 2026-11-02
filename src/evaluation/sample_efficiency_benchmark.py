@@ -7,7 +7,7 @@ ranging from extremely scarce (200 transitions) to abundant (5000+ transitions).
 
 import json
 import os
-from typing import List
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,7 +27,11 @@ from src.models import (
 )
 from src.training.trainer import DynamicsTrainer
 from src.utils.config import parse_args_with_config
-from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
+from src.utils.kinematics import (
+    PUBLISHED_MAX_VX,
+    PUBLISHED_POSITION_VELOCITY,
+    PUBLISHED_TERMINAL_VY,
+)
 from src.utils.logging import get_logger
 from src.utils.paths import (
     DATASET_GAMEPLAY,
@@ -94,9 +98,13 @@ def run_sample_efficiency_study(
         ),
     }
 
-    efficiency_results = {name: {"test_mse": [], "mean_drift": []} for name in model_factories}
+    efficiency_results: Dict[str, Dict[str, List[float]]] = {
+        name: {"test_mse": [], "mean_drift": []} for name in model_factories
+    }
 
-    evaluator = RolloutEvaluator(device=device)
+    evaluator = RolloutEvaluator(
+        device=device, max_vx=PUBLISHED_MAX_VX, terminal_vy=PUBLISHED_TERMINAL_VY
+    )
     test_states = data_dict["test_states"]
     test_actions = data_dict["test_actions"]
     test_next_states = data_dict["test_next_states"]
@@ -109,7 +117,7 @@ def run_sample_efficiency_study(
         logger.info(f"\n>>> Evaluating training regime with N = {N} transitions <<<")
         # Subsampling with fixed seed
         indices = np.random.choice(len(full_train_ds), size=N, replace=False)
-        sub_train_ds = Subset(full_train_ds, indices)
+        sub_train_ds = Subset(full_train_ds, indices.tolist())
         sub_gen = torch.Generator()
         sub_gen.manual_seed(seed)
         sub_train_loader = DataLoader(

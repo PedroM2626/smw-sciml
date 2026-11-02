@@ -40,7 +40,11 @@ from src.evaluation.operator_physics_injection_benchmark import (
 from src.evaluation.rollout_evaluator import RolloutEvaluator
 from src.models import ProjectedDynamics
 from src.utils.config import parse_args_with_config
-from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
+from src.utils.kinematics import (
+    PUBLISHED_MAX_VX,
+    PUBLISHED_POSITION_VELOCITY,
+    PUBLISHED_TERMINAL_VY,
+)
 from src.utils.logging import get_logger
 from src.utils.paths import DATASET_GAMEPLAY, RESULTS_DIR
 from src.utils.provenance import read_metrics, write_metrics
@@ -150,7 +154,9 @@ def run_projection_cell_benchmark(
     from src.training.trainer import DynamicsTrainer
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    evaluator = RolloutEvaluator(device=device)
+    evaluator = RolloutEvaluator(
+        device=device, max_vx=PUBLISHED_MAX_VX, terminal_vy=PUBLISHED_TERMINAL_VY
+    )
     scratch = os.path.join(tempfile.gettempdir(), f"mworld_projection_scratch_{os.getpid()}")
     os.makedirs(scratch, exist_ok=True)
     checkpoint_dir = os.path.join(out_dir, "checkpoints")

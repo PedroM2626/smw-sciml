@@ -1,0 +1,46 @@
+name: Hardware
+
+# The hosted runners have no ROM, so every emulator-dependent test skips in ci.yml and a green run
+# there says nothing about the closed-loop code. This workflow runs the whole suite on a
+# self-hosted Windows runner that holds a ROM dump, with SMW_REQUIRE_EMULATOR=1 turning that skip
+# into an error, so the emulator paths are exercised somewhere.
+#
+# It needs a runner registered with the labels below (Settings -> Actions -> Runners -> New
+# self-hosted runner) whose environment sets SMW_ROM to the dump's path (the runner's .env file;
+# SMW_CORE too if the core is not the bundled DLL). The ROM itself is never stored in GitHub. It
+# is started by hand rather than on a schedule: a scheduled job with no matching runner would sit
+# in the queue for a day and then fail.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  emulator-tests:
+    name: Emulator tests (self-hosted, ROM)
+    runs-on: [self-hosted, windows, smw-rom]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          lfs: true
+          # results/MANIFEST.md freshness gate orders artifact and checkpoint commit dates.
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.10"
+      - name: Install (CUDA 12.6 wheels; pip falls back to CPU ones on a runner without a GPU)
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cu126
+      - name: Report where the ROM, the core and the savestates resolve
+        shell: bash
+        run: python -m src.cli install-info
+      - name: Full suite with the emulator required
+        shell: bash
+        env:
+          SMW_REQUIRE_EMULATOR: "1"
+        run: python -m src.cli test-cov

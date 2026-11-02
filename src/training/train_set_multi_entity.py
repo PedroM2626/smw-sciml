@@ -17,6 +17,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from src.models.pinn_set_multi_entity import SetMultiEntityPINNDynamics
 from src.utils.config import parse_args_with_config
+from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
 from src.utils.logging import get_logger
 from src.utils.paths import (
     DATASET_SET_MULTI_ENTITY,
@@ -60,7 +61,9 @@ def run_training(
     val_loader = DataLoader(mk(va), batch_size=batch_size, shuffle=False)
 
     k = int(data["entities"].shape[1])
-    model = SetMultiEntityPINNDynamics(max_entities=k).to(device)
+    model = SetMultiEntityPINNDynamics(
+        max_entities=k, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-4)
     loss_fn = nn.SmoothL1Loss()
 

@@ -1,25 +1,27 @@
 # Super Mario World PINN vs. Statistical ML Dependencies
-# Compatible with Python >= 3.10 and CUDA 12.1+
-# Hardware reference: NVIDIA GeForce RTX 4070 Laptop GPU (PyTorch 2.5.1 + CUDA 12.1)
+# Compatible with Python 3.10-3.13 and CUDA 12.6+
+# Hardware reference: NVIDIA GeForce RTX 4070 Laptop GPU. The published artifacts were recorded
+# with PyTorch 2.5.1 + CUDA 12.1; the envelope below was re-validated on the same GPU with
+# PyTorch 2.14.1 + CUDA 12.6 (and on CPU with Python 3.13 + NumPy 2.5).
 #
 # NOTE: this file mirrors the runtime + dev dependencies declared in
 # `pyproject.toml` ( `[project.optional-dependencies].dev` ). `tests/test_dependency_parity.py`
 # fails CI if the two manifests drift apart, so update both together - or install
 # the canonical editable form instead: `pip install -e ".[dev]"`.
 #
-# Reproducible install (CUDA 12.1):
+# Reproducible install (CUDA 12.6 - the newest torch the cap allows that has a CUDA build):
 #   pip install --upgrade pip
-#   pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu121
+#   pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu126
 #
 # CPU-only fallback:
 #   pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
-# --- Deep learning (CUDA 12.1 build; ver README) ---
-torch>=2.5.1,<2.7
-torchvision>=0.20.1,<0.22
+# --- Deep learning (CUDA 12.6 build; see README) ---
+torch>=2.5.1,<2.15
+torchvision>=0.20.1,<0.30
 
 # --- Scientific stack ---
-numpy>=1.24.0,<2.1
+numpy>=1.24.0,<2.6
 scipy>=1.10.0
 matplotlib>=3.7.0
 seaborn>=0.12.0
@@ -40,6 +42,8 @@ tensorboard>=2.15.0
 # 10.43 artifact was recorded with (1.5.2, see requirements.lock). Without the cap, CI
 # resolves 1.6.x on the Python 3.10 leg and every gplearn fit raises AttributeError.
 gplearn>=0.4.2,<0.5
+# gplearn 0.4.2, the latest release, calls BaseEstimator._validate_data, which scikit-learn
+# 1.6 removed - so the 10.43 symbolic-regression study needs scikit-learn below 1.6.
 scikit-learn>=1.0.2,<1.6
 # Optional third engine for README 10.43.9 (PySR). Deliberately NOT installed here: pysr
 # pulls a Julia runtime through juliacall, so the study records that leg as unavailable

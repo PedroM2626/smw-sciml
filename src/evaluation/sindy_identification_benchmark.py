@@ -593,7 +593,9 @@ def render_gate_table(results: Dict[str, Any]) -> List[str]:
     return [demath_typographic(row) for row in rows]
 
 
-def integration_convention(data: Dict[str, Any], split: str = "train") -> Dict[str, float]:
+def integration_convention(
+    data: Dict[str, Any], split: str = "train"
+) -> Dict[str, Optional[float]]:
     r"""The least-squares second-order coefficient of the recorded transitions themselves.
 
     Section 10.55 fits $\hat x_{t+1} = x_t + v_{x,t}/16 + c\,\hat a/16$ to every arm and to
@@ -610,7 +612,7 @@ def integration_convention(data: Dict[str, Any], split: str = "train") -> Dict[s
     dxy = next_states[:, :2] - states[:, :2]
     accel = next_states[:, 2:4] - states[:, 2:4]
     contact_free = (states[:, 4:8] < 0.5).all(axis=1)
-    out: Dict[str, float] = {}
+    out: Dict[str, Optional[float]] = {}
     for name, mask in (
         ("all_frames", np.ones(states.shape[0], dtype=bool)),
         ("contact_free", contact_free),

@@ -65,14 +65,14 @@ def test_tilemap_pinn_exact_kinematics_and_gradients():
     assert next_kinematics.shape == (batch_size, 8)
     assert feat.shape == (batch_size, 32)
 
-    # Mathematical Kinematic Consistency Check:
-    # Delta X must strictly equal next_vx / 16.0
+    # Mathematical Kinematic Consistency Check (the default, README 4.1):
+    # Delta X must strictly equal the frame's own vx / 16.0
     delta_x = next_kinematics[:, 0] - dummy_kinematics[:, 0]
-    expected_delta_x = next_kinematics[:, 2] / 16.0
+    expected_delta_x = dummy_kinematics[:, 2] / 16.0
     drift_x = (delta_x - expected_delta_x).abs().max().item()
 
     delta_y = next_kinematics[:, 1] - dummy_kinematics[:, 1]
-    expected_delta_y = next_kinematics[:, 3] / 16.0
+    expected_delta_y = dummy_kinematics[:, 3] / 16.0
     drift_y = (delta_y - expected_delta_y).abs().max().item()
 
     assert drift_x < 1e-4, f"Kinematic consistency constraint violated in X: drift={drift_x}"

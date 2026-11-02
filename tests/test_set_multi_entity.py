@@ -45,14 +45,14 @@ def test_set_multi_entity_exact_kinematic_guarantee(set_model):
 
     next_mario, next_entities, _ = set_model(mario_state, entities, actions)
 
-    # Mario analytical check
-    expected_mario_x = mario_state[:, 0] + (next_mario[:, 2] / 16.0)
+    # Mario analytical check (the default convention: the frame's own velocity)
+    expected_mario_x = mario_state[:, 0] + (mario_state[:, 2] / 16.0)
     mario_x_res = torch.max(torch.abs(next_mario[:, 0] - expected_mario_x)).item()
     assert mario_x_res < 1e-5, f"Mario kinematic residual: {mario_x_res}"
 
     # Entity analytical relative check for active entities
     expected_entity_dx = (
-        entities[..., 0] + (next_entities[..., 2] - next_mario[:, 2].unsqueeze(1)) / 16.0
+        entities[..., 0] + (entities[..., 2] - mario_state[:, 2].unsqueeze(1)) / 16.0
     )
     entity_dx_res = torch.max(torch.abs(next_entities[..., 0] - expected_entity_dx)).item()
     assert entity_dx_res < 1e-5, f"Entity relative kinematic residual: {entity_dx_res}"

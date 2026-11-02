@@ -89,7 +89,9 @@ FIGURE_NAME = "inverse_model_mpc_progress.png"
 OPERATOR_CHECKPOINTS: Dict[str, tuple] = {
     "learned_physics_constrained_deeponet_10_42": (
         "operator_physicsconstrained_deeponet_best.pt",
-        lambda: PhysicsConstrainedDeepONetDynamics(state_dim=8, action_dim=6, latent_dim=64),
+        lambda: PhysicsConstrainedDeepONetDynamics(
+            state_dim=8, action_dim=6, latent_dim=64, position_velocity=PUBLISHED_POSITION_VELOCITY
+        ),
     ),
     "learned_fno_10_42": (
         "operator_fno_best.pt",
@@ -109,10 +111,10 @@ OBJECTIVE_WEIGHTS = {
 }
 
 
-def _agreement(outcomes: Dict[str, Any], reference: str) -> Dict[str, float]:
+def _agreement(outcomes: Dict[str, Any], reference: str) -> Dict[str, Any]:
     """Per-controller agreement with the established-physics controller."""
     base = outcomes[reference]["action_sequence"]
-    out: Dict[str, float] = {}
+    out: Dict[str, Any] = {}
     for name, info in outcomes.items():
         seq = info["action_sequence"]
         shared = min(len(base), len(seq))
@@ -374,7 +376,7 @@ def run_closed_loop(
     emu.load_rom(rom_path)
     runs: Dict[int, Dict[str, Any]] = {}
     try:
-        for draw in seeds:
+        for draw in draws:
             runs[draw] = {}
             for name, model in models.items():
                 set_global_seed(draw)  # identical CEM sampling for every controller

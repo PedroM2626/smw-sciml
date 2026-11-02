@@ -40,7 +40,9 @@ from src.utils.kinematics import (
     DEFAULT_POSITION_VELOCITY,
     NEXT,
     PUBLISHED_CONTACT_RULE,
+    PUBLISHED_MAX_VX,
     PUBLISHED_POSITION_VELOCITY,
+    PUBLISHED_TERMINAL_VY,
     check_contact_rule,
     check_position_velocity,
 )
@@ -209,15 +211,22 @@ def test_predicate_bounds_are_parameters_and_the_tighter_class_flags_more_frames
     states = np.tile(np.array([[0.0, 0.0, 10.0, 0.0, 1.0, 0.0, 0.0, 0.0]], dtype="float32"), (8, 1))
     actions = np.zeros((8, 6), dtype="float32")
     device = torch.device("cpu")
-    published = RolloutEvaluator(device=device).evaluate_rollout(
+    published = RolloutEvaluator(
+        device=device, max_vx=PUBLISHED_MAX_VX, terminal_vy=PUBLISHED_TERMINAL_VY
+    ).evaluate_rollout(model, "test", states[0], actions, states)
+    run_class = RolloutEvaluator(device=device, max_vx=48.0).evaluate_rollout(
         model, "test", states[0], actions, states
     )
-    run_class = RolloutEvaluator(device=device, max_vx=48.0).evaluate_rollout(
+    unbounded = RolloutEvaluator(device=device).evaluate_rollout(
         model, "test", states[0], actions, states
     )
     assert published["velocity_violations"] == 0
     assert run_class["velocity_violations"] == 8
+    # The default scores no velocity bound: section 4 measures none the console respects, so
+    # there is nothing to count, and the result says so instead of reporting a zero.
+    assert unbounded["velocity_violations"] is None
     assert np.allclose(published["predicted_trajectory"], run_class["predicted_trajectory"])
+    assert np.allclose(published["predicted_trajectory"], unbounded["predicted_trajectory"])
 
 
 def test_tolerance_is_a_parameter_of_the_same_predicate() -> None:
@@ -236,3 +245,44 @@ def test_tolerance_is_a_parameter_of_the_same_predicate() -> None:
     )
     assert published["kinematic_violations"] == 0  # inside the published 0.2 px
     assert tight["kinematic_violations"] == 4  # the same trajectory, a tighter ruler
+
+
+def test_the_flagged_operator_tilemap_and_entity_models_reproduce_the_published_form() -> None:
+    """PC-DeepONet, the tilemap PINN and the entity models: ``PUBLISHED_*`` is the next-frame form."""
+    from src.models.deeponet import PhysicsConstrainedDeepONetDynamics
+    from src.models.pinn_multi_entity import MultiEntityPINNDynamics
+    from src.models.pinn_set_multi_entity import SetMultiEntityPINNDynamics
+    from src.models.pinn_unified_multimodal import UnifiedMultimodalPINNDynamics
+    from src.models.tilemap_pinn import TilemapPINNDynamics
+
+    torch.manual_seed(0)
+    state, action = _states(), _actions()
+    deeponet = PhysicsConstrainedDeepONetDynamics(position_velocity=PUBLISHED_POSITION_VELOCITY)
+    out = deeponet(state, action)
+    assert torch.allclose(out[:, 0], state[:, 0] + out[:, 2] / SUBPIXELS, atol=1e-5)
+
+    tilemap = TilemapPINNDynamics(position_velocity=PUBLISHED_POSITION_VELOCITY)
+    patch = torch.zeros(state.shape[0], 7, 7, dtype=torch.long)
+    nxt, _ = tilemap(state, patch, action)
+    assert torch.allclose(nxt[:, 0], state[:, 0] + nxt[:, 2] / SUBPIXELS, atol=1e-5)
+
+    entity = MultiEntityPINNDynamics(position_velocity=PUBLISHED_POSITION_VELOCITY)
+    s12 = torch.cat([state, torch.tensor([[64.0, 0.0, -16.0, 1.0]]).repeat(state.shape[0], 1)], 1)
+    n12 = entity(s12, action)
+    assert torch.allclose(n12[:, 0], s12[:, 0] + n12[:, 2] / SUBPIXELS, atol=1e-5)
+    assert torch.allclose(n12[:, 8], s12[:, 8] + (n12[:, 10] - n12[:, 2]) / SUBPIXELS, atol=1e-5)
+
+    sets = SetMultiEntityPINNDynamics(position_velocity=PUBLISHED_POSITION_VELOCITY)
+    entities = torch.zeros(state.shape[0], 3, 5)
+    entities[..., 2] = -16.0
+    entities[..., 4] = 1.0
+    next_mario, next_entities, _ = sets(state, entities, action)
+    expected = entities[..., 0] + (next_entities[..., 2] - next_mario[:, 2:3]) / SUBPIXELS
+    assert torch.allclose(next_entities[..., 0], expected, atol=1e-5)
+
+    unified = UnifiedMultimodalPINNDynamics(position_velocity=PUBLISHED_POSITION_VELOCITY)
+    hazard = torch.tensor([[80.0, 0.0, -16.0, 1.0]]).repeat(state.shape[0], 1)
+    res = unified(state, action, hazard_4d=hazard)
+    m, h = res["next_mario"], res["next_hazard"]
+    assert torch.allclose(m[:, 0], state[:, 0] + m[:, 2] / SUBPIXELS, atol=1e-5)
+    assert torch.allclose(h[:, 0], hazard[:, 0] + (h[:, 2] - m[:, 2]) / SUBPIXELS, atol=1e-5)

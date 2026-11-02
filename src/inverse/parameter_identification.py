@@ -229,7 +229,11 @@ def simulate_rollout(
 
 
 def make_windows(
-    states: Tensor, actions: Tensor, next_states: Tensor, episodes: Tensor, rollout_len: int
+    states: Tensor | np.ndarray,
+    actions: Tensor | np.ndarray,
+    next_states: Tensor | np.ndarray,
+    episodes: Tensor | np.ndarray,
+    rollout_len: int,
 ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
     """Cut per-episode rollouts from a dataset for multi-step fitting.
 
@@ -268,7 +272,7 @@ def make_windows(
 
 
 def generate_synthetic_windows(
-    true_params: EngineParams,
+    true_params: EngineParams | Tensor,
     n_windows: int,
     rollout_len: int,
     seed: int,

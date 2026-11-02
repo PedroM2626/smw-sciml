@@ -108,7 +108,8 @@ def evaluate_single_controller(
     objective = TrajectoryObjective(
         weight_progress=3.0, weight_velocity=0.5, pit_penalty=1000.0, death_y=450.0
     )
-    mpc = None
+    mpc: ModelPredictiveController | None = None
+    wm: torch.nn.Module
     dagger_policy = None
 
     if controller_type == "MPC_MLP":
@@ -204,6 +205,7 @@ def evaluate_single_controller(
             action_dict, _ = dagger_policy.predict_action(s12, threshold=0.5)
         else:
             s8 = extract_8d_vector(s_dict)
+            assert mpc is not None, "an MPC controller type builds its planner above"
             act_vec, _ = mpc.plan(s8)
             action_dict = action_vector_to_dict(act_vec)
 

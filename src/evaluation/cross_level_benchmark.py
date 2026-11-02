@@ -67,9 +67,9 @@ def record_stage_b_transitions(
     ]
 
     curr_dict = emu.get_smw_state()
-    for f in range(num_frames):
+    for frame in range(num_frames):
         # Change actions periodically
-        pat_idx = (f // 45) % len(action_patterns)
+        pat_idx = (frame // 45) % len(action_patterns)
         act_dict = action_patterns[pat_idx]
 
         emu.set_input(act_dict)
@@ -225,14 +225,14 @@ def run_cross_level_benchmark(output_dir: str = RESULTS_DIR) -> Dict:
 
     rollout_results = {}
     for name, model in models.items():
-        traj = [s0.cpu().numpy()[0, :2]]
+        traj_rows = [s0.cpu().numpy()[0, :2]]
         curr = s0
         with torch.no_grad():
             for t in range(horizon - 1):
                 act = a_b[50 + t : 50 + t + 1]
                 curr = model(curr, act)
-                traj.append(curr.cpu().numpy()[0, :2])
-        traj = np.array(traj)
+                traj_rows.append(curr.cpu().numpy()[0, :2])
+        traj = np.array(traj_rows)
         drift = float(np.linalg.norm(traj[-1] - gt_traj[-1]))
         rollout_results[name] = {
             "drift_120_frames_px": round(drift, 2),

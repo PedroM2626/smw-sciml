@@ -82,6 +82,7 @@ from src.models import (
 from src.models.effective_velocity_dynamics import VELOCITY_CHANNELS
 from src.training.trainer import DynamicsTrainer
 from src.utils.config import parse_args_with_config
+from src.utils.kinematics import PUBLISHED_MAX_VX, PUBLISHED_TERMINAL_VY
 from src.utils.logging import get_logger
 from src.utils.paths import DATASET_GAMEPLAY, RESULTS_DIR
 from src.utils.provenance import read_metrics, write_metrics
@@ -660,7 +661,9 @@ def run_effective_velocity_benchmark(
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     os.makedirs(out_dir, exist_ok=True)
-    evaluator = RolloutEvaluator(device=device)
+    evaluator = RolloutEvaluator(
+        device=device, max_vx=PUBLISHED_MAX_VX, terminal_vy=PUBLISHED_TERMINAL_VY
+    )
     checkpoint_dir = os.path.join(out_dir, "checkpoints")
     scratch = os.path.join(tempfile.gettempdir(), f"mworld_effvel_scratch_{os.getpid()}")
     os.makedirs(scratch, exist_ok=True)

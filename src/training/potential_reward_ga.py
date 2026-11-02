@@ -99,6 +99,9 @@ class StageVerdict:
         if mode != wram.GAME_MODE_INTERACTIVE:
             self.left_interactive = True
 
+    def has_left_interactive(self) -> bool:
+        return self.left_interactive
+
     @property
     def died(self) -> bool:
         return self.saw_death_mode or (0 <= self.lives_now < self.lives_at_start)
@@ -209,7 +212,7 @@ def run_episode(
             emu.set_input({})
             emu.step_frame()
             verdict.observe(emu.get_game_mode(), emu.read_wram_u8(ADDR_LIVES))
-            if verdict.left_interactive:
+            if verdict.has_left_interactive():
                 break
     if verdict.cleared:
         ret += CLEAR_BONUS

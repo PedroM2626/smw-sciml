@@ -56,9 +56,41 @@ numbers* - those are reported here and in README Section 12, never applied silen
   published arithmetic, pass the `PUBLISHED_*` constant.
 - `physics_claim_audit` pins the two default constants as implementation sites and no longer
   lists the four shells, the contact penalty or the closed-form rules as dissenters; the 10.54
-  table, the §4.3.5 qualifier and Section 12 are regenerated and rewritten to match. The rollout
-  predicate's `|v_x| <= 72` / `v_y <= 64` thresholds are still the default and still recorded as
-  dissenting code, because the console respects no velocity bound that could replace them.
+  table, the §4.3.5 qualifier and Section 12 are regenerated and rewritten to match.
+- **The rollout predicate scores no velocity bound by default** (README 10.49, 10.54). §4 measures
+  72 as a speed class the telemetry never reaches and 64 as a parameter the console leaves (70.0 is
+  recorded), so `RolloutEvaluator(max_vx=None, terminal_vy=None)` is the default and its
+  `velocity_violations` is `None` rather than a zero that measured nothing. Every pipeline that
+  reproduces a committed artifact passes `PUBLISHED_MAX_VX` / `PUBLISHED_TERMINAL_VY` (72, 64) by
+  name. The audit's last two dissenters are gone: all five corrected forms are now the default.
+- **The integration convention reaches the remaining models.** `PhysicsConstrainedDeepONetDynamics`,
+  `TilemapPINNDynamics`, `MultiEntityPINNDynamics`, `SetMultiEntityPINNDynamics` and
+  `UnifiedMultimodalPINNDynamics` take `position_velocity` (default `carried`), applied to Mario
+  and to the entities' relative positions; where the 12D and unified states carry no hazard
+  vertical velocity, its value at t is the flat-terrain 0 the hazard heads already assume. Every
+  call site that loads a committed checkpoint passes `PUBLISHED_POSITION_VELOCITY`.
+- **The message-box A pulse is on by default** in `evaluate_full_level_clearance`
+  (`--message-box-hygiene` / `--no-message-box-hygiene`). The published clearance run had no A
+  button, so `make full-clearance` / `smw-pinn full-clearance` pass `--no-message-box-hygiene`.
+- **mypy checks the whole `src/` package** (147 files; it used to cover 56). Bringing the
+  study and training entry points in found two real defects, both fixed:
+  `inverse_model_mpc_benchmark.run_closed_loop` iterated `seeds` instead of `draws`, so the
+  default `seeds=None` raised and an empty `--seeds` ran zero draws instead of falling back to
+  `seed`; and `physics_injection_mpc_benchmark` defined `EFFECTIVE_ARMS` twice (an empty placeholder
+  overwritten one line later). `read_wram_u8` now raises the same "ROM not loaded" error as the
+  writes instead of a bare `TypeError`. The rest were annotations.
+- **The dependency envelope is re-validated and widened**: `torch<2.15`, `torchvision<0.30`,
+  `numpy<2.6`, checked on the RTX 4070 with torch 2.14.1 + CUDA 12.6 and on CPU with Python 3.13 +
+  NumPy 2.5; CI adds Python 3.13. The CUDA install instructions move from the `cu121` index, which
+  stops at torch 2.5.1, to `cu126` - with the wider cap, the old instruction would have installed
+  the CPU-only PyPI wheel on Windows without saying so. `scikit-learn<1.6` stays: gplearn 0.4.2, the
+  latest release, calls an estimator API that 1.6 removed.
+- **The coverage floor rises from 30% to 44%.** Coverage measures 46% with the emulator tests
+  skipped, as on the hosted runners; the floor keeps two points of margin.
+- **The emulator tests have a CI home**: `.github/workflows/hardware.yml` runs the whole suite on a
+  self-hosted Windows runner that holds a ROM dump (labels `self-hosted, windows, smw-rom`, started
+  by hand), with `SMW_REQUIRE_EMULATOR=1` turning a skipped emulator test into an error. The runner
+  itself has to be registered on the repository; the ROM never goes to GitHub.
 
 ## [0.2.0] - 2026-10-24
 

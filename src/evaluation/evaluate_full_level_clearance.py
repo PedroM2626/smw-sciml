@@ -89,7 +89,7 @@ def run_full_level_clearance(
     output_trajectory_log: str = results_file("full_level_trajectory_log.json"),
     output_figure: str = figure_file("full_level_clearance_trajectory.png"),
     max_frames: int = 2500,
-    message_box_hygiene: bool = False,
+    message_box_hygiene: bool = True,
 ) -> Dict:
     logger.info("====================================================================")
     logger.info(
@@ -126,7 +126,9 @@ def run_full_level_clearance(
         base_pinn = HardResidualPINNDynamics(
             state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
         )
-        world_model = MultiEntityPINNDynamics(base_pinn=base_pinn).to(device)
+        world_model = MultiEntityPINNDynamics(
+            base_pinn=base_pinn, position_velocity=PUBLISHED_POSITION_VELOCITY
+        ).to(device)
         ckpt = checkpoint_file("pinn_multi_entity_best.pt")
         if os.path.exists(ckpt):
             world_model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=True))
@@ -368,9 +370,11 @@ if __name__ == "__main__":
     parser.add_argument("--max_frames", type=int, default=2500)
     parser.add_argument(
         "--message-box-hygiene",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
+        default=True,
         help=(
-            "pulse A at the engine's own message boxes (10.60); off reproduces the published run"
+            "pulse A at the engine's own message boxes (10.60), the default; "
+            "--no-message-box-hygiene reproduces the published run, which had no A button"
         ),
     )
     args = parser.parse_args()

@@ -1,4 +1,4 @@
-# CPU base; for CUDA use --build-arg TORCH_INDEX_URL=https://download.pytorch.org/whl/cu121
+# CPU base; for CUDA use --build-arg TORCH_INDEX_URL=https://download.pytorch.org/whl/cu126
 FROM python:3.10-slim
 
 ARG TORCH_INDEX_URL=https://download.pytorch.org/whl/cpu

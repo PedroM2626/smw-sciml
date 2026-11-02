@@ -111,7 +111,9 @@ def train_online_mbpo(
 
     # 1. Initialize PINN World Model & Policy
     if use_safe_ensemble:
-        world_model = DeepPINNEnsemble(num_models=5, state_dim=8, action_dim=6).to(device)
+        world_model: DeepPINNEnsemble | HardResidualPINNDynamics = DeepPINNEnsemble(
+            num_models=5, state_dim=8, action_dim=6
+        ).to(device)
         ens_dir = os.path.join(output_dir, "checkpoints_ensemble")
         if os.path.exists(ens_dir):
             for i, member in enumerate(world_model.members):

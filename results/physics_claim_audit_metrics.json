@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "generated_utc": "2026-10-31T01:54:48+00:00",
-    "git_sha": "9c2c65462f1e15b0cb340ac0adc603f4b492b1a0",
+    "generated_utc": "2026-11-02T14:00:42+00:00",
+    "git_sha": "02825c81c40f5961781494c5c68b7b39e5bc38f0",
     "git_dirty": true,
     "python": "3.10.11",
     "platform": "Windows 10 (AMD64)",
@@ -15,13 +15,13 @@
   },
   "study": "Every physics claim of README section 4 checked against the code that implements it and against the recorded transitions it describes.",
   "protocol": {
-    "readme": "README.md",
+    "readme": "docs/paper (src.utils.document.full_document)",
     "published_tolerance_px": 0.2,
     "subpixels_per_pixel": 16.0,
     "telemetry_dataset": "C:\\Users\\Acer\\Downloads\\mworld-experiment\\data\\raw\\smw_gameplay_dataset.npz",
     "telemetry_scope": "training split of the canonical gameplay recording",
     "emulator_required": false,
-    "section_4_prose_state": "corrected to the measured rules; the integration identity and the ground rule are the code defaults, the rollout thresholds are recorded as dissenting code",
+    "section_4_prose_state": "corrected to the measured rules; every corrected form is the code default, and the published forms are passed by name where an artifact is reproduced",
     "satisfaction_tests": [
       "both_gravity_tiers_are_observed",
       "carried_identity_is_exact",
@@ -147,21 +147,20 @@
       "claim": "v_{y} \\le v_{y, \\text{term}} = +64.0\\text{ subpixels/frame}",
       "readme_marker": "### 4.2 Vertical Dynamics",
       "claim_quoted_from_the_readme": true,
-      "declared_sites": 2,
+      "declared_sites": 3,
       "sites_found": [
         "src/models/analytical_kinematics.py: TERMINAL_VY = 64.0",
-        "src/losses/physics_losses.py: terminal_vy: float = 64.0"
+        "src/losses/physics_losses.py: terminal_vy: float = 64.0",
+        "src/evaluation/rollout_evaluator.py: terminal_vy: Optional[float] = None"
       ],
       "sites_missing": [],
       "implemented_by_every_declared_site": true,
-      "dissenting_sites": [
-        "src/evaluation/rollout_evaluator.py: terminal_vy: float = 64.0"
-      ],
+      "dissenting_sites": [],
       "dissenting_sites_missing": [],
       "asserts": "terminal_velocity_is_broken_by_the_recording",
       "convention": null,
-      "corrected_form": "RolloutEvaluator(terminal_vy=...)",
-      "corrected_by_default": false,
+      "corrected_form": "RolloutEvaluator() scores no terminal-velocity bound",
+      "corrected_by_default": true,
       "satisfied_by_the_telemetry": true,
       "telemetry_evidence": "13.37% above $+64$ (max 70.0)"
     },
@@ -207,23 +206,22 @@
       "claim": "$|v_x| \\le 72\\text{ subpixels/frame}$",
       "readme_marker": "### 4.3 Horizontal Dynamics",
       "claim_quoted_from_the_readme": true,
-      "declared_sites": 4,
+      "declared_sites": 5,
       "sites_found": [
         "src/models/analytical_kinematics.py: VX_SPRINT = 72.0",
         "src/models/residual_dynamics.py: max_vx: float = 72.0",
         "src/models/output_projection.py: max_vx: float = 72.0",
-        "src/losses/physics_losses.py: max_vx: float = 72.0"
+        "src/losses/physics_losses.py: max_vx: float = 72.0",
+        "src/evaluation/rollout_evaluator.py: max_vx: Optional[float] = None"
       ],
       "sites_missing": [],
       "implemented_by_every_declared_site": true,
-      "dissenting_sites": [
-        "src/evaluation/rollout_evaluator.py: max_vx: float = 72.0"
-      ],
+      "dissenting_sites": [],
       "dissenting_sites_missing": [],
       "asserts": "top_class_is_never_reached",
       "convention": null,
-      "corrected_form": "RolloutEvaluator(max_vx=48.0), the class 10.49 reaches",
-      "corrected_by_default": false,
+      "corrected_form": "RolloutEvaluator() scores no horizontal-velocity bound",
+      "corrected_by_default": true,
       "satisfied_by_the_telemetry": true,
       "telemetry_evidence": "0.00% above $72$, max observed $\\lvert v_x \\rvert = 49.0$"
     },
@@ -353,22 +351,7 @@
     "claims_with_a_missing_implementation": [],
     "claims_whose_readme_quote_was_not_found": [],
     "claims_the_telemetry_does_not_satisfy": [],
-    "prose_and_code_disagree": [
-      {
-        "claim": "4.2.5_terminal_velocity",
-        "as_stated_in_section_4": "v_{y} \\le v_{y, \\text{term}} = +64.0\\text{ subpixels/frame}",
-        "sites_implementing_a_different_rule": [
-          "src/evaluation/rollout_evaluator.py: terminal_vy: float = 64.0"
-        ]
-      },
-      {
-        "claim": "4.3.3_sprint_speed",
-        "as_stated_in_section_4": "$|v_x| \\le 72\\text{ subpixels/frame}$",
-        "sites_implementing_a_different_rule": [
-          "src/evaluation/rollout_evaluator.py: max_vx: float = 72.0"
-        ]
-      }
-    ],
+    "prose_and_code_disagree": [],
     "claims_with_a_reachable_corrected_form": [
       "4.1_integration_identity_carried_velocity",
       "4.1_violation_defined_with_carried_velocity",
@@ -379,12 +362,14 @@
     "claims_whose_corrected_form_is_the_default": [
       "4.1_integration_identity_carried_velocity",
       "4.1_violation_defined_with_carried_velocity",
+      "4.2.5_terminal_velocity",
+      "4.3.3_sprint_speed",
       "4.3.5_ground_flag_gates_gravity"
     ],
-    "diverging_sites": 2,
+    "diverging_sites": 0,
     "telemetry_prefers": "carried",
     "carried_median_residual_px": 0.0,
     "next_median_residual_px": 0.0625,
-    "reading": "10 of 10 claims are implemented by every file declared to implement them (none missing), 10 of 10 are satisfied by the recorded transitions as the section now states them (none failing), and 2 are still disagreed with by 2 default code paths (['4.2.5_terminal_velocity', '4.3.3_sprint_speed']). The identity is written with the carried velocity (93.82% of frames exact, median 0.0000 px against 0.0625 px for the predicted next velocity), and the shells now advance position with it by default. The state of the fix is part of the record: 5 of 10 claims have a corrected form reachable in the same class or penalty, 3 of those are the default, and the pipelines that reproduce a committed artifact pass the published form by name, because every artifact in this repository was recorded with it. 10.57 measures what the difference costs per family."
+    "reading": "10 of 10 claims are implemented by every file declared to implement them (none missing), 10 of 10 are satisfied by the recorded transitions as the section now states them (none failing), and 0 are still disagreed with by 0 default code paths (none). The identity is written with the carried velocity (93.82% of frames exact, median 0.0000 px against 0.0625 px for the predicted next velocity), and the shells now advance position with it by default. The state of the fix is part of the record: 5 of 10 claims have a corrected form reachable in the same class or penalty, 5 of those are the default, and the pipelines that reproduce a committed artifact pass the published form by name, because every artifact in this repository was recorded with it. 10.57 measures what the difference costs per family."
   }
 }

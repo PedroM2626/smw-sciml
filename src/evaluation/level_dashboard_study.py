@@ -475,7 +475,7 @@ def render_section(payload: Dict[str, Any]) -> List[str]:
             if next_round and next_round.get("terrain")
             else "and the map was not entered again after it"
         )
-        attempt_record = next(
+        attempt_record: Dict[str, Any] = next(
             (a for a in win.get("attempts", []) if a["attempt"] == clear["attempt"]),
             {},
         )

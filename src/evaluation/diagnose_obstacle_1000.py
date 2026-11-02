@@ -17,6 +17,7 @@ each detected ground gap under SMW projectile physics
 import json
 import math
 import os
+from typing import Any, Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -84,7 +85,7 @@ def run_diagnosis(
         raise RuntimeError("Scripted drive never reached the scan window.")
 
     # 2. Slow scan with full telemetry.
-    samples = []
+    samples: List[Dict[str, Any]] = []
     for _ in range(1200):
         st = emu.get_smw_state()
         if st["x"] > X_END_SCAN:

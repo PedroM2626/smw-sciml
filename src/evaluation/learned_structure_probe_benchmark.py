@@ -118,7 +118,9 @@ MODEL_REGISTRY: Tuple[Tuple[str, str, Callable[[], torch.nn.Module], bool, float
     (
         "physics_constrained_deeponet",
         "operator_physicsconstrained_deeponet_best.pt",
-        lambda: PhysicsConstrainedDeepONetDynamics(state_dim=8, action_dim=6, latent_dim=64),
+        lambda: PhysicsConstrainedDeepONetDynamics(
+            state_dim=8, action_dim=6, latent_dim=64, position_velocity=PUBLISHED_POSITION_VELOCITY
+        ),
         True,
         72.0,
     ),

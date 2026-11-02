@@ -19,6 +19,8 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 
+from src.utils.kinematics import CARRIED, DEFAULT_POSITION_VELOCITY, check_position_velocity
+
 
 class TilemapEncoder(nn.Module):
     """
@@ -69,9 +71,11 @@ class TilemapPINNDynamics(nn.Module):
         subpixels_per_pixel: float = 16.0,
         max_vx: float = 48.0,
         max_vy: float = 64.0,
+        position_velocity: str = DEFAULT_POSITION_VELOCITY,
     ):
         super().__init__()
         self.subpixels_per_pixel = subpixels_per_pixel
+        self.position_velocity = check_position_velocity(position_velocity)
         self.max_vx = max_vx
         self.max_vy = max_vy
 
@@ -132,11 +136,12 @@ class TilemapPINNDynamics(nn.Module):
         next_vx = torch.clamp(b_vx + accel[:, 0], -self.max_vx, self.max_vx)
         next_vy = torch.clamp(b_vy + accel[:, 1], -self.max_vy, self.max_vy)
 
-        # 4. Exact Discrete Kinematic Consistency Layer:
-        # hat_X_{t+1} = X_t + hat_vx_{t+1} / 16.0
-        # hat_Y_{t+1} = Y_t + hat_vy_{t+1} / 16.0
-        next_x = b_x + (next_vx / self.subpixels_per_pixel)
-        next_y = b_y + (next_vy / self.subpixels_per_pixel)
+        # 4. Exact Discrete Kinematic Consistency Layer: position advances with the velocity
+        # the frame starts with ("carried", README 4.1, the default) or with the velocity just
+        # predicted ("next", what the published tilemap checkpoint was trained with).
+        use_vx, use_vy = (b_vx, b_vy) if self.position_velocity == CARRIED else (next_vx, next_vy)
+        next_x = b_x + (use_vx / self.subpixels_per_pixel)
+        next_y = b_y + (use_vy / self.subpixels_per_pixel)
 
         # 5. Assemble next 8D kinematic state
         next_kinematics = torch.stack(

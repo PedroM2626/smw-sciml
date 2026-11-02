@@ -363,7 +363,7 @@ def identification_report() -> Dict[str, Any]:
     if not os.path.isfile(SCAN_ARTIFACT):
         return {}
     payload = read_metrics(SCAN_ARTIFACT)
-    chosen = next(
+    chosen: Dict[str, Any] = next(
         (c for c in payload.get("candidates", []) if c["addr"] == payload.get("chosen")), {}
     )
     return {

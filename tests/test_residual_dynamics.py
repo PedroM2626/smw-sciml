@@ -30,7 +30,7 @@ from src.models import (
     PhysicsConstrainedDeepONetDynamics,
     StatisticalMLPDynamics,
 )
-from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
+from src.utils.kinematics import CARRIED, PUBLISHED_POSITION_VELOCITY
 
 STATE_DIM = 8
 ACTION_DIM = 6
@@ -99,24 +99,24 @@ def test_wrapper_integration_path_equals_the_published_physics_constrained_deepo
     equality against the published class is checkable."""
     state = _states(seed=3)
     action = torch.rand(state.shape[0], ACTION_DIM, generator=torch.Generator().manual_seed(3))
-    pc = PhysicsConstrainedDeepONetDynamics(state_dim=STATE_DIM, action_dim=ACTION_DIM)
-    pc.eval()
-
-    with torch.no_grad():
-        sensors = torch.cat([state, action], dim=-1)
-        coefficients = pc.branch(sensors)
-        basis = pc.trunk(pc.residual_query_coords)
-        aux = torch.einsum("bp,qp->bq", coefficients, basis) + pc.output_bias
-        wrapped = ResidualDynamics(
-            _StubBase(aux),
-            state_dim=STATE_DIM,
-            hard=True,
-            position_velocity=PUBLISHED_POSITION_VELOCITY,
+    for convention in (PUBLISHED_POSITION_VELOCITY, CARRIED):
+        pc = PhysicsConstrainedDeepONetDynamics(
+            state_dim=STATE_DIM, action_dim=ACTION_DIM, position_velocity=convention
         )
-        expected = pc(state, action)
-        got = wrapped(state, action)
+        pc.eval()
 
-    assert torch.equal(got, expected)
+        with torch.no_grad():
+            sensors = torch.cat([state, action], dim=-1)
+            coefficients = pc.branch(sensors)
+            basis = pc.trunk(pc.residual_query_coords)
+            aux = torch.einsum("bp,qp->bq", coefficients, basis) + pc.output_bias
+            wrapped = ResidualDynamics(
+                _StubBase(aux), state_dim=STATE_DIM, hard=True, position_velocity=convention
+            )
+            expected = pc(state, action)
+            got = wrapped(state, action)
+
+        assert torch.equal(got, expected), convention
 
 
 def test_hard_shell_matches_the_published_hard_pinn_invariant() -> None:

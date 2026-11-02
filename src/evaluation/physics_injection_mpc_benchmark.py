@@ -25,6 +25,7 @@ and ROM of Section 11.2 and writes nothing without hardware.
 import argparse
 import os
 import time
+from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import torch
@@ -155,7 +156,9 @@ GRID_CHECKPOINTS: Dict[str, Tuple[str, Callable[[], nn.Module]]] = {
 PUBLISHED_CHECKPOINTS: Dict[str, Tuple[str, Callable[[], nn.Module]]] = {
     "published_pc_deeponet_10_42": (
         "operator_physicsconstrained_deeponet_best.pt",
-        lambda: PhysicsConstrainedDeepONetDynamics(state_dim=8, action_dim=6, latent_dim=64),
+        lambda: PhysicsConstrainedDeepONetDynamics(
+            state_dim=8, action_dim=6, latent_dim=64, position_velocity=PUBLISHED_POSITION_VELOCITY
+        ),
     ),
     "published_hard_pinn_10_27": (
         os.path.basename(PINN_HARD_CKPT),
@@ -167,17 +170,6 @@ PUBLISHED_CHECKPOINTS: Dict[str, Tuple[str, Callable[[], nn.Module]]] = {
 
 REFERENCE = "established_wram_engine_rules"
 
-# The 10.51 arms: the same state-output networks with the bounds projected onto the
-# output, flown against the 10.42 shell so the two ways of guaranteeing a bound can be
-# compared by a planner rather than by a rollout.
-PROJECTION_ARMS: Dict[str, Tuple[str, Callable[[], nn.Module]]] = {
-    f"{family.lower()}_state_projected": (
-        f"proj_{family.lower()}_best.pt",
-        (lambda f=family: _projected(f)),
-    )
-    for family in ("MLP", "DeepONet", "FNO")
-}
-
 
 def _projected(family: str) -> nn.Module:
     from src.evaluation.projection_cell_benchmark import build_projected
@@ -185,14 +177,23 @@ def _projected(family: str) -> nn.Module:
     return build_projected(family)
 
 
+# The 10.51 arms: the same state-output networks with the bounds projected onto the
+# output, flown against the 10.42 shell so the two ways of guaranteeing a bound can be
+# compared by a planner rather than by a rollout.
+PROJECTION_ARMS: Dict[str, Tuple[str, Callable[[], nn.Module]]] = {
+    f"{family.lower()}_state_projected": (
+        f"proj_{family.lower()}_best.pt",
+        partial(_projected, family),
+    )
+    for family in ("MLP", "DeepONet", "FNO")
+}
+
+
 # The 10.53 arms: the same three families and the same unconstrained data term, with the
 # velocity that advances position switched from the frame's own prediction to the velocity
 # the console integrates with (and a version free to predict the difference). The published
 # ``next`` convention is flown alongside so the convention is the only difference between
 # rows of the same family, in the same run, against the same planner.
-EFFECTIVE_ARMS: Dict[str, Tuple[str, Callable[[], nn.Module]]] = {}
-
-
 def _build_effective_arms() -> Dict[str, Tuple[str, Callable[[], nn.Module]]]:
     """The nine unconstrained 10.53 cells: label -> (published checkpoint, factory)."""
     from src.evaluation import effective_velocity_benchmark as eff
@@ -200,7 +201,7 @@ def _build_effective_arms() -> Dict[str, Tuple[str, Callable[[], nn.Module]]]:
     return {
         f"{family.lower()}_{mode}_{eff.PUBLISHED_MECHANISM}": (
             eff.checkpoint_name(eff.arm_label(family, mode, eff.PUBLISHED_MECHANISM)),
-            (lambda f=family, m=mode: eff.build_arm(f, m, eff.PUBLISHED_MECHANISM, 8, 6)),
+            partial(eff.build_arm, family, mode, eff.PUBLISHED_MECHANISM, 8, 6),
         )
         for family in eff.FAMILIES
         for mode in eff.MODES
@@ -217,7 +218,7 @@ def _build_ode_arms() -> Dict[str, Tuple[str, Callable[[], nn.Module]]]:
     return {
         f"{family.lower()}_{solver}_free": (
             ode.checkpoint_name(ode.arm_label(family, solver, "free")),
-            (lambda f=family, s=solver: ode.build_arm(f, s, "free", STATE_DIM, ACTION_DIM)),
+            partial(ode.build_arm, family, solver, "free", STATE_DIM, ACTION_DIM),
         )
         for family in ode.FAMILIES
         for solver in ode.SOLVERS
@@ -234,7 +235,7 @@ def _build_corrected_arms() -> Dict[str, Tuple[str, Callable[[], nn.Module]]]:
     return {
         corr.arm_slug(label): (
             corr.checkpoint_name(label),
-            (lambda arm=label: corr.build_arm_for(arm)),
+            partial(corr.build_arm_for, label),
         )
         for label in corr.FLYABLE_LABELS
     }

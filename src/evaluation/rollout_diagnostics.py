@@ -171,7 +171,8 @@ def traction_sensitivity(rows: Dict[str, Any], thresholds: tuple) -> Dict[str, A
     """
     out: Dict[str, Any] = {}
     for threshold in thresholds:
-        accepted, artifacts = [], {}
+        accepted: list[Any] = []
+        artifacts: Dict[str, Any] = {}
         for artifact_name, probes in rows.items():
             for label, block in probes.items():
                 if not block.get("available"):

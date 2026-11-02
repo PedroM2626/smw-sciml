@@ -110,7 +110,7 @@ def _train_one(
     return model
 
 
-def _fit_slope(x: Sequence[float], y: Sequence[float]) -> Dict[str, float]:
+def _fit_slope(x: Sequence[float], y: Sequence[float]) -> Dict[str, Optional[float]]:
     """Least-squares slope of plateau on the support cap that produced it."""
     xs = np.asarray(x, dtype=float)
     ys = np.asarray(y, dtype=float)

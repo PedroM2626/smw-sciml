@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import os
 import subprocess
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Sequence, Tuple
 
 import imageio
 import matplotlib.pyplot as plt
@@ -137,16 +137,16 @@ IDLE_PIP = "#2f3a52"
 
 #: the layout, in figure fractions of a 1280x720 canvas. The tile panel is sized for a 20x14
 #: grid, and the legend sits inside a narrow strip to its right.
-RECT_TITLE = [0.010, 0.945, 0.978, 0.040]
-RECT_RGB = [0.010, 0.200, 0.463, 0.720]
-RECT_PROGRESS = [0.010, 0.150, 0.463, 0.035]
-RECT_TIME = [0.010, 0.078, 0.463, 0.064]
-RECT_TILE = [0.490, 0.565, 0.280, 0.330]
-RECT_LEGEND = [0.790, 0.565, 0.198, 0.330]
-RECT_THINK = [0.490, 0.235, 0.330, 0.280]
-RECT_PAD = [0.835, 0.235, 0.153, 0.280]
-RECT_REWARD = [0.490, 0.090, 0.498, 0.095]
-RECT_CLEAR = [0.490, 0.030, 0.498, 0.045]
+RECT_TITLE = (0.010, 0.945, 0.978, 0.040)
+RECT_RGB = (0.010, 0.200, 0.463, 0.720)
+RECT_PROGRESS = (0.010, 0.150, 0.463, 0.035)
+RECT_TIME = (0.010, 0.078, 0.463, 0.064)
+RECT_TILE = (0.490, 0.565, 0.280, 0.330)
+RECT_LEGEND = (0.790, 0.565, 0.198, 0.330)
+RECT_THINK = (0.490, 0.235, 0.330, 0.280)
+RECT_PAD = (0.835, 0.235, 0.153, 0.280)
+RECT_REWARD = (0.490, 0.090, 0.498, 0.095)
+RECT_CLEAR = (0.490, 0.030, 0.498, 0.045)
 
 
 #: the translevel byte at $7E:13BF and the name each stage is drawn under. The rows carry their
@@ -314,7 +314,7 @@ def sprite_classes(sprites: np.ndarray) -> np.ndarray:
     return out
 
 
-def _panel(fig: Any, rect: List[float], title: str = "", card: bool = True) -> Any:
+def _panel(fig: Any, rect: Sequence[float], title: str = "", card: bool = True) -> Any:
     """One dashboard panel: dark card, thin edge, small-caps title above it."""
     ax = fig.add_axes(rect, facecolor=PANEL if card else BG, zorder=1)
     ax.set_xticks([])

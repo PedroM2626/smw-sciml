@@ -44,7 +44,7 @@ class DistilledActorPolicy(nn.Module):
         self, state_dim: int = 12, action_dim: int = 6, hidden_dims: List[int] = [128, 64]
     ):
         super().__init__()
-        layers = []
+        layers: List[nn.Module] = []
         curr = state_dim
         for h in hidden_dims:
             layers.append(nn.Linear(curr, h))
@@ -116,7 +116,9 @@ def collect_mpc_expert_demonstrations(
     base_pinn = HardResidualPINNDynamics(
         state_dim=8, action_dim=6, position_velocity=PUBLISHED_POSITION_VELOCITY
     )
-    world_model = MultiEntityPINNDynamics(base_pinn=base_pinn).to(device)
+    world_model = MultiEntityPINNDynamics(
+        base_pinn=base_pinn, position_velocity=PUBLISHED_POSITION_VELOCITY
+    ).to(device)
     if os.path.exists(model_checkpoint):
         world_model.load_state_dict(
             torch.load(model_checkpoint, map_location=device, weights_only=True)

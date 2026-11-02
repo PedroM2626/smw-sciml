@@ -21,7 +21,11 @@ import torch.nn as nn
 
 from src.evaluation.rollout_evaluator import RolloutEvaluator
 from src.models import HardResidualPINNDynamics, StatisticalMLPDynamics
-from src.utils.kinematics import PUBLISHED_POSITION_VELOCITY
+from src.utils.kinematics import (
+    PUBLISHED_MAX_VX,
+    PUBLISHED_POSITION_VELOCITY,
+    PUBLISHED_TERMINAL_VY,
+)
 from src.utils.logging import get_logger
 from src.utils.paths import (
     CHECKPOINTS_DIR,
@@ -74,7 +78,9 @@ def run_spatial_holdout(
         ),
     }
     crit = nn.MSELoss()
-    evaluator = RolloutEvaluator(device=device)
+    evaluator = RolloutEvaluator(
+        device=device, max_vx=PUBLISHED_MAX_VX, terminal_vy=PUBLISHED_TERMINAL_VY
+    )
     H = min(120, len(far_states) - 1)
 
     single, roll = {}, {}

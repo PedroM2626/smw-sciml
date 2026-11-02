@@ -39,6 +39,11 @@ from src.models import (
 )
 from src.training.trainer import DynamicsTrainer
 from src.utils.config import parse_args_with_config
+from src.utils.kinematics import (
+    PUBLISHED_MAX_VX,
+    PUBLISHED_POSITION_VELOCITY,
+    PUBLISHED_TERMINAL_VY,
+)
 from src.utils.logging import get_logger
 from src.utils.paths import DATASET_GAMEPLAY, RESULTS_DIR
 from src.utils.provenance import read_metrics, write_metrics
@@ -99,7 +104,10 @@ def _build_model(
         return DeepONetDynamics(state_dim=state_dim, action_dim=action_dim, latent_dim=latent_dim)
     if name == "PhysicsConstrained_DeepONet":
         return PhysicsConstrainedDeepONetDynamics(
-            state_dim=state_dim, action_dim=action_dim, latent_dim=latent_dim
+            state_dim=state_dim,
+            action_dim=action_dim,
+            latent_dim=latent_dim,
+            position_velocity=PUBLISHED_POSITION_VELOCITY,
         )
     if name == "FNO":
         return FNODynamics(
@@ -135,7 +143,9 @@ def run_operator_benchmark(
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     os.makedirs(output_dir, exist_ok=True)
-    evaluator = RolloutEvaluator(device=device)
+    evaluator = RolloutEvaluator(
+        device=device, max_vx=PUBLISHED_MAX_VX, terminal_vy=PUBLISHED_TERMINAL_VY
+    )
 
     architectures: Dict[str, Any] = {}
     for name in ("DeepONet", "PhysicsConstrained_DeepONet", "FNO"):

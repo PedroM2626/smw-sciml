@@ -441,7 +441,7 @@ def run_lengths(rec: Recording) -> Dict[str, np.ndarray]:
     """The empirical distribution of consecutive-exception and consecutive-clean run lengths."""
     exc = rec.exception
     adjacent = rec.adjacent
-    runs = {"exception": [], "clean": []}
+    runs: Dict[str, List[int]] = {"exception": [], "clean": []}
     state, length = bool(exc[0]), 1
     for index in range(1, rec.n):
         continues = bool(adjacent[index - 1]) and bool(exc[index]) == state
@@ -607,7 +607,7 @@ def summarize(per_recording: Dict[str, Any]) -> Dict[str, Any]:
     lattice = [block["lattice"] for block in per_recording.values()]
     persistence = [block["persistence"] for block in per_recording.values()]
     lifts = [b["persistence_lift"] for b in persistence if b["persistence_lift"]]
-    coverage = {name: [] for name in KERNELS}
+    coverage: Dict[str, List[float]] = {name: [] for name in KERNELS}
     for block in per_recording.values():
         for scores in block["calibration"].get("horizons", {}).values():
             for name in coverage:

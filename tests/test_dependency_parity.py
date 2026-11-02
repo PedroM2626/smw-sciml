@@ -77,9 +77,11 @@ def test_version_specifiers_match():
 def test_torch_envelope_is_still_capped():
     """The validated CUDA envelope must not be silently widened (README 11.6)."""
     reqs = _requirements_txt()
-    assert "<2.7" in reqs["torch"], "torch upper cap changed: re-validate on RTX hardware first"
-    assert "<0.22" in reqs["torchvision"], "torchvision upper cap changed"
-    assert "<2.1" in reqs["numpy"], "numpy upper cap changed"
+    assert "<2.15" in reqs["torch"], "torch upper cap changed: re-validate on RTX hardware first"
+    assert "<0.30" in reqs["torchvision"], "torchvision upper cap changed"
+    assert "<2.6" in reqs["numpy"], "numpy upper cap changed"
+    # gplearn 0.4.2 (the latest release) needs BaseEstimator._validate_data, gone in 1.6.
+    assert "<1.6" in reqs["scikit-learn"], "scikit-learn cap changed: gplearn breaks on 1.6"
 
 
 def _tuple_version(text: str) -> tuple[int, ...]:

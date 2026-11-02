@@ -142,14 +142,14 @@ class SnesLibretroEmulator:
         # `require_core` resolves platform suffixes and raises a message that
         # explains how to obtain the asset (git lfs pull / SMW_CORE).
         self.core = ctypes.CDLL(require_core(core_path))
-        self.rom_data = None
-        self.rom_buffer = None
-        self.wram_buffer = None
+        self.rom_data: bytes | None = None
+        self.rom_buffer: ctypes.Array[ctypes.c_char] | None = None
+        self.wram_buffer: ctypes.Array[ctypes.c_uint8] | None = None
         self.is_loaded = False
 
         # Pixel frame capture (opt-in; off by default to preserve headless speed).
         self._capture_frames = False
-        self._last_frame = None  # np.ndarray uint8 [H, W, 3] RGB, or None
+        self._last_frame: np.ndarray | None = None  # uint8 [H, W, 3] RGB
         self._pixel_format = RETRO_PIXEL_FORMAT_0RGB1555  # libretro default
         #: format the buffer actually held on the last captured frame
         self._frame_pixel_format = RETRO_PIXEL_FORMAT_0RGB1555
@@ -325,6 +325,8 @@ class SnesLibretroEmulator:
 
     def read_wram_u8(self, addr: int) -> int:
         """Reads an unsigned byte from WRAM (offset 0x0000 to 0x1FFFF)."""
+        if self.wram_buffer is None:
+            raise RuntimeError("ROM not loaded: cannot read WRAM.")
         offset = addr & 0x1FFFF
         return self.wram_buffer[offset]
 

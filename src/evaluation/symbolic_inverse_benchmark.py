@@ -557,7 +557,10 @@ def _weight_ablation(
     gp_kwargs = {k: v for k, v in budget.items() if k != "stride"}
     out: Dict[str, Any] = {}
     for strength in strengths:
-        decel_err, gravity_err, maes, nodes = [], [], {"dvx": [], "dvy": []}, {"dvx": [], "dvy": []}
+        decel_err: List[float] = []
+        gravity_err: List[float] = []
+        maes: Dict[str, List[float]] = {"dvx": [], "dvy": []}
+        nodes: Dict[str, List[float]] = {"dvx": [], "dvy": []}
         for rep in range(3):
             _, bank, eval_bank = _synthetic_banks(
                 params, fit_windows, eval_windows, rollout_len, rep, stride
@@ -756,7 +759,7 @@ def _hybrid_residual_control(
     for i, name in enumerate(CHANNEL_NAMES):
         y_fit = fit_bank.next_states[:, i] - fit_pred[:, i]
         y_test = test_bank.next_states[:, i] - test_pred[:, i]
-        rows: List[Dict[str, float]] = []
+        rows: List[Dict[str, Any]] = []
         for seed in gp_seeds:
             law, _ = fit_law(f"residual_{name}", X_fit, y_fit, features, seed=seed, **gp_kwargs)
             train = evaluate_law(law, X_fit, y_fit)

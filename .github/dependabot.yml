@@ -5,16 +5,19 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 3
-    # The torch/CUDA envelope below is validated on RTX 4070 + CUDA 12.1.
-    # Major bumps need hardware re-validation first: keep dependabot inside
+    # The torch/CUDA envelope below is validated on RTX 4070 + CUDA 12.6 (torch 2.14.1).
+    # Bumps past it need hardware re-validation first: keep dependabot inside
     # the tested caps so CI stays green; widen caps deliberately in pyproject.
+    # scikit-learn stays below 1.6 because gplearn 0.4.2 needs an API 1.6 removed.
     ignore:
       - dependency-name: torch
-        versions: [">=2.7"]
+        versions: [">=2.15"]
       - dependency-name: torchvision
-        versions: [">=0.22"]
+        versions: [">=0.30"]
       - dependency-name: numpy
-        versions: [">=2.1"]
+        versions: [">=2.6"]
+      - dependency-name: scikit-learn
+        versions: [">=1.6"]
   - package-ecosystem: github-actions
     directory: /
     schedule:

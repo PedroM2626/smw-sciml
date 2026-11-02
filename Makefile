@@ -8,18 +8,18 @@ CONFIG_DIR := configs
 SMOKE_DIR := results_smoke
 
 .PHONY: install install-cuda test test-cov lint format format-check typecheck check-all \
-       reproduce benchmark sample-efficiency multiseed piml-mfrl piml-mfrl-study inverse-transfer deeponet operators symbolic-inverse symbolic-tilemap symbolic-engines inverse-mpc sprint-excitation learned-probes physics-injection plateau-provenance projection-cell gate-excitation effective-velocity physics-claims neural-ode sindy potential-ga corrected-physics residue-process boundary-channel pixel-frame-probe scroll-scan record-boundary record-dashboard dashboard-video dashboard-study stage-identity pixel-level-recheck pause-hygiene forced-mode-buffer pixel-retrain survey-map survey-opened-map survey-map-replay world-map-recheck probe-tiles probe-sprites perception-correction-study unlock-map record-level-dashboards level-dashboard-study record-jump record-sprint metric-decomposition velocity-classes smoke smoke-all run install-info help
+       reproduce benchmark sample-efficiency multiseed piml-mfrl piml-mfrl-study inverse-transfer deeponet operators symbolic-inverse symbolic-tilemap symbolic-engines inverse-mpc sprint-excitation learned-probes physics-injection plateau-provenance projection-cell gate-excitation effective-velocity physics-claims neural-ode sindy potential-ga full-clearance corrected-physics residue-process boundary-channel pixel-frame-probe scroll-scan record-boundary record-dashboard dashboard-video dashboard-study stage-identity pixel-level-recheck pause-hygiene forced-mode-buffer pixel-retrain survey-map survey-opened-map survey-map-replay world-map-recheck probe-tiles probe-sprites perception-correction-study unlock-map record-level-dashboards level-dashboard-study record-jump record-sprint metric-decomposition velocity-classes smoke smoke-all run install-info help
 
 help:
 	@echo "install            pip install -e .[dev] (CPU torch)"
-	@echo "install-cuda       pip install -e .[dev] (CUDA 12.1 torch)"
+	@echo "install-cuda       pip install -e .[dev] (CUDA 12.6 torch)"
 	@echo "install-info       report resolved ROM/core/dataset paths and torch version"
 	@echo "test               pytest tests/ -q"
-	@echo "test-cov           pytest with coverage (fail under 30%)"
+	@echo "test-cov           pytest with coverage (fail under 44%)"
 	@echo "lint               ruff check src tests scripts"
 	@echo "format             ruff format (rewrites files)"
 	@echo "format-check       ruff format --check (what CI and pre-commit enforce)"
-	@echo "typecheck          mypy on the typed core modules"
+	@echo "typecheck          mypy on the whole src/ package"
 	@echo "check-all          lint + format-check + typecheck + test-cov"
 	@echo "reproduce          fast CPU smoke benchmark (configs/reproduce.yaml)"
 	@echo "smoke / smoke-all  seconds-scale runs of the slow studies -> $(SMOKE_DIR)/"
@@ -72,6 +72,7 @@ help:
 	@echo "sindy  Sparse identification of the engine's law on every recording (10.56)"
 	@echo "conformal-uncertainty  Distribution-free intervals on the 10.56 laws (10.56.1)"
 	@echo "potential-ga       GA policy under the simple potential-maximum reward, clears 0x29 (10.69, needs core + ROM)"
+	@echo "full-clearance     Re-fly the published Yoshi's Island 1 clearance run (10.29.4, needs core + ROM)"
 	@echo "corrected-physics  What the three section-4 corrections cost, open loop and on the console (10.57, 10.57.1)"
 	@echo "record-jump        Record jump-excited WRAM telemetry (needs the console)"
 	@echo "run MOD=... ARGS=...  any module, e.g. make run MOD=src.evaluation.spatial_holdout_benchmark"
@@ -83,13 +84,13 @@ install:
 
 install-cuda:
 	pip install --upgrade pip
-	pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cu121
+	pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cu126
 
 test:
 	$(PY) -m pytest tests/ -q -p no:cacheprovider
 
 test-cov:
-	$(PY) -m pytest tests/ -q --cov=src --cov-report=term-missing --cov-fail-under=30
+	$(PY) -m pytest tests/ -q --cov=src --cov-report=term-missing --cov-fail-under=44
 
 lint:
 	$(PY) -m ruff check src tests scripts
@@ -225,6 +226,11 @@ conformal-uncertainty:
 # Defaults to the 0x29 session; pass --state smw_map_round_1_152_104_t27.state for 0x27.
 potential-ga:
 	$(PY) -m src.training.potential_reward_ga
+
+# The published full-stage clearance run (README 10.29.4, needs core + ROM). It was flown without
+# the message-box A pulse of 10.60, which is now the evaluator's default, so the flag turns it off.
+full-clearance:
+	$(PY) -m src.evaluation.evaluate_full_level_clearance --no-message-box-hygiene
 
 # What the corrected forms of section 4 cost or buy, per family, paired over seeds
 # (README 10.57), then the same arms flown by the published planner on the real console
