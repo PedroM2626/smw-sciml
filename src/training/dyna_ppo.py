@@ -144,7 +144,7 @@ class DynaPPOTrainer:
 
         # Generalized Advantage Estimation (GAE)
         advantages = torch.zeros_like(rewards_buf)
-        last_gae = 0.0
+        last_gae: torch.Tensor | float = 0.0
         for t in reversed(range(rollout_length)):
             if t == rollout_length - 1:
                 next_non_terminal = 1.0 - dones_buf[t]

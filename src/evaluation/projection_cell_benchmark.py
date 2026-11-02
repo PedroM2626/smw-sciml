@@ -72,7 +72,7 @@ def build_projected(
     fno_width: int = 32,
     fno_modes: int = 6,
     fno_layers: int = 2,
-) -> torch.nn.Module:
+) -> ProjectedDynamics:
     """One state-output network of the given family behind the output projection."""
     from src.models import DeepONetDynamics, FNODynamics, StatisticalMLPDynamics
 
@@ -312,7 +312,7 @@ def _vx_mae(model: torch.nn.Module, data: Dict[str, Any], device: torch.device) 
 
 
 @torch.no_grad()
-def _clip_rate(model: torch.nn.Module, data: Dict[str, Any], device: torch.device) -> float:
+def _clip_rate(model: ProjectedDynamics, data: Dict[str, Any], device: torch.device) -> float:
     """How often the wrapper has to overwrite the network's own velocity output.
 
     This is the mechanism variable behind the projection: a large rate means the model

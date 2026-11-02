@@ -342,7 +342,7 @@ def render_section(payload: Dict[str, Any]) -> List[str]:
     empty_share = payload["caption"]["tile_empty_cell_share"]
 
     lines: List[str] = [
-        "### 10.60 The Dashboard at the Top of This File, and the Two Instruments It Needed",
+        "### 10.60 The Dashboard at the Top of the README, and the Two Instruments It Needed",
         "",
         f"The repository had telemetry plots and a schematic GIF, and neither could be looked at "
         f"while the console ran. The hero above is the fix: one episode, the emulator's own RGB "
@@ -458,7 +458,7 @@ def render_section(payload: Dict[str, Any]) -> List[str]:
         "",
         "**What this changes, and what it does not.** It does not move any telemetry result: every "
         "state, residue, camera and mode number in this repository comes from WRAM, and WRAM was "
-        "never decoded through the pixel path. What it does touch is any claim this file has made "
+        "never decoded through the pixel path. What it does touch is any claim this document has made "
         "about what a frame *shows*. The two such claims are the pixel probe of 10.31 and the "
         "picture check of 10.36.3, both run on frames decoded as 32-bit, so both were measured again "
         "with the fixed decoder on the same forced-mode savestate they were made on: driven for "

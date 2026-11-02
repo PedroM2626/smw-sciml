@@ -223,7 +223,7 @@ def train_unified_ppo(
         done_t = torch.stack(done_buf)  # [num_steps, num_envs]
 
         advantages = torch.zeros_like(rew_t)
-        last_gae = 0.0
+        last_gae: torch.Tensor | float = 0.0
         for t in reversed(range(num_steps)):
             if t == num_steps - 1:
                 next_non_terminal = 1.0 - done_t[t].float()

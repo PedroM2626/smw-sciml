@@ -541,7 +541,7 @@ def render_section(payload: Dict[str, Any]) -> List[str]:
         "**What a clear is - three definitions in one day.** A stage that ends is a stage the engine "
         "leaves, so `scripts/unlock_world_map.py` flies the published clearance controller at the "
         "entered level and samples `$7E:0100` every frame instead of trusting a distance. The first "
-        "definition this file used was 10.37's: `x >= 1900 px`. The second was this script's own "
+        "definition this document used was 10.37's: `x >= 1900 px`. The second was this script's own "
         "first draft - reaching the map mode `0x0E` counts - and it reported every round as cleared, "
         "because a game over also ends on the map. The third is the byte: a death leaves `0x14` for "
         "`0x0B`, the death animation, and a run that reaches the map without passing through it has "

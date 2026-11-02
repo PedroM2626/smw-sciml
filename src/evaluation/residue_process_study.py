@@ -300,7 +300,7 @@ def rule_explanations(rec: Recording) -> Dict[str, Any]:
     zeroed = np.abs(rec.vx_next) < EXACT_TOLERANCE_SUBPIXELS
     unchanged = np.abs(rec.vx_next - rec.vx) < EXACT_TOLERANCE_SUBPIXELS
     one_pixel_short = np.abs(rec.residue + SUBPIXELS_PER_PIXEL) < EXACT_TOLERANCE_SUBPIXELS
-    any_flag = (rec.flags > 0.5).any(axis=1)
+    any_flag: np.ndarray = np.asarray((rec.flags > 0.5).any(axis=1))
     return {
         "n_exceptions": int(exc.sum()),
         "rate_exceptions_explained_by_next_velocity_rule": float(residue_of_next_rule[exc].mean()),

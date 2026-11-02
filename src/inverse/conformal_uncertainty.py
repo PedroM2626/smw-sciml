@@ -36,7 +36,7 @@ import numpy as np
 from scipy.stats import norm
 
 
-def conformal_quantile(scores: Sequence[float], alpha: float) -> float:
+def conformal_quantile(scores: Sequence[float] | np.ndarray, alpha: float) -> float:
     """The split-conformal half-width: the k-th smallest calibration score.
 
     k = ceil((n + 1) * (1 - alpha)) is the smallest order statistic that makes the

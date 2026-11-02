@@ -609,7 +609,7 @@ def mcmc_random_walk(
     )
     lp = log_posterior(theta, windows, noise_variance)
     keep = n_samples
-    chain = np.zeros((keep, len(theta)))
+    chain: np.ndarray = np.zeros((keep, len(theta)))
     accepted = 0
     idx = 0
     post_burn_iters = 0

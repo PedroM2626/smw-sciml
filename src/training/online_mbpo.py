@@ -14,7 +14,7 @@ Implements the complete active reinforcement learning cycle:
 import json
 import os
 import time
-from typing import Dict, Tuple
+from typing import Any, Dict, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -111,9 +111,7 @@ def train_online_mbpo(
 
     # 1. Initialize PINN World Model & Policy
     if use_safe_ensemble:
-        world_model: DeepPINNEnsemble | HardResidualPINNDynamics = DeepPINNEnsemble(
-            num_models=5, state_dim=8, action_dim=6
-        ).to(device)
+        world_model: Any = DeepPINNEnsemble(num_models=5, state_dim=8, action_dim=6).to(device)
         ens_dir = os.path.join(output_dir, "checkpoints_ensemble")
         if os.path.exists(ens_dir):
             for i, member in enumerate(world_model.members):

@@ -626,7 +626,7 @@ python scripts/record_dashboard_run.py
 #     results/dashboard_video_metrics.json.
 python -m src.evaluation.dashboard_video
 
-# 72. Gather the three artifacts into the section this file prints (10.60), cut the message-box
+# 72. Gather the three artifacts into Section 10.60, cut the message-box
 #     evidence figure out of the committed recording, and re-measure the forced-mode picture claim
 #     of 10.31/10.36.3 with the corrected decoder (the last step needs core + ROM, ~10 s).
 python -m src.evaluation.dashboard_study

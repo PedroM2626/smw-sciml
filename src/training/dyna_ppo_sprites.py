@@ -181,7 +181,7 @@ def train_multi_entity_dyna_ppo(
 
         # Compute GAE advantages
         advantages = torch.zeros_like(rew_buf)
-        lastgaelam = 0.0
+        lastgaelam: torch.Tensor | float = 0.0
         for t in reversed(range(num_steps)):
             if t == num_steps - 1:
                 nextnonterminal = 1.0 - done_buf[t]

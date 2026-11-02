@@ -115,7 +115,7 @@ are published with MathJax on the [documentation site](https://pedrom2626.github
    * [10.57 What Section 4 Costs: the Corrected Physics, Measured One Line at a Time](docs/paper/10-57-what-section-4-costs-the-corrected-physics.md)
    * [10.58 The Residue of Section 4.1 Is a Clamp, Not a Noise Term](docs/paper/10-58-the-residue-of-section-4-1-is.md)
    * [10.59 The Boundary Channel 10.58 Predicted, Built, and Refuted](docs/paper/10-59-the-boundary-channel-10-58-predicted-built.md)
-   * [10.60 The Dashboard at the Top of This File, and the Two Instruments It Needed](docs/paper/10-60-the-dashboard-at-the-top-of-this.md)
+   * [10.60 The Dashboard at the Top of the README, and the Two Instruments It Needed](docs/paper/10-60-the-dashboard-at-the-top-of-this.md)
    * [10.61 Which Level the Committed Recordings Actually Walk](docs/paper/10-61-which-level-the-committed-recordings-actually-walk.md)
    * [10.62 The Pixel Recording, Re-made From a Level That Is Really Entered](docs/paper/10-62-the-pixel-recording-re-made-from-a-level.md)
    * [10.63 The Held Player Has Two Mechanisms, and the Recordings Mostly Show the Other One](docs/paper/10-63-the-held-player-has-two-mechanisms-and.md)
