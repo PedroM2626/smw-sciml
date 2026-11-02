@@ -521,7 +521,7 @@ def build_clear_dataset_and_frontiers(
         running = rew_list[i] + gamma * running
         returns[i] = running
 
-    dataset = {
+    dataset: Dict[str, np.ndarray] = {
         "obs": np.stack(obs_list, axis=0).astype(np.float32),
         "phys": np.stack(phys_list, axis=0).astype(np.float32),
         "actions": np.asarray(act_list, dtype=np.int64),
