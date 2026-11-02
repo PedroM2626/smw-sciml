@@ -1,4 +1,4 @@
-[← 10.69](10-69-the-simple-reward-a-stage-no-agent-had.md) · [Contents](../../README.md#contents) · [12 →](12-scientific-integrity-statement.md)
+[← 10.70](10-70-what-the-way-across-0x27-requires-and.md) · [Contents](../../README.md#contents) · [12 →](12-scientific-integrity-statement.md)
 
 ## 11. Complete Reproducibility Guide
 

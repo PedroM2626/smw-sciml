@@ -11,6 +11,19 @@ numbers* - those are reported here and in README Section 12, never applied silen
 
 ### Added
 
+- **`0x27` is cleared by cell-archive frontier search (Go-Explore) under the same potential-maximum reward**
+  (README 10.70, `make frontier-search`). `src/training/frontier_archive_search.py` measures why every
+  greedy run from `t = 0` stopped at `x = 544.0625 px` on `0x27`: the lower floor (`row 24, y = 384 px`)
+  ends at column 18 (`x = 304 px`) before a 240 px gap of `0x006B` scenery tiles and a vertical pillar
+  at column 34 (`x = 544 px`) whose top sits 128 px higher (`row 16, y = 256 px`), physically unreachable
+  from the lower ledge, while four stepped platforms (`row 20 -> row 16 -> row 12 -> row 9`) sit directly
+  above the entry. Restarting from savestates along a 4D kinematic-spatial cell archive
+  `(x_bin, y_bin, vy_tier, vx_tier)` climbs that initial staircase, crosses `x = 544 px` at iteration 52,
+  clears the second vertical wall at `x = 3768 px` via its sprint-speed tier (`vx >= 38`), and touches the
+  goal tape of `0x27` at iteration 106 (`x = 5081.6250 px`, `5065.6250 px` of progress, `2252` frames,
+  `$7E:1493` set on frame `2251`, mode marching `0x14 -> 0x0c -> 0x0d -> 0x0e` with lives `4 -> 4`).
+  All four sessions the world map hands over (`0x2A`, `0x28`, `0x29`, `0x27`) are now concluded on the
+  console's own terms.
 - **`0x29` is cleared, by a genetic algorithm under the simple potential-maximum reward**
   (README 10.69, `make potential-ga`). `src/training/potential_reward_ga.py` pays only for a new
   maximum of x (in tiles) plus a bonus on an engine-verified clear, ends the episode on death, and

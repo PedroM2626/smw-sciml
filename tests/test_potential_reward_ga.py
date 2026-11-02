@@ -129,6 +129,70 @@ ARTIFACTS = {
 }
 
 
+def test_cell_key_and_score_separate_speed_and_elevation_tiers() -> None:
+    from src.training import frontier_archive_search as fas
+
+    slow = fas.cell_key(x=100.0, y=352.0, vx=20.0, vy=0.0, c_ground=1.0)
+    sprint = fas.cell_key(x=100.0, y=352.0, vx=42.0, vy=0.0, c_ground=1.0)
+    rising = fas.cell_key(x=100.0, y=280.0, vx=36.0, vy=-40.0, c_ground=0.0)
+    falling = fas.cell_key(x=100.0, y=280.0, vx=36.0, vy=40.0, c_ground=0.0)
+    assert slow != sprint
+    assert rising != falling
+    assert fas.cell_score(100.0, 256.0, 40.0, 1.0) > fas.cell_score(100.0, 352.0, 20.0, 0.0)
+    assert len(fas.build_macro_primitives()) == 28
+
+
+def test_frontier_replay_verifies_clear_and_death_on_fake_emulator() -> None:
+    from src.training import frontier_archive_search as fas
+
+    emu = _FakeEmu([wram.GAME_MODE_INTERACTIVE] * 40 + [0x0C, 0x0D, 0x0E])
+    out = fas.replay_action_sequence(
+        emu, b"", [1] * 12, use_player_hold=False, post_verdict_frames=4
+    )
+    assert out["cleared"] and not out["died"]
+    assert out["lives_at_start"] == 4 and out["lives_at_end"] == 4
+    assert out["modes_seen"] == ["0x14", "0x0c", "0x0d", "0x0e"]
+
+
+def test_section_10_70_quotes_the_committed_frontier_artifact() -> None:
+    """Every number in 10.70's table and barrier diagnosis comes from its artifact."""
+    import json
+
+    from src.utils.document import full_document
+    from src.utils.paths import CHECKPOINTS_DIR, RESULTS_DIR
+
+    path = os.path.join(RESULTS_DIR, "frontier_archive_smw_map_round_1_152_104_t27_metrics.json")
+    if not os.path.isfile(path):
+        pytest.skip("the 10.70 frontier archive search has not been run")
+    with open(path, encoding="utf-8") as handle:
+        payload = json.load(handle)
+    text = full_document()
+    best = payload["best"]
+    search = payload["search"]
+    barrier = payload["first_screen_barrier"]
+    assert best["cleared"] and not best["died"]
+    assert best["lives_at_start"] == best["lives_at_end"] == 4
+    assert best["modes_seen"] == ["0x14", "0x0c", "0x0d", "0x0e"]
+    assert payload["replay_without_player_hold"]["progress_px"] == pytest.approx(
+        best["progress_px"]
+    )
+    assert f"{best['progress_px']:.4f} px" in text
+    assert f"{best['frames']} frames to the goal tape ({search['macro_steps']} macro-steps)" in text
+    assert (
+        f"{search['archive_cells']} cells ({search['expanded_cells']} expanded, "
+        f"cleared at iteration {search['clear_iteration']})"
+    ) in text
+    assert (
+        f"column {barrier['lower_floor_last_solid_col']} (`x = {barrier['lower_floor_edge_x_px']} px`)"
+        in text
+    )
+    assert f"column {barrier['pillar_left_col']} (`x = {barrier['pillar_left_x_px']} px`)" in text
+    ckpt = os.path.join(CHECKPOINTS_DIR, "frontier_archive_smw_map_round_1_152_104_t27.npz")
+    assert os.path.isfile(ckpt)
+    actions = np.load(ckpt)["actions"]
+    assert len(actions) == search["macro_steps"]
+
+
 @pytest.mark.parametrize("stage", sorted(ARTIFACTS))
 def test_section_10_69_quotes_the_committed_artifacts(stage: str) -> None:
     """Every number in 10.69's table is the artifact's, and the verdict column is the artifact's."""

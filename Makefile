@@ -8,7 +8,7 @@ CONFIG_DIR := configs
 SMOKE_DIR := results_smoke
 
 .PHONY: install install-cuda test test-cov lint format format-check typecheck check-all \
-       reproduce benchmark sample-efficiency multiseed piml-mfrl piml-mfrl-study inverse-transfer deeponet operators symbolic-inverse symbolic-tilemap symbolic-engines inverse-mpc sprint-excitation learned-probes physics-injection plateau-provenance projection-cell gate-excitation effective-velocity physics-claims neural-ode sindy potential-ga full-clearance corrected-physics residue-process boundary-channel pixel-frame-probe scroll-scan record-boundary record-dashboard dashboard-video dashboard-study stage-identity pixel-level-recheck pause-hygiene forced-mode-buffer pixel-retrain survey-map survey-opened-map survey-map-replay world-map-recheck probe-tiles probe-sprites perception-correction-study unlock-map record-level-dashboards level-dashboard-study record-jump record-sprint metric-decomposition velocity-classes smoke smoke-all run install-info help
+       reproduce benchmark sample-efficiency multiseed piml-mfrl piml-mfrl-study inverse-transfer deeponet operators symbolic-inverse symbolic-tilemap symbolic-engines inverse-mpc sprint-excitation learned-probes physics-injection plateau-provenance projection-cell gate-excitation effective-velocity physics-claims neural-ode sindy potential-ga frontier-search full-clearance corrected-physics residue-process boundary-channel pixel-frame-probe scroll-scan record-boundary record-dashboard dashboard-video dashboard-study stage-identity pixel-level-recheck pause-hygiene forced-mode-buffer pixel-retrain survey-map survey-opened-map survey-map-replay world-map-recheck probe-tiles probe-sprites perception-correction-study unlock-map record-level-dashboards level-dashboard-study record-jump record-sprint metric-decomposition velocity-classes smoke smoke-all run install-info help
 
 help:
 	@echo "install            pip install -e .[dev] (CPU torch)"
@@ -72,6 +72,7 @@ help:
 	@echo "sindy  Sparse identification of the engine's law on every recording (10.56)"
 	@echo "conformal-uncertainty  Distribution-free intervals on the 10.56 laws (10.56.1)"
 	@echo "potential-ga       GA policy under the simple potential-maximum reward, clears 0x29 (10.69, needs core + ROM)"
+	@echo "frontier-search    Cell-archive frontier search (Go-Explore), clears 0x27 (10.70, needs core + ROM)"
 	@echo "full-clearance     Re-fly the published Yoshi's Island 1 clearance run (10.29.4, needs core + ROM)"
 	@echo "corrected-physics  What the three section-4 corrections cost, open loop and on the console (10.57, 10.57.1)"
 	@echo "record-jump        Record jump-excited WRAM telemetry (needs the console)"
@@ -226,6 +227,11 @@ conformal-uncertainty:
 # Defaults to the 0x29 session; pass --state smw_map_round_1_152_104_t27.state for 0x27.
 potential-ga:
 	$(PY) -m src.training.potential_reward_ga
+
+# Cell-archive frontier search (Go-Explore) under the simple potential-maximum reward, clearing
+# 0x27 by climbing the first-screen platform staircase (README 10.70, needs core + ROM).
+frontier-search:
+	$(PY) -m src.training.frontier_archive_search
 
 # The published full-stage clearance run (README 10.29.4, needs core + ROM). It was flown without
 # the message-box A pulse of 10.60, which is now the evaluator's default, so the flag turns it off.
