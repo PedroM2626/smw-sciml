@@ -82,18 +82,24 @@ EPISODES = {
         "outro_frames": 320,
     },
     "0x27": {
-        "kind": "dagger",
-        "seed": None,
-        "frames": 1268,
-        "goal_px": GOAL_PROXY_PX,
-        "outro_frames": 240,
+        "kind": "piml-ppo",
+        "seed": 42,
+        "frames": 9000,
+        "goal_px": None,
+        "operator_delay": 10000,
+        "warmup_frames": 0,
+        "render_stride": 8,
+        "outro_frames": 320,
     },
     "0x29": {
-        "kind": "dagger",
-        "seed": None,
-        "frames": 1268,
-        "goal_px": GOAL_PROXY_PX,
-        "outro_frames": 240,
+        "kind": "piml-ppo",
+        "seed": 42,
+        "frames": 9000,
+        "goal_px": None,
+        "operator_delay": 10000,
+        "warmup_frames": 0,
+        "render_stride": 8,
+        "outro_frames": 320,
     },
 }
 
@@ -320,11 +326,30 @@ def main() -> Dict[str, Any]:
     )
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--output", default="results/level_dashboards_cleared.json")
+    parser.add_argument(
+        "--reuse-stages",
+        default="",
+        help="comma-separated translevel ids (e.g. 0x2A,0x28) to reuse from --output if present",
+    )
     args = parser.parse_args()
+
+    reuse_set = {s.strip().upper() for s in args.reuse_stages.split(",") if s.strip()}
+    existing_by_id: Dict[str, Dict[str, Any]] = {}
+    if reuse_set and os.path.isfile(args.output):
+        with open(args.output, encoding="utf-8") as fh:
+            old_payload = json.load(fh)
+        for st in old_payload.get("stages", []):
+            tid = str((st.get("identity") or {}).get("translevel", "")).upper()
+            if tid:
+                existing_by_id[tid] = st
 
     stages: List[Dict[str, Any]] = []
     for entry in candidates(args.survey, args.progression):
         translevel = entry["translevel"]
+        if translevel.upper() in reuse_set and translevel.upper() in existing_by_id:
+            logger.info(f"stage {entry['state']} ({translevel}): reused from {args.output}")
+            stages.append(existing_by_id[translevel.upper()])
+            continue
         plan = EPISODES.get(
             translevel, {"kind": "dagger", "seed": None, "frames": 1268, "goal_px": GOAL_PROXY_PX}
         )

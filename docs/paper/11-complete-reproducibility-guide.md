@@ -1,4 +1,4 @@
-[← 10.70](10-70-what-the-way-across-0x27-requires-and.md) · [Contents](../../README.md#contents) · [12 →](12-scientific-integrity-statement.md)
+[← 10.71](10-71-physics-informed-reinforcement-learning-across-every-stage.md) · [Contents](../../README.md#contents) · [12 →](12-scientific-integrity-statement.md)
 
 ## 11. Complete Reproducibility Guide
 
@@ -118,7 +118,10 @@ smw-pinn/
 │   │   ├── train_terminal_value.py        # TD-MPC terminal value (MC regression on hw log)
 │   │   ├── train_unified_multimodal.py    # Joint tilemap+hazard training (two datasets)
 │   │   ├── train_set_multi_entity.py      # Supervised training on 12-slot sprite sets
-│   │   └── online_mbpo.py                 # Closed-loop Online MBPO & Safe MBPO engine
+│   │   ├── online_mbpo.py                 # Closed-loop Online MBPO & Safe MBPO engine
+│   │   ├── potential_reward_ga.py         # Simple potential-maximum GA policy search (10.69)
+│   │   ├── frontier_archive_search.py     # Cell-archive Go-Explore frontier search (10.70)
+│   │   └── piml_stage_ppo.py              # Physics-Informed Stage PPO: CBF + HJB critic + Hard PINN head (10.71)
 │   ├── planning/
 │   │   ├── mpc_planner.py                 # GPU-vectorized CEM / Random Shooting MPC planner
 │   │   ├── terrain_runner.py              # The rule-based agent over the measured tables (10.68)
@@ -718,6 +721,13 @@ python -m src.evaluation.world_map_recheck_study
 #     the test split, against the iid-Gaussian arm and the fit-mean null. Emulator-free,
 #     ~10 s. Writes results/conformal_uncertainty_metrics.json and the table README 10.56.1 quotes.
 python -m src.evaluation.conformal_uncertainty_benchmark
+
+# 86. Physics-Informed Stage PPO across stages 0x29 and 0x27 (10.71): train and evaluate the
+#     closed-loop PIMLStageActorCritic (DiscreteCBFCategoricalFilter + PhysicsInformedCriticLoss +
+#     ActionPhysicsViolation + HardKinematicsHead) with Go-Explore Phase-2 frontier resets and
+#     Self-Imitation Learning. Needs core + ROM, ~5 min. Writes results/piml_stage_ppo_metrics.json
+#     and results/checkpoints/piml_ppo_*.pt.
+python -m src.training.piml_stage_ppo
 ```
 
 ### 11.6 Engineering Workflows (CI, Configs, Parity Baselines, Regression Gates)

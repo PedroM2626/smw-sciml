@@ -346,6 +346,29 @@ def main() -> Dict[str, Any]:
             if emu.get_game_mode() != wram.GAME_MODE_INTERACTIVE:
                 break
 
+    for tag, name in STAGES:
+        if wanted is not None and not (wanted - set(frames)):
+            break
+        stem = os.path.splitext(os.path.basename(name))[0]
+        rec_path = dataset_path(f"smw_dashboard_run_{stem}.npz")
+        if not os.path.isfile(rec_path):
+            continue
+        with open(state_path(name), "rb") as fh:
+            state_bytes = fh.read()
+        with np.load(rec_path, allow_pickle=False) as episode:
+            rec_executed = np.asarray(episode["executed"], dtype=np.float64)
+            rec_operator = np.asarray(episode["operator"], dtype=np.float64)
+        emu.load_state(state_bytes)
+        note_new_sprites(f"{tag}-clear-draw")
+        for action, press_a in zip(rec_executed, rec_operator):
+            if emu.get_game_mode() != wram.GAME_MODE_INTERACTIVE:
+                break
+            buttons = {b: bool(val > 0.5) for b, val in zip(ACTION_BUTTONS, action)}
+            buttons["A"] = bool(press_a > 0.5)
+            emu.set_input(buttons)
+            emu.step_frame()
+            note_new_sprites(f"{tag}-clear-draw")
+
     records: List[Dict[str, Any]] = []
     for sid in sorted(frames):
         tag, frame_bytes = frames[sid]

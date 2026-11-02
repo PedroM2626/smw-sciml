@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "generated_utc": "2026-10-15T10:06:57+00:00",
-    "git_sha": "20272b4277bf7a87412aa988603af7b284b5d66b",
+    "generated_utc": "2026-11-02T17:45:10+00:00",
+    "git_sha": "27c28f2480bee6c58fba9c6260890d486df20dc9",
     "git_dirty": true,
     "python": "3.10.11",
     "platform": "Windows 10 (AMD64)",
@@ -73,18 +73,24 @@
           "outro_frames": 320
         },
         "0x27": {
-          "kind": "dagger",
-          "seed": null,
-          "frames": 1268,
-          "goal_px": 1900.0,
-          "outro_frames": 240
+          "kind": "piml-ppo",
+          "seed": 42,
+          "frames": 9000,
+          "goal_px": null,
+          "operator_delay": 10000,
+          "warmup_frames": 0,
+          "render_stride": 8,
+          "outro_frames": 320
         },
         "0x29": {
-          "kind": "dagger",
-          "seed": null,
-          "frames": 1268,
-          "goal_px": 1900.0,
-          "outro_frames": 240
+          "kind": "piml-ppo",
+          "seed": 42,
+          "frames": 9000,
+          "goal_px": null,
+          "operator_delay": 10000,
+          "warmup_frames": 0,
+          "render_stride": 8,
+          "outro_frames": 320
         }
       },
       "conclusion_definition": "the engine returned the player to the map (0x0E) without taking a life. The mode byte alone cannot say it: the house session's left-edge exit marches through 0x0B - the byte the death animation owns - on its way out the door, and the byte would call that a death. The lives counter ($7E:0DBE) settles it: an exit leaves it put, a death decrements it, and reaching the map while losing a life is the game-over sequence, not a conclusion",
@@ -2257,33 +2263,32 @@
       },
       "episode": {
         "dataset": "data/raw/smw_dashboard_run_smw_map_node_68_135_t29.npz",
-        "controller": "dagger",
-        "controller_kind": "button head",
-        "planner_seed": null,
-        "episode_end_rule": "the published 1900 px distance proxy",
-        "frames": 548,
-        "engine_exit_frame": 385,
-        "outro_frames": 240,
+        "controller": "piml-ppo",
+        "controller_kind": "physics-informed RL policy",
+        "planner_seed": 42,
+        "episode_end_rule": "the engine's own mode byte leaving 0x14",
+        "frames": 4207,
+        "engine_exit_frame": 3887,
+        "outro_frames": 320,
         "lives_before": 4,
-        "lives_after": 3,
-        "progress_px": 406.4375,
-        "ended": "death",
+        "lives_after": 4,
+        "progress_px": 5008.5625,
+        "ended": "engine_left_0x14_to_0x0C",
         "mode_bytes_seen": [
-          11,
           12,
           13,
           14,
           20
         ],
-        "wall_clock_s": 2.59,
-        "frames_under_operator_A": 0
+        "wall_clock_s": 23.51,
+        "frames_under_operator_A": 93
       },
       "clear_evidence": {
-        "concluded": false,
+        "concluded": true,
         "reached_map": true,
-        "lives_lost": true,
-        "exit_mode": "0x0B",
-        "reason": "the engine ended the session in the death mode and took a life"
+        "lives_lost": false,
+        "exit_mode": "0x0C",
+        "reason": "the engine ended the session through its exit sequence, no death mode, no life lost"
       },
       "mpc": {
         "clears": 0,
@@ -2291,7 +2296,7 @@
         "best_progress_px": null,
         "source": "no clearance flight has ever finished a run in this session; 10.68 measured it unplayable"
       },
-      "render_stride": 2,
+      "render_stride": 8,
       "goal_proxy_px": 1900.0
     },
     {
@@ -2361,31 +2366,32 @@
       },
       "episode": {
         "dataset": "data/raw/smw_dashboard_run_smw_map_round_1_152_104_t27.npz",
-        "controller": "dagger",
-        "controller_kind": "button head",
-        "planner_seed": null,
-        "episode_end_rule": "the published 1900 px distance proxy",
-        "frames": 592,
-        "engine_exit_frame": 542,
-        "outro_frames": 240,
+        "controller": "piml-ppo",
+        "controller_kind": "physics-informed RL policy",
+        "planner_seed": 42,
+        "episode_end_rule": "the engine's own mode byte leaving 0x14",
+        "frames": 3172,
+        "engine_exit_frame": 2852,
+        "outro_frames": 320,
         "lives_before": 4,
-        "lives_after": 3,
-        "progress_px": 372.875,
-        "ended": "death",
+        "lives_after": 4,
+        "progress_px": 5267.0625,
+        "ended": "engine_left_0x14_to_0x0C",
         "mode_bytes_seen": [
-          11,
           12,
+          13,
+          14,
           20
         ],
-        "wall_clock_s": 2.49,
-        "frames_under_operator_A": 23
+        "wall_clock_s": 16.06,
+        "frames_under_operator_A": 0
       },
       "clear_evidence": {
-        "concluded": false,
-        "reached_map": false,
-        "lives_lost": true,
-        "exit_mode": "0x0B",
-        "reason": "the engine ended the session in the death mode and took a life"
+        "concluded": true,
+        "reached_map": true,
+        "lives_lost": false,
+        "exit_mode": "0x0C",
+        "reason": "the engine ended the session through its exit sequence, no death mode, no life lost"
       },
       "mpc": {
         "clears": 0,
@@ -2393,7 +2399,7 @@
         "best_progress_px": 376.5,
         "source": "the published clearance campaign of 10.66"
       },
-      "render_stride": 2,
+      "render_stride": 8,
       "goal_proxy_px": 1900.0
     }
   ],
@@ -2491,43 +2497,43 @@
       "label": "Yoshi's Island 2",
       "dataset": "data/raw/smw_dashboard_run_smw_map_node_68_135_t29.npz",
       "goal_px": 5120.0,
-      "clear_line": "no run has ever finished this session \u00b7 this arm 406 / 5120 px",
+      "clear_line": "cleared: the engine ended the stage without the death mode \u00b7 this arm 5009 / 5120 px",
       "video": {
         "mp4": "results/figures/dashboard_level_3.mp4",
-        "bytes": 1221221,
-        "frames_written": 101,
+        "bytes": 5413331,
+        "frames_written": 336,
         "fps": 30.0,
-        "duration_s": 3.37
+        "duration_s": 11.2
       },
       "gif": {
         "gif": "results/figures/dashboard_level_3.gif",
-        "bytes": 1452613,
+        "bytes": 5262745,
         "gif_fps": 12.0,
         "gif_width_px": 900,
         "gif_palette_colors": 96
       },
       "still": {
         "png": "results/figures/dashboard_level_3_still.png",
-        "bytes": 93407,
-        "frame": 122
+        "bytes": 100866,
+        "frame": 1960
       },
       "caption": {
-        "episode_frames": 548,
-        "tile_empty_cell_share": 0.9281152241918665,
-        "frames_with_enemy_cells": 208,
-        "rendered_frames_with_enemy_cells": 43,
-        "max_enemy_cells_in_frame": 1,
-        "active_sprite_rows": 497,
-        "max_active_sprite_slots_in_frame": 3,
-        "progress_px": 406.4375,
+        "episode_frames": 4207,
+        "tile_empty_cell_share": 0.9223937994498964,
+        "frames_with_enemy_cells": 733,
+        "rendered_frames_with_enemy_cells": 67,
+        "max_enemy_cells_in_frame": 2,
+        "active_sprite_rows": 8052,
+        "max_active_sprite_slots_in_frame": 6,
+        "progress_px": 5007.25,
         "camera_travel_px": 65519.0,
-        "mean_top_action_probability": 0.16383409197966337,
-        "mean_max_button_probability": 0.5004326097504066,
-        "residue_exact_share": 0.9962264150943396,
-        "operator_A_frames": 0,
-        "value_first_px": 201.41864013671875,
-        "value_last_px": 195.16087341308594,
-        "subscreens_reached": 2
+        "mean_top_action_probability": 0.9201043989586383,
+        "mean_max_button_probability": 0.7658052092422724,
+        "residue_exact_share": 0.8389544688026982,
+        "operator_A_frames": 93,
+        "value_first_px": 201.4052734375,
+        "value_last_px": 70.93865966796875,
+        "subscreens_reached": 20
       }
     },
     {
@@ -2535,43 +2541,43 @@
       "label": "Yoshi's Island 3",
       "dataset": "data/raw/smw_dashboard_run_smw_map_round_1_152_104_t27.npz",
       "goal_px": 5376.0,
-      "clear_line": "0 of 2 attempts cleared it \u00b7 this arm 373 / 5376 px",
+      "clear_line": "cleared: the engine ended the stage without the death mode \u00b7 this arm 5267 / 5376 px",
       "video": {
         "mp4": "results/figures/dashboard_level_4.mp4",
-        "bytes": 1118050,
-        "frames_written": 87,
+        "bytes": 4675441,
+        "frames_written": 350,
         "fps": 30.0,
-        "duration_s": 2.9
+        "duration_s": 11.67
       },
       "gif": {
         "gif": "results/figures/dashboard_level_4.gif",
-        "bytes": 1333681,
+        "bytes": 3434812,
         "gif_fps": 12.0,
         "gif_width_px": 900,
         "gif_palette_colors": 96
       },
       "still": {
         "png": "results/figures/dashboard_level_4_still.png",
-        "bytes": 91260,
-        "frame": 130
+        "bytes": 98532,
+        "frame": 1400
       },
       "caption": {
-        "episode_frames": 592,
-        "tile_empty_cell_share": 0.9473817567567567,
-        "frames_with_enemy_cells": 0,
-        "rendered_frames_with_enemy_cells": 0,
-        "max_enemy_cells_in_frame": 0,
-        "active_sprite_rows": 617,
-        "max_active_sprite_slots_in_frame": 2,
-        "progress_px": 370.625,
+        "episode_frames": 3172,
+        "tile_empty_cell_share": 0.9600736353810124,
+        "frames_with_enemy_cells": 530,
+        "rendered_frames_with_enemy_cells": 66,
+        "max_enemy_cells_in_frame": 2,
+        "active_sprite_rows": 4878,
+        "max_active_sprite_slots_in_frame": 5,
+        "progress_px": 5265.75,
         "camera_travel_px": 65519.0,
-        "mean_top_action_probability": 0.1612803807821856,
-        "mean_max_button_probability": 0.5043146127482524,
-        "residue_exact_share": 0.985,
-        "operator_A_frames": 23,
-        "value_first_px": 201.41864013671875,
-        "value_last_px": 198.32931518554688,
-        "subscreens_reached": 2
+        "mean_top_action_probability": 0.8939325355115484,
+        "mean_max_button_probability": 0.7018381324638175,
+        "residue_exact_share": 0.8159041394335512,
+        "operator_A_frames": 0,
+        "value_first_px": 201.4052734375,
+        "value_last_px": 70.93865203857422,
+        "subscreens_reached": 21
       }
     }
   ],
@@ -2675,7 +2681,7 @@
   },
   "conclusion_video": {
     "mp4": "results/figures/all_covered_stages.mp4",
-    "bytes": 1507244,
+    "bytes": 4508112,
     "crf": 27,
     "segments": [
       {
@@ -2689,6 +2695,18 @@
         "label": "Yoshi's House",
         "dataset": "data/raw/smw_dashboard_run_smw_map_node_116_126_t28.npz",
         "mp4": "results/figures/dashboard_level_2.mp4"
+      },
+      {
+        "level_index": 3,
+        "label": "Yoshi's Island 2",
+        "dataset": "data/raw/smw_dashboard_run_smw_map_node_68_135_t29.npz",
+        "mp4": "results/figures/dashboard_level_3.mp4"
+      },
+      {
+        "level_index": 4,
+        "label": "Yoshi's Island 3",
+        "dataset": "data/raw/smw_dashboard_run_smw_map_round_1_152_104_t27.npz",
+        "mp4": "results/figures/dashboard_level_4.mp4"
       }
     ]
   }

@@ -252,11 +252,150 @@ class TerrainRunnerActor:
         }
 
 
+class PimlStageActor:
+    """The 10.71 Physics-Informed PPO (PIML-PPO) closed-loop Actor-Critic with CBF safety filter.
+
+    Reads the 81D terrain-and-kinematics observation and 8D physical state from the live emulator
+    every `FRAME_SKIP = 4` frames, projects candidate macro-action logits through
+    `DiscreteCBFCategoricalFilter`, and emits the actor's genuine safety-filtered primitive
+    distribution (`primitive_probs`) and marginal button probabilities (`button_probs`).
+    """
+
+    name = "piml-ppo"
+    kind = "physics-informed RL policy"
+    checkpoint = "piml_ppo_smw_map_node_68_135_t29.pt"
+
+    def __init__(self, device: str, state_path: Optional[str] = None) -> None:
+        from src.environment.episode_hygiene import PlayerHold
+        from src.training.piml_stage_ppo import (
+            ACTIONS,
+            ADDR_END_LEVEL_TIMER,
+            FRAME_SKIP,
+            MPC_PRIMITIVE_TO_STAGE_ACTION,
+            N_ACTIONS,
+            OBS_DIM,
+            PHYS_DIM,
+            STAGE_ACTION_TO_MPC_PRIMITIVE,
+            EpisodeTracker,
+            PIMLStageActorCritic,
+            extract_piml_observation,
+            potential_reward,
+        )
+
+        self._ACTIONS = ACTIONS
+        self._ADDR_END_LEVEL_TIMER = ADDR_END_LEVEL_TIMER
+        self._FRAME_SKIP = FRAME_SKIP
+        self._MPC_TO_STAGE = list(MPC_PRIMITIVE_TO_STAGE_ACTION)
+        self._STAGE_TO_MPC = STAGE_ACTION_TO_MPC_PRIMITIVE
+        self._EpisodeTracker = EpisodeTracker
+        self._extract_obs = extract_piml_observation
+        self._potential_reward = potential_reward
+        self._device = device
+
+        if state_path:
+            tag = os.path.splitext(os.path.basename(state_path))[0]
+            self.checkpoint = f"piml_ppo_{tag}.pt"
+        ckpt_file = os.path.join(CHECKPOINTS_DIR, self.checkpoint)
+        torch.backends.cuda.matmul.allow_tf32 = False
+        blob = torch.load(ckpt_file, map_location=device, weights_only=False)
+        self.model = PIMLStageActorCritic(
+            obs_dim=int(blob.get("obs_dim", OBS_DIM)),
+            phys_dim=int(blob.get("phys_dim", PHYS_DIM)),
+            hidden_dim=int(blob.get("hidden_dim", 192)),
+            n_actions=int(blob.get("n_actions", N_ACTIONS)),
+            cbf_beta=float(blob.get("cbf_beta", 0.25)),
+        ).to(device)
+        self.model.load_state_dict(blob["model_state_dict"])
+        self.model.eval()
+
+        self._emu: Any = None
+        self._hold = PlayerHold()
+        self._tracker: Any = None
+        self._frames_called = 0
+        self._subframe = 0
+        self._prev_max_x = 0.0
+        self._current_action = 0
+        self._current_chosen_mpc = 0
+        self._current_mpc_probs = np.zeros(len(ACTION_MATRIX), dtype=np.float32)
+        self._current_mpc_probs[0] = 1.0
+        self._current_button_probs = np.zeros(len(ACTION_BUTTONS), dtype=np.float32)
+
+    def bind(self, emu: Any) -> None:
+        self._emu = emu
+
+    def act(self, s_vec: np.ndarray, device: str) -> Tuple[Dict[str, bool], Dict[str, Any]]:
+        assert self._emu is not None, "PimlStageActor requires actor.bind(emu) before act()"
+        if self._tracker is None:
+            self._tracker = self._EpisodeTracker.from_emu(self._emu)
+            self._prev_max_x = float(self._tracker.max_x)
+
+        if self._frames_called > 0 and self._emu.read_wram_u8(self._ADDR_END_LEVEL_TIMER) == 0:
+            s = self._emu.get_smw_state()
+            self._hold.observe(np.array([s["x"], s["y"], s["vx"], s["vy"]]))
+            _, self._tracker.max_x = self._potential_reward(float(s["x"]), self._tracker.max_x)
+            self._subframe += 1
+            if self._subframe >= self._FRAME_SKIP:
+                btn_prev = dict(self._ACTIONS[self._current_action])
+                self._tracker.stall_steps = (
+                    0
+                    if self._tracker.max_x > self._prev_max_x + 1e-6
+                    else self._tracker.stall_steps + 1
+                )
+                self._tracker.b_hold_steps = (
+                    self._tracker.b_hold_steps + 1 if btn_prev.get("B", False) else 0
+                )
+                self._tracker.airborne_steps = (
+                    0 if float(s["c_ground"]) > 0.5 else self._tracker.airborne_steps + 1
+                )
+                self._tracker.prev_action = self._current_action
+                self._tracker.step_count += 1
+                self._subframe = 0
+
+        self._frames_called += 1
+
+        if self._emu.read_wram_u8(self._ADDR_END_LEVEL_TIMER) != 0:
+            idle_probs = np.zeros(len(ACTION_MATRIX), dtype=np.float32)
+            idle_probs[0] = 1.0
+            return {b: False for b in ACTION_BUTTONS}, {
+                "button_probs": np.zeros(len(ACTION_BUTTONS), dtype=np.float32),
+                "primitive_probs": idle_probs,
+                "chosen_primitive": 0,
+            }
+
+        if self._subframe == 0:
+            self._prev_max_x = float(self._tracker.max_x)
+            obs, phys = self._extract_obs(self._emu, self._tracker)
+            obs_t = torch.as_tensor(obs, dtype=torch.float32, device=self._device).unsqueeze(0)
+            phys_t = torch.as_tensor(phys, dtype=torch.float32, device=self._device).unsqueeze(0)
+            with torch.no_grad():
+                dist, _, _ = self.model(obs_t, phys_t)
+                stage_probs = dist.probs.squeeze(0).cpu().numpy()
+            self._current_action = int(np.argmax(stage_probs))
+            self._current_chosen_mpc = int(self._STAGE_TO_MPC[self._current_action])
+            mpc_probs = stage_probs[self._MPC_TO_STAGE].astype(np.float32)
+            mpc_probs /= max(float(mpc_probs.sum()), 1e-8)
+            self._current_mpc_probs = mpc_probs
+            self._current_button_probs = (
+                (mpc_probs[:, None] * ACTION_MATRIX).sum(axis=0).astype(np.float32)
+            )
+
+        raw_buttons = self._hold.buttons(dict(self._ACTIONS[self._current_action]))
+        buttons = {b: bool(raw_buttons.get(b, False)) for b in ACTION_BUTTONS}
+        if raw_buttons.get("A", False):
+            buttons["A"] = True
+        return buttons, {
+            "button_probs": self._current_button_probs.copy(),
+            "primitive_probs": self._current_mpc_probs.copy(),
+            "chosen_primitive": self._current_chosen_mpc,
+        }
+
+
 ACTORS = {
     "ppo": PpoPrimitiveActor,
     "dagger": DaggerButtonActor,
     "mpc": MpcClearanceActor,
     "terrain-runner": TerrainRunnerActor,
+    "piml-ppo": PimlStageActor,
 }
 
 
@@ -445,6 +584,8 @@ def record(
         actor = MpcClearanceActor(device, seed=seed)
     elif kind == "terrain-runner":
         actor = TerrainRunnerActor(device, direction=runner_direction)
+    elif kind == "piml-ppo":
+        actor = PimlStageActor(device, state_path=state_path)
     else:
         actor = ACTORS[kind](device)
     value_net, value_stats = load_value_critic(device)

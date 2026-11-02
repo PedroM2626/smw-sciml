@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "generated_utc": "2026-10-14T18:28:34+00:00",
-    "git_sha": "1ed1255580d2fdb011cd2ca51d836ddc6165c55a",
+    "generated_utc": "2026-11-02T17:40:02+00:00",
+    "git_sha": "27c28f2480bee6c58fba9c6260890d486df20dc9",
     "git_dirty": true,
     "python": "3.10.11",
     "platform": "Windows 10 (AMD64)",
@@ -35,18 +35,24 @@
         "outro_frames": 320
       },
       "0x27": {
-        "kind": "dagger",
-        "seed": null,
-        "frames": 1268,
-        "goal_px": 1900.0,
-        "outro_frames": 240
+        "kind": "piml-ppo",
+        "seed": 42,
+        "frames": 9000,
+        "goal_px": null,
+        "operator_delay": 10000,
+        "warmup_frames": 0,
+        "render_stride": 8,
+        "outro_frames": 320
       },
       "0x29": {
-        "kind": "dagger",
-        "seed": null,
-        "frames": 1268,
-        "goal_px": 1900.0,
-        "outro_frames": 240
+        "kind": "piml-ppo",
+        "seed": 42,
+        "frames": 9000,
+        "goal_px": null,
+        "operator_delay": 10000,
+        "warmup_frames": 0,
+        "render_stride": 8,
+        "outro_frames": 320
       }
     },
     "conclusion_definition": "the engine returned the player to the map (0x0E) without taking a life. The mode byte alone cannot say it: the house session's left-edge exit marches through 0x0B - the byte the death animation owns - on its way out the door, and the byte would call that a death. The lives counter ($7E:0DBE) settles it: an exit leaves it put, a death decrements it, and reaching the map while losing a life is the game-over sequence, not a conclusion",
@@ -331,33 +337,32 @@
       },
       "episode": {
         "dataset": "data/raw/smw_dashboard_run_smw_map_node_68_135_t29.npz",
-        "controller": "dagger",
-        "controller_kind": "button head",
-        "planner_seed": null,
-        "episode_end_rule": "the published 1900 px distance proxy",
-        "frames": 548,
-        "engine_exit_frame": 385,
-        "outro_frames": 240,
+        "controller": "piml-ppo",
+        "controller_kind": "physics-informed RL policy",
+        "planner_seed": 42,
+        "episode_end_rule": "the engine's own mode byte leaving 0x14",
+        "frames": 4207,
+        "engine_exit_frame": 3887,
+        "outro_frames": 320,
         "lives_before": 4,
-        "lives_after": 3,
-        "progress_px": 406.4375,
-        "ended": "death",
+        "lives_after": 4,
+        "progress_px": 5008.5625,
+        "ended": "engine_left_0x14_to_0x0C",
         "mode_bytes_seen": [
-          11,
           12,
           13,
           14,
           20
         ],
-        "wall_clock_s": 2.59,
-        "frames_under_operator_A": 0
+        "wall_clock_s": 23.51,
+        "frames_under_operator_A": 93
       },
       "clear_evidence": {
-        "concluded": false,
+        "concluded": true,
         "reached_map": true,
-        "lives_lost": true,
-        "exit_mode": "0x0B",
-        "reason": "the engine ended the session in the death mode and took a life"
+        "lives_lost": false,
+        "exit_mode": "0x0C",
+        "reason": "the engine ended the session through its exit sequence, no death mode, no life lost"
       },
       "mpc": {
         "clears": 0,
@@ -365,7 +370,7 @@
         "best_progress_px": null,
         "source": "no clearance flight has ever finished a run in this session; 10.68 measured it unplayable"
       },
-      "render_stride": 2,
+      "render_stride": 8,
       "goal_proxy_px": 1900.0
     },
     {
@@ -435,31 +440,32 @@
       },
       "episode": {
         "dataset": "data/raw/smw_dashboard_run_smw_map_round_1_152_104_t27.npz",
-        "controller": "dagger",
-        "controller_kind": "button head",
-        "planner_seed": null,
-        "episode_end_rule": "the published 1900 px distance proxy",
-        "frames": 592,
-        "engine_exit_frame": 542,
-        "outro_frames": 240,
+        "controller": "piml-ppo",
+        "controller_kind": "physics-informed RL policy",
+        "planner_seed": 42,
+        "episode_end_rule": "the engine's own mode byte leaving 0x14",
+        "frames": 3172,
+        "engine_exit_frame": 2852,
+        "outro_frames": 320,
         "lives_before": 4,
-        "lives_after": 3,
-        "progress_px": 372.875,
-        "ended": "death",
+        "lives_after": 4,
+        "progress_px": 5267.0625,
+        "ended": "engine_left_0x14_to_0x0C",
         "mode_bytes_seen": [
-          11,
           12,
+          13,
+          14,
           20
         ],
-        "wall_clock_s": 2.49,
-        "frames_under_operator_A": 23
+        "wall_clock_s": 16.06,
+        "frames_under_operator_A": 0
       },
       "clear_evidence": {
-        "concluded": false,
-        "reached_map": false,
-        "lives_lost": true,
-        "exit_mode": "0x0B",
-        "reason": "the engine ended the session in the death mode and took a life"
+        "concluded": true,
+        "reached_map": true,
+        "lives_lost": false,
+        "exit_mode": "0x0C",
+        "reason": "the engine ended the session through its exit sequence, no death mode, no life lost"
       },
       "mpc": {
         "clears": 0,
@@ -467,7 +473,7 @@
         "best_progress_px": 376.5,
         "source": "the published clearance campaign of 10.66"
       },
-      "render_stride": 2,
+      "render_stride": 8,
       "goal_proxy_px": 1900.0
     }
   ],

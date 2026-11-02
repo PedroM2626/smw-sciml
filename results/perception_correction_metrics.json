@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "generated_utc": "2026-10-15T10:07:03+00:00",
-    "git_sha": "20272b4277bf7a87412aa988603af7b284b5d66b",
+    "generated_utc": "2026-11-02T17:45:42+00:00",
+    "git_sha": "27c28f2480bee6c58fba9c6260890d486df20dc9",
     "git_dirty": true,
     "python": "3.10.11",
     "platform": "Windows 10 (AMD64)",
@@ -49,10 +49,10 @@
       "contact_frames": 45,
       "clearance_collector": {
         "dataset": "data/raw/smw_dashboard_run.npz",
-        "frames_replayed": 4375,
+        "frames_replayed": 5514,
         "controls": "the committed executed buttons plus its recorded operator A channel"
       },
-      "ids_probed": 22,
+      "ids_probed": 33,
       "class_rule": "hostile: the contact or the stomp killed a small Mario with the sprite present and not with its slot cleared (a fall past the floor kills both runs and says nothing about the sprite); interact: the engine froze the whole player record with the mode still 0x14 (10.63's box signature) with the sprite present and not with its slot cleared - a teleport that freezes both runs is the landing spot, not a box; stompable: the stomp harmed a running sprite - it died (status below the running band or gone) or changed state inside it, like the Rex flattening; platform: the stomp held Mario up where the cleared run fell; neutral: the engine ignored the contact. Only slots the engine is running (status >= 8) are ever met: the first sweep met dormant slots (status 1) and read their wake-up as a stomp, which painted empty shells and the message block as enemies"
     },
     "episode_plans": {
@@ -75,18 +75,24 @@
         "outro_frames": 320
       },
       "0x27": {
-        "kind": "dagger",
-        "seed": null,
-        "frames": 1268,
-        "goal_px": 1900.0,
-        "outro_frames": 240
+        "kind": "piml-ppo",
+        "seed": 42,
+        "frames": 9000,
+        "goal_px": null,
+        "operator_delay": 10000,
+        "warmup_frames": 0,
+        "render_stride": 8,
+        "outro_frames": 320
       },
       "0x29": {
-        "kind": "dagger",
-        "seed": null,
-        "frames": 1268,
-        "goal_px": 1900.0,
-        "outro_frames": 240
+        "kind": "piml-ppo",
+        "seed": 42,
+        "frames": 9000,
+        "goal_px": null,
+        "operator_delay": 10000,
+        "warmup_frames": 0,
+        "render_stride": 8,
+        "outro_frames": 320
       }
     },
     "conclusion_definition": "the engine returned the player to the map (0x0E) without taking a life. The mode byte alone cannot say it: the house session's left-edge exit marches through 0x0B - the byte the death animation owns - on its way out the door, and the byte would call that a death. The lives counter ($7E:0DBE) settles it: an exit leaves it put, a death decrements it, and reaching the map while losing a life is the game-over sequence, not a conclusion"
@@ -10895,8 +10901,8 @@
   },
   "sprite_probe": {
     "_meta": {
-      "generated_utc": "2026-10-14T20:11:00+00:00",
-      "git_sha": "1ed1255580d2fdb011cd2ca51d836ddc6165c55a",
+      "generated_utc": "2026-11-02T17:41:33+00:00",
+      "git_sha": "27c28f2480bee6c58fba9c6260890d486df20dc9",
       "git_dirty": true,
       "python": "3.10.11",
       "platform": "Windows 10 (AMD64)",
@@ -10919,10 +10925,10 @@
       "contact_frames": 45,
       "clearance_collector": {
         "dataset": "data/raw/smw_dashboard_run.npz",
-        "frames_replayed": 4375,
+        "frames_replayed": 5514,
         "controls": "the committed executed buttons plus its recorded operator A channel"
       },
-      "ids_probed": 22,
+      "ids_probed": 33,
       "class_rule": "hostile: the contact or the stomp killed a small Mario with the sprite present and not with its slot cleared (a fall past the floor kills both runs and says nothing about the sprite); interact: the engine froze the whole player record with the mode still 0x14 (10.63's box signature) with the sprite present and not with its slot cleared - a teleport that freezes both runs is the landing spot, not a box; stompable: the stomp harmed a running sprite - it died (status below the running band or gone) or changed state inside it, like the Rex flattening; platform: the stomp held Mario up where the cleared run fell; neutral: the engine ignored the contact. Only slots the engine is running (status >= 8) are ever met: the first sweep met dormant slots (status 1) and read their wake-up as a stomp, which painted empty shells and the message block as enemies"
     },
     "sprites": [
@@ -10933,7 +10939,7 @@
           "ran": true,
           "mario_died": false,
           "final_mode": "0x14",
-          "final_y": 354.1,
+          "final_y": 361.1,
           "froze_the_player": true
         },
         "contact_without_sprite": {
@@ -10985,7 +10991,7 @@
           "ran": true,
           "mario_died": false,
           "final_mode": "0x14",
-          "final_y": 305.4,
+          "final_y": 312.4,
           "froze_the_player": true
         },
         "stomp": {
@@ -11152,8 +11158,98 @@
         "class": "stompable"
       },
       {
+        "sprite": "0x09",
+        "met_in_stage": "0x27-clear-draw",
+        "contact": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 360.4,
+          "froze_the_player": true
+        },
+        "contact_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 454.8,
+          "froze_the_player": false
+        },
+        "stomp": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 352.9,
+          "bounced": true,
+          "held_up": true,
+          "rest_y": 352.9,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "stomp_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 352.1,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 352.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "class": "stompable"
+      },
+      {
+        "sprite": "0x0b",
+        "met_in_stage": "0x27-clear-draw",
+        "contact": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 72.4,
+          "froze_the_player": true
+        },
+        "contact_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 176.1,
+          "froze_the_player": false
+        },
+        "stomp": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 100.9,
+          "bounced": true,
+          "held_up": false,
+          "rest_y": 100.9,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "stomp_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 177.1,
+          "bounced": false,
+          "held_up": false,
+          "rest_y": 177.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "class": "stompable"
+      },
+      {
         "sprite": "0x2c",
-        "met_in_stage": "0x2A",
+        "met_in_stage": "0x2A-clear-draw",
         "contact": {
           "ran": true,
           "mario_died": false,
@@ -11198,7 +11294,7 @@
       },
       {
         "sprite": "0x35",
-        "met_in_stage": "0x2A",
+        "met_in_stage": "0x2A-clear-draw",
         "contact": {
           "ran": true,
           "mario_died": false,
@@ -11383,15 +11479,15 @@
           "ran": true,
           "mario_died": false,
           "final_mode": "0x14",
-          "final_y": 352.1,
-          "froze_the_player": false
+          "final_y": 309.2,
+          "froze_the_player": true
         },
         "contact_without_sprite": {
           "ran": true,
           "mario_died": false,
           "final_mode": "0x14",
-          "final_y": 352.1,
-          "froze_the_player": false
+          "final_y": 309.2,
+          "froze_the_player": true
         },
         "stomp": {
           "ran": true,
@@ -11420,6 +11516,186 @@
           "sprite_gone": true
         },
         "class": "neutral"
+      },
+      {
+        "sprite": "0x55",
+        "met_in_stage": "0x27-clear-draw",
+        "contact": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 369.1,
+          "froze_the_player": false
+        },
+        "contact_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 369.1,
+          "froze_the_player": false
+        },
+        "stomp": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 177.2,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 177.2,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": 8,
+          "sprite_gone": false
+        },
+        "stomp_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 305.1,
+          "bounced": false,
+          "held_up": false,
+          "rest_y": 305.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "class": "platform"
+      },
+      {
+        "sprite": "0x57",
+        "met_in_stage": "0x27-clear-draw",
+        "contact": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 369.1,
+          "froze_the_player": false
+        },
+        "contact_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 369.1,
+          "froze_the_player": false
+        },
+        "stomp": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 161.9,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 161.9,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": 8,
+          "sprite_gone": false
+        },
+        "stomp_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 305.1,
+          "bounced": false,
+          "held_up": false,
+          "rest_y": 305.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "class": "platform"
+      },
+      {
+        "sprite": "0x59",
+        "met_in_stage": "0x27-clear-draw",
+        "contact": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 353.1,
+          "froze_the_player": false
+        },
+        "contact_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 353.1,
+          "froze_the_player": false
+        },
+        "stomp": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 161.2,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 161.2,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": 8,
+          "sprite_gone": false
+        },
+        "stomp_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 289.1,
+          "bounced": false,
+          "held_up": false,
+          "rest_y": 289.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "class": "platform"
+      },
+      {
+        "sprite": "0x5a",
+        "met_in_stage": "0x27-clear-draw",
+        "contact": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 369.1,
+          "froze_the_player": false
+        },
+        "contact_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 369.1,
+          "froze_the_player": false
+        },
+        "stomp": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 177.2,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 177.2,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": 8,
+          "sprite_gone": false
+        },
+        "stomp_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 305.1,
+          "bounced": false,
+          "held_up": false,
+          "rest_y": 305.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "class": "platform"
       },
       {
         "sprite": "0x5f",
@@ -11459,6 +11735,96 @@
           "bounced": false,
           "held_up": false,
           "rest_y": 361.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "class": "neutral"
+      },
+      {
+        "sprite": "0x74",
+        "met_in_stage": "0x29-clear-draw",
+        "contact": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 352.1,
+          "froze_the_player": false
+        },
+        "contact_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 352.1,
+          "froze_the_player": false
+        },
+        "stomp": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 352.1,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 352.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": 8,
+          "sprite_gone": false
+        },
+        "stomp_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 352.1,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 352.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "class": "neutral"
+      },
+      {
+        "sprite": "0x78",
+        "met_in_stage": "0x2A-clear-draw",
+        "contact": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 352.1,
+          "froze_the_player": false
+        },
+        "contact_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 352.1,
+          "froze_the_player": false
+        },
+        "stomp": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 304.1,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 304.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": 8,
+          "sprite_gone": false
+        },
+        "stomp_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 304.1,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 304.1,
           "froze_the_player": false,
           "sprite_status_before": 8,
           "sprite_status_after": null,
@@ -11737,6 +12103,51 @@
         "class": "neutral"
       },
       {
+        "sprite": "0x8e",
+        "met_in_stage": "0x29-clear-draw",
+        "contact": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 301.6,
+          "froze_the_player": true
+        },
+        "contact_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 352.4,
+          "froze_the_player": false
+        },
+        "stomp": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 288.1,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 288.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": 8,
+          "sprite_gone": false
+        },
+        "stomp_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 288.1,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 288.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "class": "interact"
+      },
+      {
         "sprite": "0x91",
         "met_in_stage": "0x2A-clear-draw",
         "contact": {
@@ -11774,6 +12185,51 @@
           "bounced": false,
           "held_up": true,
           "rest_y": 288.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "class": "interact"
+      },
+      {
+        "sprite": "0x95",
+        "met_in_stage": "0x29-clear-draw",
+        "contact": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 340.1,
+          "froze_the_player": true
+        },
+        "contact_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 454.8,
+          "froze_the_player": false
+        },
+        "stomp": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 352.6,
+          "bounced": true,
+          "held_up": true,
+          "rest_y": 352.6,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": 8,
+          "sprite_gone": false
+        },
+        "stomp_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 352.1,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 352.1,
           "froze_the_player": false,
           "sprite_status_before": 8,
           "sprite_status_after": null,
@@ -11915,18 +12371,64 @@
           "sprite_gone": true
         },
         "class": "neutral"
+      },
+      {
+        "sprite": "0xc7",
+        "met_in_stage": "0x29-clear-draw",
+        "contact": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 454.8,
+          "froze_the_player": false
+        },
+        "contact_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 454.8,
+          "froze_the_player": false
+        },
+        "stomp": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 352.1,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 352.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "stomp_without_sprite": {
+          "ran": true,
+          "mario_died": false,
+          "final_mode": "0x14",
+          "final_y": 352.1,
+          "bounced": false,
+          "held_up": true,
+          "rest_y": 352.1,
+          "froze_the_player": false,
+          "sprite_status_before": 8,
+          "sprite_status_after": null,
+          "sprite_gone": true
+        },
+        "class": "stompable"
       }
     ],
     "class_counts": {
-      "stompable": 7,
-      "neutral": 13,
-      "interact": 2
+      "stompable": 10,
+      "neutral": 15,
+      "interact": 4,
+      "platform": 4
     }
   },
   "stages": {
     "_meta": {
-      "generated_utc": "2026-10-14T18:28:34+00:00",
-      "git_sha": "1ed1255580d2fdb011cd2ca51d836ddc6165c55a",
+      "generated_utc": "2026-11-02T17:40:02+00:00",
+      "git_sha": "27c28f2480bee6c58fba9c6260890d486df20dc9",
       "git_dirty": true,
       "python": "3.10.11",
       "platform": "Windows 10 (AMD64)",
@@ -11960,18 +12462,24 @@
           "outro_frames": 320
         },
         "0x27": {
-          "kind": "dagger",
-          "seed": null,
-          "frames": 1268,
-          "goal_px": 1900.0,
-          "outro_frames": 240
+          "kind": "piml-ppo",
+          "seed": 42,
+          "frames": 9000,
+          "goal_px": null,
+          "operator_delay": 10000,
+          "warmup_frames": 0,
+          "render_stride": 8,
+          "outro_frames": 320
         },
         "0x29": {
-          "kind": "dagger",
-          "seed": null,
-          "frames": 1268,
-          "goal_px": 1900.0,
-          "outro_frames": 240
+          "kind": "piml-ppo",
+          "seed": 42,
+          "frames": 9000,
+          "goal_px": null,
+          "operator_delay": 10000,
+          "warmup_frames": 0,
+          "render_stride": 8,
+          "outro_frames": 320
         }
       },
       "conclusion_definition": "the engine returned the player to the map (0x0E) without taking a life. The mode byte alone cannot say it: the house session's left-edge exit marches through 0x0B - the byte the death animation owns - on its way out the door, and the byte would call that a death. The lives counter ($7E:0DBE) settles it: an exit leaves it put, a death decrements it, and reaching the map while losing a life is the game-over sequence, not a conclusion",
@@ -12256,33 +12764,32 @@
         },
         "episode": {
           "dataset": "data/raw/smw_dashboard_run_smw_map_node_68_135_t29.npz",
-          "controller": "dagger",
-          "controller_kind": "button head",
-          "planner_seed": null,
-          "episode_end_rule": "the published 1900 px distance proxy",
-          "frames": 548,
-          "engine_exit_frame": 385,
-          "outro_frames": 240,
+          "controller": "piml-ppo",
+          "controller_kind": "physics-informed RL policy",
+          "planner_seed": 42,
+          "episode_end_rule": "the engine's own mode byte leaving 0x14",
+          "frames": 4207,
+          "engine_exit_frame": 3887,
+          "outro_frames": 320,
           "lives_before": 4,
-          "lives_after": 3,
-          "progress_px": 406.4375,
-          "ended": "death",
+          "lives_after": 4,
+          "progress_px": 5008.5625,
+          "ended": "engine_left_0x14_to_0x0C",
           "mode_bytes_seen": [
-            11,
             12,
             13,
             14,
             20
           ],
-          "wall_clock_s": 2.59,
-          "frames_under_operator_A": 0
+          "wall_clock_s": 23.51,
+          "frames_under_operator_A": 93
         },
         "clear_evidence": {
-          "concluded": false,
+          "concluded": true,
           "reached_map": true,
-          "lives_lost": true,
-          "exit_mode": "0x0B",
-          "reason": "the engine ended the session in the death mode and took a life"
+          "lives_lost": false,
+          "exit_mode": "0x0C",
+          "reason": "the engine ended the session through its exit sequence, no death mode, no life lost"
         },
         "mpc": {
           "clears": 0,
@@ -12290,7 +12797,7 @@
           "best_progress_px": null,
           "source": "no clearance flight has ever finished a run in this session; 10.68 measured it unplayable"
         },
-        "render_stride": 2,
+        "render_stride": 8,
         "goal_proxy_px": 1900.0
       },
       {
@@ -12360,31 +12867,32 @@
         },
         "episode": {
           "dataset": "data/raw/smw_dashboard_run_smw_map_round_1_152_104_t27.npz",
-          "controller": "dagger",
-          "controller_kind": "button head",
-          "planner_seed": null,
-          "episode_end_rule": "the published 1900 px distance proxy",
-          "frames": 592,
-          "engine_exit_frame": 542,
-          "outro_frames": 240,
+          "controller": "piml-ppo",
+          "controller_kind": "physics-informed RL policy",
+          "planner_seed": 42,
+          "episode_end_rule": "the engine's own mode byte leaving 0x14",
+          "frames": 3172,
+          "engine_exit_frame": 2852,
+          "outro_frames": 320,
           "lives_before": 4,
-          "lives_after": 3,
-          "progress_px": 372.875,
-          "ended": "death",
+          "lives_after": 4,
+          "progress_px": 5267.0625,
+          "ended": "engine_left_0x14_to_0x0C",
           "mode_bytes_seen": [
-            11,
             12,
+            13,
+            14,
             20
           ],
-          "wall_clock_s": 2.49,
-          "frames_under_operator_A": 23
+          "wall_clock_s": 16.06,
+          "frames_under_operator_A": 0
         },
         "clear_evidence": {
-          "concluded": false,
-          "reached_map": false,
-          "lives_lost": true,
-          "exit_mode": "0x0B",
-          "reason": "the engine ended the session in the death mode and took a life"
+          "concluded": true,
+          "reached_map": true,
+          "lives_lost": false,
+          "exit_mode": "0x0C",
+          "reason": "the engine ended the session through its exit sequence, no death mode, no life lost"
         },
         "mpc": {
           "clears": 0,
@@ -12392,7 +12900,7 @@
           "best_progress_px": 376.5,
           "source": "the published clearance campaign of 10.66"
         },
-        "render_stride": 2,
+        "render_stride": 8,
         "goal_proxy_px": 1900.0
       }
     ],
@@ -12400,7 +12908,7 @@
   },
   "conclusion_video": {
     "mp4": "results/figures/all_covered_stages.mp4",
-    "bytes": 1507244,
+    "bytes": 4508112,
     "crf": 27,
     "segments": [
       {
@@ -12414,6 +12922,18 @@
         "label": "Yoshi's House",
         "dataset": "data/raw/smw_dashboard_run_smw_map_node_116_126_t28.npz",
         "mp4": "results/figures/dashboard_level_2.mp4"
+      },
+      {
+        "level_index": 3,
+        "label": "Yoshi's Island 2",
+        "dataset": "data/raw/smw_dashboard_run_smw_map_node_68_135_t29.npz",
+        "mp4": "results/figures/dashboard_level_3.mp4"
+      },
+      {
+        "level_index": 4,
+        "label": "Yoshi's Island 3",
+        "dataset": "data/raw/smw_dashboard_run_smw_map_round_1_152_104_t27.npz",
+        "mp4": "results/figures/dashboard_level_4.mp4"
       }
     ]
   },
@@ -12438,11 +12958,11 @@
     "",
     "**The corrected record.** `0x0025` is measured decor; `0x002B` is measured coin; `0x003F` is measured decor; `0x0073` is measured decor; `0x0100` is measured platform; `0x0124` is measured solid; `0x013F` is measured harmful; `0x0173` is measured slope; and the pre-10.68 classifier, for its part, called the fill `0x003F` solid, the bushes `0x0073`/`0x0074` pipes, and the spikes `0x008C` - none of which the engine agrees with. A walk over the recorded stages validates the table against the engine's own collision flags: on 1009 grounded frames the tile under the feet was a solid-or-slope class every time, and on 1183 frames through decor the engine never once blocked the run.",
     "",
-    "**The sprites.** The old panel drew one marker - whichever sprite the hazard probe found nearest, whatever it held. Measured per id: 7 stompable (the Rex `0x05` and the Koopa `0x04` - the stomp moved a *running* sprite's status byte, which is the measurement an enemy is made of), 2 interact (the message block `0x91`: touching it opened the engine's own box and froze the player - 10.63's signature, and only with the sprite present, which is the counterfactual that separates a box from a bad teleport), and 13 neutral - the chimney smoke `0x8A` and the parked shells `0x01`/`0x4D`/`0x4E`/`0xB9` that the first sweep painted as enemies. That first sweep is itself part of the corrected record: it met these ids in dormant slots (status 1), the teleport woke them (1 -> 8), and the wake-up read as a stomp. The probe now meets only slots the engine is running (status >= 8), and the runner and the panel read the same filter. The probe's collector is the clearance draw itself - the held-right walk dies in the first pit, so the Koopas of the stage's middle are met by flying the seed-7 draw that finishes it. The panel draws the sprites the way the reference grid draws them - INTO the map, one cell per live engine-running sprite, in the plane the terrain classes share - so an enemy entering the window at its edge is a full cell of the window rather than a dot at the edge of it, and an id the probe has not met yet draws its cell as unmeasured rather than guessed.",
+    "**The sprites.** The old panel drew one marker - whichever sprite the hazard probe found nearest, whatever it held. Measured per id: 10 stompable (the Rex `0x05` and the Koopa `0x04` - the stomp moved a *running* sprite's status byte, which is the measurement an enemy is made of), 4 interact (the message block `0x91`: touching it opened the engine's own box and froze the player - 10.63's signature, and only with the sprite present, which is the counterfactual that separates a box from a bad teleport), and 15 neutral - the chimney smoke `0x8A` and the parked shells `0x01`/`0x4D`/`0x4E`/`0xB9` that the first sweep painted as enemies. That first sweep is itself part of the corrected record: it met these ids in dormant slots (status 1), the teleport woke them (1 -> 8), and the wake-up read as a stomp. The probe now meets only slots the engine is running (status >= 8), and the runner and the panel read the same filter. The probe's collector is the clearance draw itself - the held-right walk dies in the first pit, so the Koopas of the stage's middle are met by flying the seed-7 draw that finishes it. The panel draws the sprites the way the reference grid draws them - INTO the map, one cell per live engine-running sprite, in the plane the terrain classes share - so an enemy entering the window at its edge is a full cell of the window rather than a dot at the edge of it, and an id the probe has not met yet draws its cell as unmeasured rather than guessed.",
     "",
     "**What the corrected map says about the sessions.** Yoshi's Island 1 (`0x2A`) is completed on screen, by the same seeded clearance draw 10.66 published - flown again with every frame kept: 4375 frames to the verdict, 5011 px of the 5120 px the buffer holds, the mode byte going `0x14` to `0x0C` with no `0x0B` on the way and the lives counter untouched. The house session (`0x28`) has no goal tape at all, and is concluded by walking back out through its door: the engine performs the left-edge exit itself - the mode marching `0x14` -> `0x0B` -> `0x0C` -> `0x0D` -> `0x0E` back onto the map with the lives byte never moving. That march is why the discriminator now reads two bytes: `0x0B` is the byte the death animation owns, and the house's exit passes through it on the way out, so the byte alone would call a walk out the door a death. The lives counter (`$7E:0DBE`) settles it - an exit leaves it put, a death decrements it. The other two sessions are measured dead under every route, fresh entry or restored savestate alike: past its first 369 px the `0x27` session's row 24 is a stretch of measured decor (message-block ids) over air, and walking west stops at a wall - every run ends in the death mode with a life taken; the `0x29` session is a scripted pipe ride whose own machinery lifts the player and drops him past the level with the controls untouched, the same death with the same life taken even on a fresh entry that never touched a button. No distance proxy was moved to make any of those sentences.",
     "",
-    "**One reel with the concluded sessions.** `results/figures/all_covered_stages.mp4` is the single video: the 2 sessions the engine concluded, each flown by the agent that can finish that session and kept recording through the engine's own exit sequence - the mode march and the map settling - so the reel shows the clear and the walk out the door, each to the verdict the engine itself delivered. 1.51 MB, 2 segments.",
+    "**One reel with the concluded sessions.** `results/figures/all_covered_stages.mp4` is the single video: the 4 sessions the engine concluded, each flown by the agent that can finish that session and kept recording through the engine's own exit sequence - the mode march and the map settling - so the reel shows the clear and the walk out the door, each to the verdict the engine itself delivered. 4.51 MB, 4 segments.",
     "",
     "**The panel.** The tile window draws five collapsed classes - ground and wall, coin, other block, enemy, and empty - from the recorded 16-bit ids classified by the measured behaviour table, with one cell per live engine-running sprite drawn into the grid the way the reference grid draws its hostile plane. The 33x33 recorded window is cropped to 20x14 with Mario at column 5, row 8, using the reference's exact hitbox cells: Mario at `((x + 8) >> 4, (y + 16) >> 4)` and each sprite at `((x + 8) >> 4, (y + 8) >> 4)`. All twelve engine slots with status at least 8 are recorded before that crop, which puts more of the level ahead of the player than behind. Both channels are gated: an id the table does not know cannot reach the panel as a guess, and a recording whose window holds a per-level id the probe never measured fails its gate instead of drawing one. The reel keeps the moving episode at its stride and compresses a stall twelve-fold - every drawn frame is a recorded frame, and the frame counter on the panel shows the jump - so the planner's long pause at the level's pipe is on screen without being most of the video.",
     ""

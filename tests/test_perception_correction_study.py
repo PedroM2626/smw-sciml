@@ -101,8 +101,8 @@ def test_every_session_ends_with_the_engines_own_verdict() -> None:
 
     The verdict is two bytes now: the mode byte and the lives counter. The house's walk out the
     door passes through the death animation's own byte on its way to the map, so the byte alone
-    would call an exit a death - the lives counter settles it, and the two measured-dead
-    sessions show the counter doing the other job.
+    would call an exit a death - the lives counter settles it, and the two PIML-PPO stages (0x29
+    and 0x27) leave 0x14 for 0x0C with the lives counter untouched.
     """
     stages = _load(STAGES)
     by_id = {str(s["identity"]["translevel"]).lower(): s for s in stages["stages"]}
@@ -116,13 +116,13 @@ def test_every_session_ends_with_the_engines_own_verdict() -> None:
         "what separates that march from a death"
     )
     assert wram.GAME_MODE_WORLD_MAP in house["episode"]["mode_bytes_seen"]
-    for dead in ("0x27", "0x29"):
-        session = by_id[dead]
-        assert not session["clear_evidence"]["concluded"]
-        assert session["episode"]["lives_after"] != session["episode"]["lives_before"], (
-            f"{dead}: the measured death must show the engine taking a life, or the verdict is a "
-            "guess about the byte it never read"
-        )
+    for cleared_id in ("0x27", "0x29"):
+        session = by_id[cleared_id]
+        assert session["episode"]["controller"] == "piml-ppo"
+        assert session["clear_evidence"]["concluded"]
+        assert session["clear_evidence"]["exit_mode"] == "0x0C"
+        assert session["episode"]["lives_after"] == session["episode"]["lives_before"]
+        assert wram.GAME_MODE_WORLD_MAP in session["episode"]["mode_bytes_seen"]
         assert session["clear_evidence"]["reason"]
 
 

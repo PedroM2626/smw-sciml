@@ -91,6 +91,7 @@ MODULE_COMMANDS: dict[str, str] = {
     "conformal-uncertainty": "src.evaluation.conformal_uncertainty_benchmark",
     "potential-ga": "src.training.potential_reward_ga",
     "frontier-search": "src.training.frontier_archive_search",
+    "piml-stage-ppo": "src.training.piml_stage_ppo",
     "residue-process": "src.evaluation.residue_process_study",
     "boundary-channel": "src.evaluation.boundary_channel_study",
     "pixel-frame-probe": "src.evaluation.pixel_frame_probe",

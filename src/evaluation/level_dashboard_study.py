@@ -559,8 +559,8 @@ def render_section(payload: Dict[str, Any]) -> List[str]:
         "flown by the published clearance controller on its seed-7 draw until the engine itself "
         "ends the stage; the blank house session has no goal tape at all and is concluded by "
         "walking back out through its door - the left-edge exit the engine performs on its own; "
-        "the other two sessions are documented by the distilled actor for a fixed horizon, "
-        "because 10.68 measured no agent concludes them at all. Every episode keeps recording "
+        "and Yoshi's Island 2 (`0x29`) and Yoshi's Island 3 (`0x27`) are flown to their goal tapes "
+        "in closed loop by the physics-informed PPO actor-critic (`piml-ppo`, 10.71). Every episode keeps recording "
         "past the verdict with the controls released, so each video shows the engine's own exit "
         "sequence - the mode march and the map settling - instead of freezing on the flipped "
         "byte.",

@@ -1,4 +1,4 @@
-[← 10.69](10-69-the-simple-reward-a-stage-no-agent-had.md) · [Contents](../../README.md#contents) · [11 →](11-complete-reproducibility-guide.md)
+[← 10.69](10-69-the-simple-reward-a-stage-no-agent-had.md) · [Contents](../../README.md#contents) · [10.71 →](10-71-physics-informed-reinforcement-learning-across-every-stage.md)
 
 ### 10.70 What the Way Across `0x27` Requires, and Clearing the Fourth Stage by Frontier Archive Search
 

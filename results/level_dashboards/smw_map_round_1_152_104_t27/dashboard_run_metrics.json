@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "generated_utc": "2026-10-14T18:28:34+00:00",
-    "git_sha": "1ed1255580d2fdb011cd2ca51d836ddc6165c55a",
+    "generated_utc": "2026-11-02T17:40:01+00:00",
+    "git_sha": "27c28f2480bee6c58fba9c6260890d486df20dc9",
     "git_dirty": true,
     "python": "3.10.11",
     "platform": "Windows 10 (AMD64)",
@@ -10,7 +10,7 @@
     "cuda_device": "NVIDIA GeForce RTX 4070 Laptop GPU",
     "cuda_version": "12.1",
     "numpy": "1.26.4",
-    "command": "python scripts/record_dashboard_run.py --controller dagger"
+    "command": "python scripts/record_dashboard_run.py --controller piml-ppo"
   },
   "study": "One controller episode recorded with everything the README dashboard shows: the actor's per-button probabilities, the critic V(s) fitted on the published clearance returns, the buttons the emulator actually received after the published reflex overrides and the jump edge-trigger pulse, the tile patch and camera the actor does not see, an RGB frame, the section-4.1 identity residue of each step, and the paused-player flag of 10.59 together with the operator's A presses that clear it.",
   "protocol": {
@@ -20,12 +20,12 @@
       "translevel": "0x27"
     },
     "savestate_route": "entered through the world map; the survey's own capture step saved the state 180 frames after the fade in, before the handoff probes",
-    "controller": "dagger",
-    "controller_kind": "button head",
-    "checkpoint": "dagger_policy_best.pt",
-    "planner_seed": null,
-    "goal_px": 1900.0,
-    "episode_end_rule": "the published 1900 px distance proxy",
+    "controller": "piml-ppo",
+    "controller_kind": "physics-informed RL policy",
+    "checkpoint": "piml_ppo_smw_map_round_1_152_104_t27.pt",
+    "planner_seed": 42,
+    "goal_px": null,
+    "episode_end_rule": "the engine's own mode byte leaving 0x14",
     "buttons": [
       "B",
       "Y",
@@ -44,7 +44,7 @@
       "WALK_LEFT",
       "RUN_LEFT"
     ],
-    "reflex_overrides": "hazard within 75 px and grounded, or a right wall while grounded",
+    "reflex_overrides": "none: the clearance draw of 10.66 is the planner alone",
     "jump_pulse": "B released on every even frame while held and grounded",
     "value_critic": {
       "checkpoint": "terminal_value_best.pt",
@@ -67,54 +67,55 @@
     ],
     "frame_capture": {
       "requested_pixel_format": 2,
-      "decoded_as_pixel_format": 2,
+      "decoded_as_pixel_format": 1,
       "note": "0 = 0RGB1555, 1 = RGB565, 2 = RGB888; the two differ because the core asks for a 32-bit buffer and hands back a 16-bit one"
     },
     "device": "cuda"
   },
   "run": {
-    "frames": 592,
-    "ended": "death",
-    "engine_exit_frame": 542,
-    "outro_frames": 240,
+    "frames": 3172,
+    "ended": "engine_left_0x14_to_0x0C",
+    "engine_exit_frame": 2852,
+    "outro_frames": 320,
     "lives_before": 4,
-    "lives_after": 3,
-    "progress_px": 372.875,
-    "wall_clock_s": 2.49,
-    "fps": 237.5,
-    "share_of_frames_live": 0.33783783783783783,
+    "lives_after": 4,
+    "progress_px": 5267.0625,
+    "wall_clock_s": 16.06,
+    "fps": 197.5,
+    "share_of_frames_live": 0.8682219419924337,
     "camera_travel_px": 65519.0,
     "screen_x_range_px": [
-      -65132.375,
-      386.625
+      -60237.25,
+      5281.75
     ],
-    "mean_max_button_probability": 0.5043146127482524,
-    "frames_with_no_button_above_half": 241,
-    "frames_where_reflex_overrode": 4,
-    "frames_where_pulse_released_B": 1,
-    "frames_under_operator_A": 23,
+    "mean_max_button_probability": 0.7018381324638175,
+    "frames_with_no_button_above_half": 944,
+    "frames_where_reflex_overrode": 0,
+    "frames_where_pulse_released_B": 0,
+    "frames_under_operator_A": 0,
     "pauses_observed": 1,
     "pauses_cleared_by_the_operator": 1,
-    "first_pause_at_progress_px": 256.875,
-    "value_start_px": 201.41863496655105,
-    "value_end_px": 198.3293167058795,
-    "value_max_px": 207.2785286071887,
-    "residue_exact_share": 0.3344594594594595,
-    "residue_abs_max_subpixels": 36.0,
+    "first_pause_at_progress_px": 5201.75,
+    "value_start_px": 201.4052803561727,
+    "value_end_px": 70.93864942864631,
+    "value_max_px": 216.55277291040238,
+    "residue_exact_share": 0.7386506935687264,
+    "residue_abs_max_subpixels": 31.0,
     "mode_bytes_seen": [
-      11,
       12,
+      13,
+      14,
       20
     ]
   },
   "dataset": "data\\raw\\smw_dashboard_run_smw_map_round_1_152_104_t27.npz",
   "pauses": [
     {
-      "frame": 299,
-      "progress_px": 256.875,
+      "frame": 2755,
+      "progress_px": 5201.75,
       "mode_byte": 20,
-      "held_frames": 152,
-      "operator_frames": 23,
+      "held_frames": 65,
+      "operator_frames": 0,
       "resumed": true
     }
   ]

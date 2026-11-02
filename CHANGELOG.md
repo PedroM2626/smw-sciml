@@ -11,6 +11,26 @@ numbers* - those are reported here and in README Section 12, never applied silen
 
 ### Added
 
+- **Physics-Informed Stage PPO (`PIML-PPO`) clears both `0x29` and `0x27` in closed loop, and all four stage dashboards (`dashboard_level_1..4.mp4` and `all_covered_stages.mp4`) now show full completions**
+  (README 10.71, `make piml-stage-ppo`, `make record-level-dashboards`, `make level-dashboard-study`).
+  `src/training/piml_stage_ppo.py` trains `PIMLStageActorCritic` over an 81D Markov state (8D kinematics &
+  contacts + 4D progress/stall/hold/phase state + 8D previous macro-action + `7x7` measured 16-bit tile window +
+  `3x4` active sprite channels) paired with four SciML inductive biases: `DiscreteCBFCategoricalFilter`
+  (Control Barrier Function logit projection, $\beta_{\text{cbf}} = 0.25$), `PhysicsInformedCriticLoss`
+  (HJB / Control-Lyapunov danger-state value decay via `torch.autograd.grad`), `ActionPhysicsViolation`
+  (non-penetration and speed-envelope regulariser), and `HardKinematicsHead` (exact fixed-point 4-frame
+  integration $\hat{x}_{t+1} = x_t + \frac{4}{16}\hat{v}_{x,t+1}$, max structural residual `0.0039`). Trained
+  with Go-Explore Phase-2 frontier savestate resets, Clipped PPO + GAE, Self-Imitation Learning, and strict
+  FP32 matmul determinism (`allow_tf32 = False`, `min_margin >= 0.5`), the closed-loop checkpoints
+  (`results/checkpoints/piml_ppo_smw_map_node_68_135_t29.pt` and
+  `results/checkpoints/piml_ppo_smw_map_round_1_152_104_t27.pt`) clear both `0x29` (`4808.0625 px`, `3288`
+  frames, lives `4 -> 4`, Hard PINN MAE `2.07 px`) and `0x27` (`5065.6250 px`, `2252` frames, lives `4 -> 4`,
+  Hard PINN MAE `1.26 px`). Wired into `scripts/record_dashboard_run.py` and `scripts/record_level_dashboards.py`
+  as `--controller piml-ppo`, the full-stage dashboard episodes expose 10 mid- and late-stage sprite IDs
+  (`0x09`, `0x0B`, `0x55`, `0x57`, `0x59`, `0x5A`, `0x74`, `0x8E`, `0x95`, `0xC7`, probed into
+  `src/environment/sprite_behavior_table.py`, including 4 moving/rotating platform IDs on `0x27`) and
+  regenerate `results/figures/dashboard_level_3.mp4`, `dashboard_level_4.mp4`, and
+  `results/figures/all_covered_stages.mp4` with 4 of 4 sessions concluded.
 - **`0x27` is cleared by cell-archive frontier search (Go-Explore) under the same potential-maximum reward**
   (README 10.70, `make frontier-search`). `src/training/frontier_archive_search.py` measures why every
   greedy run from `t = 0` stopped at `x = 544.0625 px` on `0x27`: the lower floor (`row 24, y = 384 px`)

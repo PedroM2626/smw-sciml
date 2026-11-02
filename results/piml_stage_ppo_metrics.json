@@ -1,0 +1,195 @@
+{
+  "_meta": {
+    "generated_utc": "2026-11-02T17:34:49+00:00",
+    "git_sha": "27c28f2480bee6c58fba9c6260890d486df20dc9",
+    "git_dirty": true,
+    "python": "3.10.11",
+    "platform": "Windows 10 (AMD64)",
+    "torch": "2.5.1+cu121",
+    "cuda_available": true,
+    "cuda_device": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "cuda_version": "12.1",
+    "numpy": "1.26.4",
+    "seed": 42,
+    "command": "python -m src.training.piml_stage_ppo"
+  },
+  "study": "Physics-Informed Proximal Policy Optimization (PIML-PPO / SciML-RL) on stages 0x29 and 0x27: closed-loop Actor-Critic with DiscreteCBFCategoricalFilter, PhysicsInformedCriticLoss (HJB/Lyapunov), ActionPhysicsViolation, and a HardKinematicsHead (Residual PINN) under the potential-maximum reward (10.71)",
+  "protocol": {
+    "algorithm": "PIML-PPO (Clipped PPO + GAE + Frontier Resets + Self-Imitation + SciML Losses)",
+    "obs_dim": 81,
+    "phys_dim": 8,
+    "n_actions": 8,
+    "frame_skip": 4,
+    "sciml_components": [
+      "DiscreteCBFCategoricalFilter (Control-Barrier-Function logit projection)",
+      "PhysicsInformedCriticLoss (HJB / Control-Lyapunov danger-state value decay)",
+      "ActionPhysicsViolation (non-penetration and velocity-saturation regulariser)",
+      "HardKinematicsHead (exact fixed-point dx = (k/16)*vx' structural integration)"
+    ],
+    "seed": 42
+  },
+  "stages": {
+    "smw_map_node_68_135_t29.state": {
+      "state": "smw_map_node_68_135_t29.state",
+      "checkpoint": "results/checkpoints/piml_ppo_smw_map_node_68_135_t29.pt",
+      "epochs": 35,
+      "rollout_steps_per_epoch": 64,
+      "ppo_updates_per_epoch": 8,
+      "sciml_diagnostics": {
+        "cbf_beta": 0.25,
+        "lambda_hjb": 0.05,
+        "lambda_phys_act": 0.02,
+        "lambda_pinn": 0.05,
+        "hard_pinn_position_mae_px": 2.0675699710845947,
+        "hard_pinn_velocity_mae_subpx": 5.284727096557617,
+        "structural_kinematic_identity_max_residual": 0.00390625,
+        "policy_action_agreement": 1.0,
+        "final_hjb_critic_loss": 1.3434746637940407,
+        "final_phys_action_violation": 0.10321979504078627,
+        "final_hard_pinn_loss": 0.11534631997346878
+      },
+      "closed_loop_evaluation": {
+        "cleared": true,
+        "died": false,
+        "return": 310.50390625,
+        "progress_px": 4808.0625,
+        "max_x": 4824.0625,
+        "frames": 3288,
+        "macro_steps": 822,
+        "end_timer_frame": 3288,
+        "goal_wait_frames": 599,
+        "lives_at_start": 4,
+        "lives_at_end": 4,
+        "modes_seen": [
+          "0x14",
+          "0x0c",
+          "0x0d",
+          "0x0e"
+        ],
+        "mean_chosen_action_prob": 0.9950970730352285,
+        "value_first": 41.201133728027344,
+        "value_last": 10.307023048400879,
+        "mean_executed_physics_violation": 0.1435523114355231
+      },
+      "history_head_tail": [
+        {
+          "epoch": 0,
+          "anchor_accuracy": 0.8442822098731995,
+          "ppo_policy": 0.042491252068430185,
+          "value": 15.505648970603943,
+          "entropy": 1.5753664076328278,
+          "hjb_critic": 0.5344997346401215,
+          "phys_action": 0.0637266868725419,
+          "hard_pinn": 0.20324400626122952,
+          "sil": 0.896326445043087,
+          "structural_res": 0.003864288330078125
+        },
+        {
+          "epoch": 17,
+          "anchor_accuracy": 0.9939172863960266,
+          "ppo_policy": -0.008500121533870697,
+          "value": 5.131727755069733,
+          "entropy": 0.3241758197546005,
+          "hjb_critic": 0.6348749459721148,
+          "phys_action": 0.07171748019754887,
+          "hard_pinn": 0.13915436156094074,
+          "sil": 0.044220623560249805,
+          "structural_res": 0.0038399696350097656
+        },
+        {
+          "epoch": 34,
+          "anchor_accuracy": 0.9951338171958923,
+          "ppo_policy": -0.04129712004214525,
+          "value": 4.217452764511108,
+          "entropy": 0.20468061044812202,
+          "hjb_critic": 1.3434746637940407,
+          "phys_action": 0.10321979504078627,
+          "hard_pinn": 0.11534631997346878,
+          "sil": 0.027639180421829224,
+          "structural_res": 0.0038890838623046875
+        }
+      ]
+    },
+    "smw_map_round_1_152_104_t27.state": {
+      "state": "smw_map_round_1_152_104_t27.state",
+      "checkpoint": "results/checkpoints/piml_ppo_smw_map_round_1_152_104_t27.pt",
+      "epochs": 35,
+      "rollout_steps_per_epoch": 64,
+      "ppo_updates_per_epoch": 8,
+      "sciml_diagnostics": {
+        "cbf_beta": 0.25,
+        "lambda_hjb": 0.05,
+        "lambda_phys_act": 0.02,
+        "lambda_pinn": 0.05,
+        "hard_pinn_position_mae_px": 1.2648561000823975,
+        "hard_pinn_velocity_mae_subpx": 4.803300857543945,
+        "structural_kinematic_identity_max_residual": 0.003875732421875,
+        "policy_action_agreement": 1.0,
+        "final_hjb_critic_loss": 0.0,
+        "final_phys_action_violation": 0.0,
+        "final_hard_pinn_loss": 0.13756268471479416
+      },
+      "closed_loop_evaluation": {
+        "cleared": true,
+        "died": false,
+        "return": 326.6015625,
+        "progress_px": 5065.625,
+        "max_x": 5081.625,
+        "frames": 2252,
+        "macro_steps": 563,
+        "end_timer_frame": 2251,
+        "goal_wait_frames": 600,
+        "lives_at_start": 4,
+        "lives_at_end": 4,
+        "modes_seen": [
+          "0x14",
+          "0x0c",
+          "0x0d",
+          "0x0e"
+        ],
+        "mean_chosen_action_prob": 0.992696061121634,
+        "value_first": 46.771358489990234,
+        "value_last": 11.025691986083984,
+        "mean_executed_physics_violation": 0.0
+      },
+      "history_head_tail": [
+        {
+          "epoch": 0,
+          "anchor_accuracy": 0.8436945080757141,
+          "ppo_policy": -0.0984657984226942,
+          "value": 24.235366106033325,
+          "entropy": 1.8586475402116776,
+          "hjb_critic": 0.4818602930754423,
+          "phys_action": 0.0,
+          "hard_pinn": 0.18401655927300453,
+          "sil": 0.7838832587003708,
+          "structural_res": 0.0038318634033203125
+        },
+        {
+          "epoch": 17,
+          "anchor_accuracy": 0.9449378252029419,
+          "ppo_policy": -0.019794400548562407,
+          "value": 10.277678728103638,
+          "entropy": 0.3234851732850075,
+          "hjb_critic": 0.38532424165168777,
+          "phys_action": 0.0,
+          "hard_pinn": 0.15411167964339256,
+          "sil": 0.15230118483304977,
+          "structural_res": 0.0038585662841796875
+        },
+        {
+          "epoch": 34,
+          "anchor_accuracy": 0.9538188576698303,
+          "ppo_policy": -0.018318451941013336,
+          "value": 5.336259245872498,
+          "entropy": 0.21760494448244572,
+          "hjb_critic": 0.0,
+          "phys_action": 0.0,
+          "hard_pinn": 0.13756268471479416,
+          "sil": 0.10122613981366158,
+          "structural_res": 0.0038646310567855835
+        }
+      ]
+    }
+  }
+}
