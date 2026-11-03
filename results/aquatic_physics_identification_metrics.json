@@ -1,0 +1,68 @@
+{
+  "_meta": {
+    "generated_utc": "2026-11-03T01:48:43+00:00",
+    "git_sha": "79f32711f81f2ca8fae1e36b34f60b8384fbb353",
+    "git_dirty": true,
+    "python": "3.10.11",
+    "platform": "Windows 10 (AMD64)",
+    "torch": "2.5.1+cu121",
+    "cuda_available": true,
+    "cuda_device": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "cuda_version": "12.1",
+    "numpy": "1.26.4",
+    "seed": 42,
+    "command": "python -m src.inverse.aquatic_physics_identification"
+  },
+  "study": "Aquatic physics parameter identification and fluid-regime transition on the authentic SNES console: inverse problem recovery of gravity, swim stroke impulse, viscous drag, and medium-invariant kinematic integration scale in Yoshi's Island 4 (10.72)",
+  "protocol": {
+    "stage": "smw_map_round_2_184_72_t26.state",
+    "translevel": "0x26",
+    "seed": 42,
+    "n_episodes": 10,
+    "frames_per_episode": 400,
+    "in_water_wram_address": "0x0075"
+  },
+  "terrestrial_air_regime": {
+    "n_samples": 2570,
+    "effective_gravity": 5.872881355932203,
+    "effective_gravity_std": 0.8640328204050726,
+    "impulse_strength_subpx": -82.0,
+    "mean_impulse_subpx": -57.07281553398058,
+    "max_horizontal_velocity_subpx": 37.0,
+    "velocity_retention_ratio": 1.0088901249562783,
+    "kinematic_scale": 17.044162854804316,
+    "max_kinematic_identity_residual": 20.0
+  },
+  "aquatic_fluid_regime": {
+    "n_samples": 1430,
+    "effective_gravity": 0.48043184885290147,
+    "effective_gravity_std": 0.8544290118632359,
+    "impulse_strength_subpx": -24.0,
+    "mean_impulse_subpx": -16.36697247706422,
+    "max_horizontal_velocity_subpx": 16.0,
+    "velocity_retention_ratio": 1.0125206277912937,
+    "kinematic_scale": 16.0,
+    "max_kinematic_identity_residual": 0.0
+  },
+  "regime_contrasts": {
+    "gravity_ratio_water_to_air": 0.08180513443671339,
+    "impulse_ratio_water_to_air": 0.2926829268292683,
+    "horizontal_speed_ratio_water_to_air": 0.43243243243243246,
+    "kinematic_integration_scale_invariant": false
+  },
+  "forward_transfer_evaluation": {
+    "n_evaluated_water_transitions": 1430,
+    "terrestrial_model_on_water": {
+      "y_position_mae_px": 1.531028875785218,
+      "y_position_mse_px2": 6.070866882153896,
+      "y_velocity_mae_subpx": 23.809428706886333
+    },
+    "adapted_aquatic_model_on_water": {
+      "y_position_mae_px": 0.32982190717515886,
+      "y_position_mse_px2": 0.5070065833123789,
+      "y_velocity_mae_subpx": 5.015926313902023
+    },
+    "adaptation_mae_reduction_factor": 4.6419866069482545,
+    "adaptation_mse_reduction_factor": 11.973940934832969
+  }
+}

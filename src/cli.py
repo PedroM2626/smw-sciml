@@ -115,6 +115,8 @@ MODULE_COMMANDS: dict[str, str] = {
     "corrected-physics": "src.evaluation.corrected_physics_ablation",
     "sprint-excitation": "src.evaluation.sprint_excitation_benchmark",
     "learned-probes": "src.evaluation.learned_structure_probe_benchmark",
+    "aquatic-physics": "src.inverse.aquatic_physics_identification",
+    "pixel-piml": "src.evaluation.pixel_piml_closed_loop",
 }
 
 # Config file injected for the workflows that accept --config.

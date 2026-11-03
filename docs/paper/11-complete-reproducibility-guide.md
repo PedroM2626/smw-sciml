@@ -1,4 +1,4 @@
-[← 10.71](10-71-physics-informed-reinforcement-learning-across-every-stage.md) · [Contents](../../README.md#contents) · [12 →](12-scientific-integrity-statement.md)
+[← 10.73](10-73-end-to-end-pixel-perception-with-physics-informed-reinforcement-learning.md) · [Contents](../../README.md#contents) · [12 →](12-scientific-integrity-statement.md)
 
 ## 11. Complete Reproducibility Guide
 
@@ -133,7 +133,8 @@ smw-pinn/
 │   │   ├── parameter_identification.py    # 7-constant inverse problem + Laplace/MCMC posterior (§10.40)
 │   │   ├── structure_selection.py         # Nested-template selection of clamp/gate structures (§10.43.9)
 │   │   ├── sindy_identification.py        # Polynomial dictionary, ridge and sequential thresholding (§10.56)
-│   │   └── symbolic_regression.py         # GP law discovery, excitation normalisation, constant probes (§10.43)
+│   │   ├── symbolic_regression.py         # GP law discovery, excitation normalisation, constant probes (§10.43)
+│   │   └── aquatic_physics_identification.py # Aquatic fluid parameter identification on stage 0x26 (§10.72)
 │   └── evaluation/
 │       ├── analytical_baselines.py        # No-NN baseline + oracle-MPC upper bound (§10.37)
 │       ├── ablation_benchmark.py          # PINN constraint ablation (soft vs hard vs MLP)
@@ -196,7 +197,8 @@ smw-pinn/
 │       ├── plot_learning_curves.py          # Model-Free vs Dyna comparison figure
 │       ├── spatial_holdout_benchmark.py     # OOD-with-danger holdout (X>700, CI-safe)
 │       ├── render_level_clearance_video.py # Telemetry HUD video/GIF renderer
-│       └── render_comparison_animation.py # Synchronized trajectory animation generator
+│       ├── render_comparison_animation.py # Synchronized trajectory animation generator
+│       └── pixel_piml_closed_loop.py        # End-to-end pixel perception with PIML closed-loop safety filter (§10.73)
 ├── tests/ (340+ tests: unit + regression + smoke + emulator-guarded integration)
 │   ├── conftest.py                        # requires_emulator guard (Windows DLL)
 │   ├── test_losses.py                     # Unit tests for physics loss functions
@@ -249,7 +251,9 @@ smw-pinn/
 │   ├── test_inverse_world_models.py       # Inverse-model MPC wrappers + figure/agreement (§10.44)
 │   ├── test_hardware_loops.py             # Emulator-guarded end-to-end hardware entry points
 │   ├── test_smoke_runs.py                 # Every configs/smoke_*.yaml is accepted + runs
-│   └── test_english_only.py               # Repo text stays English-only
+│   ├── test_english_only.py               # Repo text stays English-only
+│   ├── test_aquatic_physics_identification.py # Aquatic fluid physics parameter identification tests (§10.72)
+│   └── test_pixel_piml_closed_loop.py   # Closed-loop pixel-to-action PIML verification tests (§10.73)
 ├── pyproject.toml                         # Python package and pytest configuration
 ├── README.md                              # Complete experimental documentation and benchmark report
 ├── CONTRIBUTING.md                        # Setup, canonical commands, conventions
@@ -728,6 +732,16 @@ python -m src.evaluation.conformal_uncertainty_benchmark
 #     Self-Imitation Learning. Needs core + ROM, ~5 min. Writes results/piml_stage_ppo_metrics.json
 #     and results/checkpoints/piml_ppo_*.pt.
 python -m src.training.piml_stage_ppo
+
+# 87. Aquatic fluid physics parameter identification on stage 0x26 (10.72): identify buoyant gravity,
+#     swim impulse, viscous drag ceiling, and verify discrete kinematic scale invariance in water.
+#     Needs core + ROM, ~3 min. Writes results/aquatic_physics_identification_metrics.json.
+python -m src.inverse.aquatic_physics_identification
+
+# 88. Closed-loop end-to-end pixel perception with physics-informed reinforcement learning (10.73):
+#     evaluate the 2-frame CNN estimator with discrete CBF safety filtering in closed loop on SNES.
+#     Needs core + ROM, ~4 min. Writes results/pixel_piml_closed_loop_metrics.json.
+python -m src.evaluation.pixel_piml_closed_loop
 ```
 
 ### 11.6 Engineering Workflows (CI, Configs, Parity Baselines, Regression Gates)

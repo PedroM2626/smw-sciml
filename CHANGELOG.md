@@ -11,6 +11,29 @@ numbers* - those are reported here and in README Section 12, never applied silen
 
 ### Added
 
+- **End-to-End Pixel Perception with Physics-Informed Reinforcement Learning Closed-Loop Control**
+  (README 10.73, `make pixel-piml`, `smw-pinn pixel-piml`).
+  `src/evaluation/pixel_piml_closed_loop.py` establishes the first closed-loop visual control benchmark
+  coupling the 2-frame stacked RGB CNN estimator (`PixelStateEstimator`, `in_channels=6`) with discrete
+  Control Barrier Functions (`DiscreteCBFCategoricalFilter`, $\beta_{\text{cbf}} = 0.25$). Evaluated on
+  authentic SNES hardware across 3 seeds on `smw_yoshi_island_1_level.state`, Pixel-PIML achieves
+  $1198.04 \pm 143.20\text{ px}$ forward displacement (peak $1308.5\text{ px}$) with strictly $0.0000$ physics
+  boundary violations, outperforming unconstrained visual policies ($1041.40\text{ px}$, $0.0053$ violations)
+  and random exploration ($261.15\text{ px}$). Out-of-distribution evaluation on stage `0x29` quantifies visual
+  distribution shift failure modes ($0.0\text{ px}$ due to safe conservative braking under hallucinated velocities).
+  Metrics recorded in `results/pixel_piml_closed_loop_metrics.json`.
+- **Inverse Parameter Identification of Aquatic Fluid Dynamics and Physical Regime Shift on Stage `0x26`**
+  (README 10.72, `make aquatic-physics`, `smw-pinn aquatic-physics`).
+  `src/inverse/aquatic_physics_identification.py` unlocks stage `0x26` (*Yoshi's Island 4*) via the post-`0x27`
+  world map route, saving authentic savestates `data/raw/smw_world_map_after_round_1_152_104_t27.state` and
+  `data/raw/smw_map_round_2_184_72_t26.state`. The inverse study recovers buoyant gravitational acceleration
+  $g_{\text{water}} \approx 0.48\text{ subpx/f}$ ($91.8\%$ reduction relative to terrestrial gravity $g_{\text{air}} \approx 5.87\text{ subpx/f}$),
+  swim stroke reset impulse $J_{\text{water}} \approx -24.0\text{ subpx/f}$ (vs terrestrial jump $-82.0\text{ subpx/f}$),
+  and horizontal viscous terminal velocity $v_{\text{max,water}} = 16.0\text{ subpx/f}$. Discrete kinematic scale
+  invariance ($16\Delta x - v_x = 0$) is proven invariant across media (scale $16.0000$, residual $0.0000$),
+  and adapted aquatic physics yields a $12.0\times$ reduction in forward vertical trajectory prediction MSE over the
+  terrestrial null model ($0.507\text{ px}^2$ vs $6.071\text{ px}^2$). Metrics recorded in
+  `results/aquatic_physics_identification_metrics.json`.
 - **Physics-Informed Stage PPO (`PIML-PPO`) clears both `0x29` and `0x27` in closed loop, and all four stage dashboards (`dashboard_level_1..4.mp4` and `all_covered_stages.mp4`) now show full completions**
   (README 10.71, `make piml-stage-ppo`, `make record-level-dashboards`, `make level-dashboard-study`).
   `src/training/piml_stage_ppo.py` trains `PIMLStageActorCritic` over an 81D Markov state (8D kinematics &

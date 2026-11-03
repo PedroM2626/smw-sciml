@@ -8,7 +8,7 @@ CONFIG_DIR := configs
 SMOKE_DIR := results_smoke
 
 .PHONY: install install-cuda test test-cov lint format format-check typecheck check-all \
-       reproduce benchmark sample-efficiency multiseed piml-mfrl piml-mfrl-study inverse-transfer deeponet operators symbolic-inverse symbolic-tilemap symbolic-engines inverse-mpc sprint-excitation learned-probes physics-injection plateau-provenance projection-cell gate-excitation effective-velocity physics-claims neural-ode sindy potential-ga frontier-search piml-stage-ppo full-clearance corrected-physics residue-process boundary-channel pixel-frame-probe scroll-scan record-boundary record-dashboard dashboard-video dashboard-study stage-identity pixel-level-recheck pause-hygiene forced-mode-buffer pixel-retrain survey-map survey-opened-map survey-map-replay world-map-recheck probe-tiles probe-sprites perception-correction-study unlock-map record-level-dashboards level-dashboard-study record-jump record-sprint metric-decomposition velocity-classes smoke smoke-all run install-info help
+       reproduce benchmark sample-efficiency multiseed piml-mfrl piml-mfrl-study inverse-transfer deeponet operators symbolic-inverse symbolic-tilemap symbolic-engines inverse-mpc sprint-excitation learned-probes physics-injection plateau-provenance projection-cell gate-excitation effective-velocity physics-claims neural-ode sindy potential-ga frontier-search piml-stage-ppo aquatic-physics pixel-piml full-clearance corrected-physics residue-process boundary-channel pixel-frame-probe scroll-scan record-boundary record-dashboard dashboard-video dashboard-study stage-identity pixel-level-recheck pause-hygiene forced-mode-buffer pixel-retrain survey-map survey-opened-map survey-map-replay world-map-recheck probe-tiles probe-sprites perception-correction-study unlock-map record-level-dashboards level-dashboard-study record-jump record-sprint metric-decomposition velocity-classes smoke smoke-all run install-info help
 
 help:
 	@echo "install            pip install -e .[dev] (CPU torch)"
@@ -239,6 +239,14 @@ frontier-search:
 # frontier resets and Self-Imitation Learning, clearing 0x29 and 0x27 in closed loop (README 10.71).
 piml-stage-ppo:
 	$(PY) -m src.training.piml_stage_ppo
+
+# Inverse parameter identification of aquatic fluid regime on 0x26 (README 10.72)
+aquatic-physics:
+	$(PY) -m src.inverse.aquatic_physics_identification
+
+# Closed-loop pixel perception with physics-informed reinforcement learning (README 10.73, needs core + ROM)
+pixel-piml:
+	$(PY) -m src.evaluation.pixel_piml_closed_loop
 
 # The published full-stage clearance run (README 10.29.4, needs core + ROM). It was flown without
 # the message-box A pulse of 10.60, which is now the evaluator's default, so the flag turns it off.

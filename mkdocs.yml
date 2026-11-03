@@ -156,5 +156,7 @@ nav:
           - '10.69 The Simple Reward, and a Stage No Agent Had Cleared': paper/10-69-the-simple-reward-a-stage-no-agent-had.md
           - '10.70 What the Way Across 0x27 Requires, and Clearing the Fourth Stage by Frontier Archive Search': paper/10-70-what-the-way-across-0x27-requires-and.md
           - '10.71 Physics-Informed Reinforcement Learning Across Every Playable Stage (PIML-PPO), and the Full-Stage Dashboards': paper/10-71-physics-informed-reinforcement-learning-across-every-stage.md
+          - '10.72 Aquatic Physics Parameter Identification and Fluid-Regime Transition': paper/10-72-aquatic-physics-parameter-identification-and-fluid-regime-change.md
+          - '10.73 End-to-End Pixel Perception with Physics-Informed Reinforcement Learning (Pixel-PIML)': paper/10-73-end-to-end-pixel-perception-with-physics-informed-reinforcement-learning.md
       - '11. Complete Reproducibility Guide': paper/11-complete-reproducibility-guide.md
       - '12. Scientific Integrity Statement': paper/12-scientific-integrity-statement.md
