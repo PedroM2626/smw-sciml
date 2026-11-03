@@ -64,6 +64,10 @@ The trained aquatic agent was evaluated in closed loop on authentic SNES hardwar
 | **Hard PINN Velocity MAE** | $5.908\text{ subpx/frame}$ | Accurate hydrodynamic velocity modeling |
 | **Structural Kinematic Residual** | **$0.00195$** | Analytical kinematic identity strictly preserved |
 
+![The dashboard on Yoshi's Island 4: the console's own picture, the tile window that stage's models read, and what the actor believed on every frame](results/figures/dashboard_level_5.gif)
+
+**Level 5: Yoshi's Island 4 Multi-Modal Dashboard.** 2,840 recorded frames (goal tape triggered at frame 2,052, with 800 outro frames capturing the celebration and map settling), 2735.56 px of forward progress, 4.34 MB GIF / 7.08 MB MP4: [`results/figures/dashboard_level_5.mp4`](file:///c:/Users/Acer/Downloads/mworld-experiment/results/figures/dashboard_level_5.mp4).
+
 ```mermaid
 graph LR
     subgraph S1["Phase 1: Submerged Hydrodynamic Swimming"]

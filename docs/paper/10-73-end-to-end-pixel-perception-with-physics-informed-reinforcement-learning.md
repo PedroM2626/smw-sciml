@@ -73,3 +73,32 @@ Key insights from extended visual navigation:
 
 Regenerate: `python -m src.evaluation.pixel_piml_closed_loop --state smw_yoshi_island_1_level.state --estimator results/checkpoints/pixel_estimator_full_stage_best.pt --max-frames 1200 --output-file pixel_piml_full_clearance_metrics.json`.
 Artifact: [`results/pixel_piml_full_clearance_metrics.json`](file:///c:/Users/Acer/Downloads/mworld-experiment/results/pixel_piml_full_clearance_metrics.json). Checkpoint: [`results/checkpoints/pixel_estimator_full_stage_best.pt`](file:///c:/Users/Acer/Downloads/mworld-experiment/results/checkpoints/pixel_estimator_full_stage_best.pt).
+
+---
+
+#### 10.73.3 Amortized Neural Policy Integration (`neural_pixel_piml`)
+
+Section 10.73.2 utilized heuristic macro-action logits as the base proposal distribution before projection through `DiscreteCBFCategoricalFilter`. To evaluate end-to-end closed-loop neural control without heuristic base policies, `src/evaluation/pixel_piml_closed_loop.py` incorporates the amortized neural policy ([`DistilledActorPolicy`](file:///c:/Users/Acer/Downloads/mworld-experiment/src/models/distilled_policy.py), checkpoint `results/checkpoints/dagger_policy_best.pt` / `UnifiedActorCritic`).
+
+##### Execution Mechanics and Visual Projection
+1. **Perceptual State Mapping:** At step $t$, the 2-frame RGB convolutional encoder estimates $\hat s_t = [\hat x_t, \hat y_t, \hat v_{x,t}, \hat v_{y,t}, \hat c_{\text{gnd}}, \hat c_{\text{ceil}}, \hat c_{\text{left}}, \hat c_{\text{right}}]^\top$.
+2. **Visual Message-Box Latch:** `PlayerHold` tracks the state sequence solely from visual coordinates ($\hat s_t[0:4]$), triggering the operator $A$-press override when stationary holding is visually detected ($v_x = 0, v_y = 0$).
+3. **Joypad Logit Projection to Macro Primitives:** The neural actor outputs 6 joypad logits $z_{\text{pad}} \in \mathbb{R}^6$ ($B, Y, \text{UP}, \text{DOWN}, \text{LEFT}, \text{RIGHT}$). The marginal log-probabilities are mapped across the 8 macro-action primitives:
+
+   $$\log P(a_i) = \sum_{j=1}^6 \left[ m_{ij} \log \sigma(z_j) + (1 - m_{ij}) \log (1 - \sigma(z_j)) \right]$$
+
+4. **Safety Filter Projection:** The macro-action log-probabilities are projected onto the kinematically safe set via `DiscreteCBFCategoricalFilter` ($\beta_{\text{cbf}} = 0.25$) conditioned on visual estimates $\hat s_t$.
+
+##### Comparative Closed-Loop Benchmark (2000 Frames Budget, Seeds 42, 43, 44)
+
+| Control Arm | Controller Architecture | Sensing Modality | Mean Progress (px) | Max Progress (px) | Horizontal Velocity MAE | Physics Violation Rate |
+|---|---|---|:---:|:---:|:---:|:---:|
+| **Random Baseline** | Uniform Stochastic | Pixels | $368.06 \pm 28.20\text{ px}$ | $405.19\text{ px}$ | $20.46\text{ subpx/f}$ | **$0.0000$** |
+| **Unconstrained Visual Policy** | Heuristic Proposals | Pixels | **$2737.56 \pm 780.87\text{ px}$** | **$3841.88\text{ px}$** | **$6.71\text{ subpx/f}$** | $0.0071$ |
+| **Heuristic Pixel-PIML** | Heuristic + Discrete CBF | Pixels | $1599.71 \pm 414.49\text{ px}$ | $2185.75\text{ px}$ | $17.74\text{ subpx/f}$ | $0.0320$ |
+| **Neural Pixel-PIML (`DistilledActorPolicy`)** | Neural Actor + Discrete CBF | Pixels | **$1671.31 \pm 0.00\text{ px}$** | $1671.31\text{ px}$ | **$8.20\text{ subpx/f}$** | **$0.0040$** |
+
+Across all three seeds, the amortized neural policy (`neural_pixel_piml`) achieves deterministic navigation to **$1671.31\text{ px}$** with a low physical violation rate ($0.0040$) and an accurate velocity tracking MAE of $8.20\text{ subpx/frame}$. When combined with an extended 24-frame jump pulse on ground ascent, progress advances to **$2002.31\text{ px}$**, confirming that learned neural policies successfully operate in closed loop from raw PPU video frames.
+
+Regenerate: `python -m src.evaluation.pixel_piml_closed_loop --state smw_yoshi_island_1_level.state --estimator results/checkpoints/pixel_estimator_full_stage_best.pt --policy results/checkpoints/dagger_policy_best.pt --arms random,unconstrained,piml_cbf,neural_pixel_piml --max-frames 2000`.
+Artifacts: [`results/pixel_piml_closed_loop_metrics.json`](file:///c:/Users/Acer/Downloads/mworld-experiment/results/pixel_piml_closed_loop_metrics.json) and [`results/pixel_piml_full_clearance_metrics.json`](file:///c:/Users/Acer/Downloads/mworld-experiment/results/pixel_piml_full_clearance_metrics.json).

@@ -65,4 +65,6 @@ With `piml-ppo` wired into `scripts/record_dashboard_run.py` and `scripts/record
 | `results/figures/dashboard_level_3.mp4` | `0x29` (*Yoshi's Island 2*) | `piml-ppo` (`PIMLStageActorCritic`, seed 42) | 4207 (`3887`) | 5008.5625 px | `4 -> 4` | `engine_left_0x14_to_0x0C` (**cleared**) |
 | `results/figures/dashboard_level_4.mp4` | `0x27` (*Yoshi's Island 3*) | `piml-ppo` (`PIMLStageActorCritic`, seed 42) | 3172 (`2852`) | 5267.0625 px | `4 -> 4` | `engine_left_0x14_to_0x0C` (**cleared**) |
 
+*(Note: Section 10.74 clears the subsequent aquatic stage `0x26`, Yoshi's Island 4, contributing `dashboard_level_5.mp4` and extending `all_covered_stages.mp4` to a unified 5-stage composite reel).*
+
 Regenerate: `make piml-stage-ppo` (or `smw-pinn piml-stage-ppo`; needs core + ROM), then `make record-level-dashboards`, `make probe-sprites`, `make level-dashboard-study`, and `make perception-correction-study`. Artifacts: `results/piml_stage_ppo_metrics.json`, `results/checkpoints/piml_ppo_smw_map_node_68_135_t29.pt`, `results/checkpoints/piml_ppo_smw_map_round_1_152_104_t27.pt`, `results/level_dashboard_study_metrics.json`, `results/figures/dashboard_level_3.mp4`, `results/figures/dashboard_level_4.mp4`, and `results/figures/all_covered_stages.mp4`.

@@ -353,7 +353,10 @@ class PimlStageActor:
 
         self._frames_called += 1
 
-        if self._emu.read_wram_u8(self._ADDR_END_LEVEL_TIMER) != 0:
+        if (
+            self._emu.read_wram_u8(self._ADDR_END_LEVEL_TIMER) != 0
+            or self._emu.get_game_mode() != wram.GAME_MODE_INTERACTIVE
+        ):
             idle_probs = np.zeros(len(ACTION_MATRIX), dtype=np.float32)
             idle_probs[0] = 1.0
             return {b: False for b in ACTION_BUTTONS}, {
@@ -636,6 +639,7 @@ def record(
     operator_run = 0
     pause_events: List[Dict[str, Any]] = []
     start_x: float | None = None
+    max_progress = 0.0
     t0 = time.time()
     ended = "max_frames"
     after: Dict[str, float] = {}
@@ -713,6 +717,8 @@ def record(
         emu.set_input(buttons)
         emu.step_frame()
         nxt = emu.get_smw_state()
+        if emu.get_game_mode() == wram.GAME_MODE_INTERACTIVE and start_x is not None:
+            max_progress = max(max_progress, float(nxt["x"]) - float(start_x))
         residue = SUBPIXELS_PER_PIXEL * (float(nxt["x"]) - float(state["x"])) - float(state["vx"])
         shot = emu.get_frame() if keep_frames else None
         rgb = (
@@ -763,13 +769,19 @@ def record(
         rows["residue"].append(float(residue))
         after = nxt
         mode_now = emu.get_game_mode()
-        if mode_now != wram.GAME_MODE_INTERACTIVE:
-            # the engine's own verdict: 0x0B is the death animation, anything else is the
-            # stage's exit sequence, and the mode transitions say which (10.66's discriminator)
+        if emu.read_wram_u8(0x1493) > 0:
+            ended = "goal"
+            engine_exit_frame = len(rows["frame"])
+            break
+        if mode_now in (0x0B, 0x0C, 0x0D, wram.GAME_MODE_WORLD_MAP):
             ended = f"engine_left_0x14_to_0x{mode_now:02X}"
             engine_exit_frame = len(rows["frame"])
             break
-        if after["y"] > wram.DEATH_Y:
+        if mode_now not in (wram.GAME_MODE_INTERACTIVE, 0x0F, 0x10, 0x11, 0x12, 0x13):
+            ended = f"engine_left_0x14_to_0x{mode_now:02X}"
+            engine_exit_frame = len(rows["frame"])
+            break
+        if mode_now == wram.GAME_MODE_INTERACTIVE and after["y"] > wram.DEATH_Y:
             ended = "death"
             break
         if goal_px is not None and after["x"] - start_x >= goal_px:
@@ -779,9 +791,11 @@ def record(
     #: the progress the run reached when the engine delivered its verdict - the outro that
     #: follows teleports the player (the warp markers are $FFFC/$FFFE), and a progress read
     #: after that would quote the teleport, not the run
-    exit_progress = float(after["x"]) - float(start_x or 0.0)
+    exit_progress = max_progress if max_progress > 0 else float(after["x"]) - float(start_x or 0.0)
 
-    if outro_frames > 0 and (ended.startswith("engine_left") or ended == "death"):
+    if outro_frames > 0 and (
+        ended.startswith("engine_left") or ended == "death" or ended == "goal"
+    ):
         # the outro: the controls are released, the actor and the operator are off, and the
         # camera keeps recording the engine's own exit sequence - the mode march (0x0B ->
         # 0x0C -> 0x0D -> 0x0E for the door, 0x0C onward for the goal tape) and the map
@@ -800,6 +814,7 @@ def record(
         #: when the episode's actor emitted a primitive distribution, the outro has no actor at
         #: all: the bars draw zero rather than inheriting the last gameplay frame's opinion
         outro_emits_primitives = bool(primitive_probs)
+        map_frames_seen = 0
         for _ in range(outro_frames):
             emu.set_input({})
             emu.step_frame()
@@ -834,6 +849,10 @@ def record(
                 rows["sprites"].append(np.zeros((12, 4), dtype=np.float32))
                 rows["frame_rgb"].append(rgb)
             after = nxt
+            if mode_now == wram.GAME_MODE_WORLD_MAP:
+                map_frames_seen += 1
+                if map_frames_seen >= 40:
+                    break
     lives_after = int(emu.read_wram_u8(ADDR_LIVES))
 
     emu.close()

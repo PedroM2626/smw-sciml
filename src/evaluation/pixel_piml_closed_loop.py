@@ -76,6 +76,7 @@ def run_single_closed_loop_pixel_episode(
     max_frames: int = 600,
     arm_name: str = "visual_cbf",
     seed: int = 42,
+    neural_policy: Optional[torch.nn.Module] = None,
 ) -> Dict[str, Any]:
     """Execute a single closed-loop episode where the controller sees only pixel frames."""
     rng = np.random.default_rng(seed)
@@ -159,6 +160,42 @@ def run_single_closed_loop_pixel_episode(
             # Filter logits using the visually estimated state pred_8d
             dist = cbf_filter(noisy_logits, pred_8d)
             action = int(torch.argmax(dist.probs, dim=-1).item())
+        elif arm_name == "neural_pixel_piml":
+            assert neural_policy is not None and cbf_filter is not None
+            s_12d = torch.zeros((1, 12), dtype=torch.float32, device=device)
+            s_12d[0, :8] = pred_8d[0]
+            s_12d[0, 8] = 999.0
+            with torch.no_grad():
+                btn_logits = neural_policy(s_12d)
+                btn_probs = torch.sigmoid(btn_logits).clamp(1e-4, 1.0 - 1e-4)
+                log_p = torch.log(btn_probs)
+                log_not_p = torch.log(1.0 - btn_probs)
+                macro_logits = torch.matmul(cbf_filter.action_table, log_p.t()) + torch.matmul(
+                    1.0 - cbf_filter.action_table, log_not_p.t()
+                )
+                macro_logits = macro_logits.t()
+                dist = cbf_filter(macro_logits, pred_8d)
+                action = int(torch.argmax(dist.probs, dim=-1).item())
+        elif arm_name == "neural_unconstrained":
+            assert neural_policy is not None
+            s_12d = torch.zeros((1, 12), dtype=torch.float32, device=device)
+            s_12d[0, :8] = pred_8d[0]
+            s_12d[0, 8] = 999.0
+            with torch.no_grad():
+                btn_logits = neural_policy(s_12d)
+                btn_probs = torch.sigmoid(btn_logits).clamp(1e-4, 1.0 - 1e-4)
+                log_p = torch.log(btn_probs)
+                log_not_p = torch.log(1.0 - btn_probs)
+                action_table = (
+                    cbf_filter.action_table
+                    if cbf_filter is not None
+                    else torch.as_tensor(ACTIONS_BUTTON_MATRIX, dtype=torch.float32, device=device)
+                )
+                macro_logits = torch.matmul(action_table, log_p.t()) + torch.matmul(
+                    1.0 - action_table, log_not_p.t()
+                )
+                macro_logits = macro_logits.t()
+                action = int(torch.argmax(macro_logits, dim=-1).item())
         else:
             raise ValueError(f"Unknown arm: {arm_name}")
 
@@ -198,7 +235,7 @@ def run_single_closed_loop_pixel_episode(
             emu.step_frame()
             frames_run += 1
             s = emu.get_smw_state()
-            hold.observe(np.array([s["x"], s["y"], s["vx"], s["vy"]]))
+            hold.observe(pred_np[:4])
             max_progress = max(max_progress, float(s["x"]) - start_x)
             if int(emu.get_game_mode()) == 0x0B or float(s["y"]) > 440.0:
                 died = True
@@ -257,8 +294,10 @@ def run_single_closed_loop_pixel_episode(
 def run_pixel_piml_study(
     state_file: str = "smw_map_node_68_135_t29.state",
     estimator_ckpt: str = checkpoint_file("pixel_estimator_retrain_level_pair_best.pt"),
+    policy_ckpt: str = checkpoint_file("dagger_policy_best.pt"),
     seeds: Sequence[int] = (42, 43, 44),
     max_frames: int = 500,
+    arms: Sequence[str] = ("random", "unconstrained", "piml_cbf", "neural_pixel_piml"),
     output_dir: str = RESULTS_DIR,
     output_file: Optional[str] = None,
 ) -> Dict[str, Any]:
@@ -272,6 +311,21 @@ def run_pixel_piml_study(
     estimator.load_state_dict(payload["model"])
     estimator.eval()
 
+    neural_policy = None
+
+    if any("neural" in a for a in arms) and os.path.isfile(policy_ckpt):
+        from src.training.distill_mpc_policy import DistilledActorPolicy
+
+        neural_policy = DistilledActorPolicy(state_dim=12, action_dim=6).to(device)
+
+        p_weights = torch.load(policy_ckpt, map_location=device, weights_only=False)
+
+        neural_policy.load_state_dict(p_weights)
+
+        neural_policy.eval()
+
+        logger.info("Loaded trained neural policy from %s on %s", policy_ckpt, device)
+
     action_table_t = torch.as_tensor(ACTIONS_BUTTON_MATRIX, dtype=torch.float32, device=device)
     cbf_filter = DiscreteCBFCategoricalFilter(action_table=action_table_t, beta=0.25).to(device)
 
@@ -281,7 +335,6 @@ def run_pixel_piml_study(
     with open(st_path, "rb") as f:
         initial_savestate = f.read()
 
-    arms = ["random", "unconstrained", "piml_cbf"]
     results_by_arm: Dict[str, List[Dict[str, Any]]] = {arm: [] for arm in arms}
 
     for arm in arms:
@@ -297,6 +350,7 @@ def run_pixel_piml_study(
                 max_frames=max_frames,
                 arm_name=arm,
                 seed=s,
+                neural_policy=neural_policy,
             )
             results_by_arm[arm].append(rep)
             logger.info(
@@ -339,7 +393,9 @@ def run_pixel_piml_study(
         "protocol": {
             "state_file": state_file,
             "estimator_checkpoint": estimator_ckpt,
+            "policy_checkpoint": policy_ckpt if neural_policy is not None else None,
             "seeds": list(seeds),
+            "arms": list(arms),
             "max_frames_per_run": int(max_frames),
             "cbf_beta": 0.25,
             "in_channels": 6,
@@ -364,20 +420,41 @@ def main() -> int:
     parser.add_argument(
         "--estimator", default=checkpoint_file("pixel_estimator_retrain_level_pair_best.pt")
     )
+    parser.add_argument("--policy", default=checkpoint_file("dagger_policy_best.pt"))
+    parser.add_argument("--arms", default="random,unconstrained,piml_cbf,neural_pixel_piml")
     parser.add_argument("--seeds", default="42,43,44")
     parser.add_argument("--max-frames", type=int, default=500)
+    parser.add_argument(
+        "--full-stage", action="store_true", help="Run full-stage clearance benchmark"
+    )
     parser.add_argument("--output-dir", default=RESULTS_DIR)
     parser.add_argument("--output-file", default=None, help="Custom output JSON filename")
     args = parser.parse_args()
 
     seeds = [int(s.strip()) for s in args.seeds.split(",")]
+    state_file = args.state
+    estimator_ckpt = args.estimator
+    max_frames = args.max_frames
+    arms = [a.strip() for a in args.arms.split(",") if a.strip()]
+    output_file = args.output_file
+
+    if args.full_stage:
+        state_file = "smw_yoshi_island_1_level.state"
+        estimator_ckpt = checkpoint_file("pixel_estimator_full_stage_best.pt")
+        max_frames = 6000
+        arms = ["neural_pixel_piml"]
+        if output_file is None:
+            output_file = "pixel_piml_full_clearance_metrics.json"
+
     run_pixel_piml_study(
-        state_file=args.state,
-        estimator_ckpt=args.estimator,
+        state_file=state_file,
+        estimator_ckpt=estimator_ckpt,
+        policy_ckpt=args.policy,
         seeds=seeds,
-        max_frames=args.max_frames,
+        max_frames=max_frames,
+        arms=arms,
         output_dir=args.output_dir,
-        output_file=args.output_file,
+        output_file=output_file,
     )
     return 0
 

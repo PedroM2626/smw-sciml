@@ -61,6 +61,7 @@ STAGES = (
     ("0x29", "smw_map_node_68_135_t29.state"),
     ("0x27", "smw_map_round_1_152_104_t27.state"),
     ("0x28", "smw_map_node_116_126_t28.state"),
+    ("0x26", "smw_map_round_2_184_72_t26.state"),
 )
 
 

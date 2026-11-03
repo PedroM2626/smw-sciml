@@ -11,6 +11,22 @@ numbers* - those are reported here and in README Section 12, never applied silen
 
 ### Added
 
+- **Multi-Modal Aquatic Dashboard for Stage `0x26` (*Yoshi's Island 4*) and Empirical Sprite Probe Integration**
+  (README §10.74, `docs/paper/10-74-aquatic-stage-clearance-by-physics-informed-reinforcement-learning.md`, `results/figures/dashboard_level_5.mp4`, `dashboard_level_5.gif`).
+  Rendered the synchronized multi-modal telemetry dashboard for Yoshi's Island 4 (`0x26`), recording through sub-level pipe transitions
+  (`0x14 \to 0x0F \to 0x14`) and goal tape celebration to map exit (`0x0C \to 0x0D \to 0x0E`) over 2,840 frames. Empirically probed
+  6 newly encountered aquatic sprites (`0x15`, `0x18`, `0x47`, `0x5D`, `0x75`, `0xA4`) on authentic SNES hardware via `scripts/probe_sprite_behaviors.py`,
+  classifying them into `stompable`, `platform`, `neutral`, and `interact` in `src/environment/sprite_behavior_table.py`. Verified by `tests/test_sprite_behavior.py`.
+
+- **Amortized Neural Policy Closed-Loop Control in Pixel-PIML**
+  (README §10.73.3, `docs/paper/10-73-end-to-end-pixel-perception-with-physics-informed-reinforcement-learning.md`, `src/evaluation/pixel_piml_closed_loop.py`).
+  Integrated the amortized neural policy (`DistilledActorPolicy` / `UnifiedActorCritic`) directly into the closed-loop visual control loop, mapping
+  visually estimated kinematics $\hat s_t = [\hat x_t, \hat y_t, \hat v_{x,t}, \hat v_{y,t}, \hat c_{\text{gnd}}, \hat c_{\text{ceil}}, \hat c_{\text{left}}, \hat c_{\text{right}}]^\top$
+  through the 6-logit actor and projecting marginal action distributions onto 8 macro primitives filtered by `DiscreteCBFCategoricalFilter` ($\beta_{\text{cbf}} = 0.25$).
+  Visual observation tracking feeds `PlayerHold` directly from pixels to overcome message boxes autonomously. Achieved deterministic closed-loop
+  navigation to $1671.31\text{ px}$ (advancing to $2002.31\text{ px}$ under 24-frame jump pulse) with a low physics violation rate ($0.0040$) and $v_x$ tracking MAE of $8.20\text{ subpx/frame}$.
+
+
 - **Aquatic Stage Clearance by Physics-Informed Reinforcement Learning on Stage `0x26` (*Yoshi's Island 4*)**
   (README §10.74, `docs/paper/10-74-aquatic-stage-clearance-by-physics-informed-reinforcement-learning.md`).
   `src/training/piml_stage_ppo.py` trains `PIMLStageActorCritic` on aquatic stage `0x26` (`smw_map_round_2_184_72_t26.state`),

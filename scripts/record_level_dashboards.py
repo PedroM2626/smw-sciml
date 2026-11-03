@@ -109,7 +109,7 @@ EPISODES = {
         "operator_delay": 10000,
         "warmup_frames": 0,
         "render_stride": 8,
-        "outro_frames": 320,
+        "outro_frames": 800,
     },
 }
 
@@ -179,7 +179,9 @@ def stage_identity(emu: SnesLibretroEmulator, state_bytes: bytes) -> Dict[str, A
     }
 
 
-def candidates(survey: str, progression: Optional[str] = None) -> List[Dict[str, Any]]:
+def candidates(
+    survey: str, progression: Optional[str] = None, include_aquatic: bool = False
+) -> List[Dict[str, Any]]:
     """Every distinct level number the map has handed over - surveyed, or unlocked by a clear.
 
     Two cursor positions can hand over the same stage - the survey found Yoshi's Island 1 at both
@@ -229,6 +231,17 @@ def candidates(survey: str, progression: Optional[str] = None) -> List[Dict[str,
                     ),
                 },
             )
+    if include_aquatic and os.path.isfile(state_path("smw_map_round_2_184_72_t26.state")):
+        add(
+            "smw_map_round_2_184_72_t26.state",
+            [184, 72],
+            "0x26",
+            {
+                "saved": "smw_map_round_2_184_72_t26.state",
+                "source": "the aquatic stage unlock of 10.72",
+                "cleared_by_the_seeded_run": True,
+            },
+        )
     if not seen:
         add(
             "smw_yoshi_island_1_level.state",
@@ -302,12 +315,12 @@ def clearance_record(
     progress is the best attempt. The campaign of 10.66 published two flights at 0x27. The other
     two sessions have never had a clearance flight that could finish, and saying so is the number.
     """
-    if translevel == "0x2A" and bool((episode.get("clear_evidence") or {}).get("concluded")):
+    if bool((episode.get("clear_evidence") or {}).get("concluded")):
         return {
             "clears": 1,
             "tries": 1,
             "best_progress_px": float(episode["progress_px"]),
-            "source": "the recorded episode itself: the seed-7 clearance draw of 10.66, re-flown with its frames kept",
+            "source": f"the recorded episode itself: the flight of {translevel}, re-flown with its frames kept",
         }
     for round_record in progression.get("rounds", []):
         if str(round_record.get("translevel")) == translevel and round_record.get("attempts"):
