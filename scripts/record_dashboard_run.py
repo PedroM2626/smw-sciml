@@ -309,7 +309,7 @@ class PimlStageActor:
         self.model.eval()
 
         self._emu: Any = None
-        self._hold = PlayerHold()
+        self._hold = PlayerHold(trigger=60)
         self._tracker: Any = None
         self._frames_called = 0
         self._subframe = 0
@@ -379,7 +379,13 @@ class PimlStageActor:
                 (mpc_probs[:, None] * ACTION_MATRIX).sum(axis=0).astype(np.float32)
             )
 
-        raw_buttons = self._hold.buttons(dict(self._ACTIONS[self._current_action]))
+        from src.training.piml_stage_ppo import get_macro_subframe_buttons
+
+        is_aquatic = int(self._emu.read_wram_u8(0x13BF)) == 0x26
+        sub_btn = get_macro_subframe_buttons(
+            self._current_action, self._subframe, is_aquatic=is_aquatic
+        )
+        raw_buttons = self._hold.buttons(sub_btn)
         buttons = {b: bool(raw_buttons.get(b, False)) for b in ACTION_BUTTONS}
         if raw_buttons.get("A", False):
             buttons["A"] = True

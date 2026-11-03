@@ -1,0 +1,116 @@
+{
+  "_meta": {
+    "generated_utc": "2026-11-03T16:18:14+00:00",
+    "git_sha": "332ba0725f2a224945a1a2ff672ae87e8291f32d",
+    "git_dirty": true,
+    "python": "3.10.11",
+    "platform": "Windows 10 (AMD64)",
+    "torch": "2.5.1+cu121",
+    "cuda_available": true,
+    "cuda_device": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "cuda_version": "12.1",
+    "numpy": "1.26.4",
+    "seed": 42,
+    "command": "python -m src.training.piml_stage_ppo --state smw_map_round_2_184_72_t26.state"
+  },
+  "study": "Aquatic Stage Clearance (0x26 Yoshi's Island 4) by Physics-Informed Reinforcement Learning (PIML-PPO / SciML-RL) with Hydrodynamic Swim Dynamics",
+  "protocol": {
+    "stage": "smw_map_round_2_184_72_t26.state",
+    "algorithm": "PIML-PPO (Clipped PPO + GAE + Frontier Resets + Self-Imitation + SciML Losses)",
+    "obs_dim": 81,
+    "phys_dim": 8,
+    "n_actions": 8,
+    "frame_skip": 4,
+    "sciml_components": [
+      "DiscreteCBFCategoricalFilter (Control-Barrier-Function logit projection)",
+      "PhysicsInformedCriticLoss (HJB / Control-Lyapunov aquatic danger value decay)",
+      "ActionPhysicsViolation (non-penetration and velocity-saturation regulariser)",
+      "HardKinematicsHead (exact fixed-point dx = (k/16)*vx' structural integration)"
+    ],
+    "seed": 42
+  },
+  "stage": {
+    "state": "smw_map_round_2_184_72_t26.state",
+    "checkpoint": "results/checkpoints/piml_ppo_smw_map_round_2_184_72_t26.pt",
+    "epochs": 25,
+    "rollout_steps_per_epoch": 64,
+    "ppo_updates_per_epoch": 8,
+    "sciml_diagnostics": {
+      "cbf_beta": 0.25,
+      "lambda_hjb": 0.05,
+      "lambda_phys_act": 0.02,
+      "lambda_pinn": 0.05,
+      "hard_pinn_position_mae_px": 1.4756314754486084,
+      "hard_pinn_velocity_mae_subpx": 5.908242225646973,
+      "structural_kinematic_identity_max_residual": 0.001953125,
+      "policy_action_agreement": 1.0,
+      "final_hjb_critic_loss": 0.0,
+      "final_phys_action_violation": 0.12031499482691288,
+      "final_hard_pinn_loss": 0.14474761113524437
+    },
+    "closed_loop_evaluation": {
+      "cleared": true,
+      "died": false,
+      "return": 180.97265625,
+      "progress_px": 2735.5625,
+      "max_x": 2751.5625,
+      "frames": 1860,
+      "macro_steps": 465,
+      "end_timer_frame": null,
+      "goal_wait_frames": 0,
+      "lives_at_start": 4,
+      "lives_at_end": 4,
+      "modes_seen": [
+        "0x14",
+        "0x0f",
+        "0x10",
+        "0x11",
+        "0x12",
+        "0x13",
+        "0x14"
+      ],
+      "mean_chosen_action_prob": 0.9980293502089798,
+      "value_first": 39.7450065612793,
+      "value_last": 10.11988639831543,
+      "mean_executed_physics_violation": 0.24086021505376345
+    },
+    "history_head_tail": [
+      {
+        "epoch": 0,
+        "anchor_accuracy": 0.9956989288330078,
+        "ppo_policy": -0.07131213136017323,
+        "value": 14.914111614227295,
+        "entropy": 1.841242402791977,
+        "hjb_critic": 0.0,
+        "phys_action": 0.06748702679760754,
+        "hard_pinn": 0.20141629874706268,
+        "sil": 0.579818663187325,
+        "structural_res": 0.0019435882568359375
+      },
+      {
+        "epoch": 12,
+        "anchor_accuracy": 0.9978494644165039,
+        "ppo_policy": 0.0005198940634727478,
+        "value": 4.810194313526154,
+        "entropy": 0.022345163859426975,
+        "hjb_critic": 0.0,
+        "phys_action": 0.12007888499647379,
+        "hard_pinn": 0.1627037599682808,
+        "sil": 0.010301869246177375,
+        "structural_res": 0.0019292831420898438
+      },
+      {
+        "epoch": 24,
+        "anchor_accuracy": 0.9978494644165039,
+        "ppo_policy": 0.005000480450689793,
+        "value": 1.2250456511974335,
+        "entropy": 0.00838876205671113,
+        "hjb_critic": 0.0,
+        "phys_action": 0.12031499482691288,
+        "hard_pinn": 0.14474761113524437,
+        "sil": 0.008139003650285304,
+        "structural_res": 0.0019292831420898438
+      }
+    ]
+  }
+}

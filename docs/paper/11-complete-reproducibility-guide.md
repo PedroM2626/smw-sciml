@@ -1,4 +1,4 @@
-[← 10.73](10-73-end-to-end-pixel-perception-with-physics-informed-reinforcement-learning.md) · [Contents](../../README.md#contents) · [12 →](12-scientific-integrity-statement.md)
+[← 10.74](10-74-aquatic-stage-clearance-by-physics-informed-reinforcement-learning.md) · [Contents](../../README.md#contents) · [12 →](12-scientific-integrity-statement.md)
 
 ## 11. Complete Reproducibility Guide
 

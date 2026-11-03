@@ -353,6 +353,40 @@ class PIMLStageActorCritic(nn.Module):
         return self.pinn_head(h, phys_state, actions)
 
 
+def get_macro_subframe_buttons(
+    action: int,
+    subframe: int,
+    is_aquatic: bool = False,
+) -> Dict[str, bool]:
+    """Return the Joypad button dictionary for a specific subframe of a 4-frame macro action.
+
+    On terrestrial stages, the discrete action dictionary is held constant across all 4 frames.
+    On aquatic stages (translevel 0x26), the Super Mario World game engine requires rising-edge
+    pulses on B to trigger swim strokes and UP orientation to ascend over pillars/islands.
+    """
+    btn_raw = dict(ACTIONS[int(action)])
+    if not is_aquatic:
+        return btn_raw
+
+    if action == 4:
+        sub_btn = {"RIGHT": True, "Y": True}
+        if subframe < 2:
+            sub_btn["B"] = True
+        return sub_btn
+    elif action == 7:
+        sub_btn = {"RIGHT": True, "Y": True, "UP": True}
+        if subframe < 2:
+            sub_btn["B"] = True
+        return sub_btn
+    elif action == 2:
+        return {"RIGHT": True, "Y": True}
+    else:
+        if btn_raw.get("B", False) and subframe >= 2:
+            btn_raw = dict(btn_raw)
+            btn_raw["B"] = False
+        return btn_raw
+
+
 def step_macro_action(
     emu: Any,
     hold: PlayerHold,
@@ -364,8 +398,10 @@ def step_macro_action(
     prev_max = tracker.max_x
     step_reward = 0.0
     btn_raw = dict(ACTIONS[int(action)])
-    for _ in range(FRAME_SKIP):
-        btn = hold.buttons(btn_raw)
+    is_aquatic = int(emu.read_wram_u8(0x13BF)) == 0x26
+    for sub in range(FRAME_SKIP):
+        sub_btn = get_macro_subframe_buttons(int(action), sub, is_aquatic=is_aquatic)
+        btn = hold.buttons(sub_btn)
         emu.set_input(btn)
         emu.step_frame()
         s = emu.get_smw_state()
@@ -468,7 +504,7 @@ def build_clear_dataset_and_frontiers(
     """
     emu.load_state(root_state)
     verdict = StageVerdict(lives_at_start=emu.read_wram_u8(ADDR_LIVES))
-    hold = PlayerHold()
+    hold = PlayerHold(trigger=60)
     tracker = EpisodeTracker.from_emu(emu)
 
     obs_list: List[np.ndarray] = []
@@ -566,7 +602,7 @@ def evaluate_closed_loop_piml(
     model.eval()
     emu.load_state(root_state)
     verdict = StageVerdict(lives_at_start=emu.read_wram_u8(ADDR_LIVES))
-    hold = PlayerHold()
+    hold = PlayerHold(trigger=60)
     tracker = EpisodeTracker.from_emu(emu)
     s0 = emu.get_smw_state()
     start_x = float(s0["x"])
@@ -600,8 +636,10 @@ def evaluate_closed_loop_piml(
 
         btn_raw = dict(ACTIONS[action])
         prev_max = tracker.max_x
-        for _ in range(FRAME_SKIP):
-            btn = hold.buttons(btn_raw)
+        is_aquatic = int(emu.read_wram_u8(0x13BF)) == 0x26
+        for sub in range(FRAME_SKIP):
+            sub_btn = get_macro_subframe_buttons(action, sub, is_aquatic=is_aquatic)
+            btn = hold.buttons(sub_btn)
             emu.set_input(btn)
             emu.step_frame()
             frames += 1
@@ -726,7 +764,10 @@ def train_piml_stage_ppo_single(
         cbf_beta=cbf_beta,
     ).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    hjb_loss_fn = PhysicsInformedCriticLoss(alpha=0.5, death_y=450.0, danger_low=340.0)
+    is_aquatic = "t26" in state_name or "0x26" in state_name
+    death_y = 550.0 if is_aquatic else 450.0
+    danger_low = 460.0 if is_aquatic else 340.0
+    hjb_loss_fn = PhysicsInformedCriticLoss(alpha=0.5, death_y=death_y, danger_low=danger_low)
     phys_act_fn = ActionPhysicsViolation()
 
     # Tensors for the best clearing trajectory buffer D_clear (Self-Imitation + Hard PINN + Value anchor)
@@ -758,7 +799,7 @@ def train_piml_stage_ppo_single(
         emu.load_state(root_state)
         return (
             StageVerdict(lives_at_start=emu.read_wram_u8(ADDR_LIVES)),
-            PlayerHold(),
+            PlayerHold(trigger=60),
             EpisodeTracker.from_emu(emu),
         )
 
@@ -1031,8 +1072,20 @@ def train_all_piml_stages(
     output_dir: str = RESULTS_DIR,
     checkpoint_dir: str = CHECKPOINTS_DIR,
 ) -> Dict[str, Any]:
-    """Train and evaluate closed-loop PIML-PPO policies across `0x29` and `0x27`."""
+    """Train and evaluate closed-loop PIML-PPO policies across stages."""
+    import json
+
     stage_results: Dict[str, Any] = {}
+    metrics_path = os.path.join(output_dir, "piml_stage_ppo_metrics.json")
+    if os.path.isfile(metrics_path):
+        try:
+            with open(metrics_path, "r", encoding="utf-8") as f:
+                prev_blob = json.load(f)
+                if isinstance(prev_blob.get("stages"), dict):
+                    stage_results.update(prev_blob["stages"])
+        except Exception:
+            pass
+
     for st in states:
         res = train_piml_stage_ppo_single(
             state_name=st,
@@ -1042,11 +1095,40 @@ def train_all_piml_stages(
             checkpoint_dir=checkpoint_dir,
         )
         stage_results[st] = res
+        if "t26" in st or "0x26" in st:
+            aquatic_payload = {
+                "study": (
+                    "Aquatic Stage Clearance (0x26 Yoshi's Island 4) by Physics-Informed "
+                    "Reinforcement Learning (PIML-PPO / SciML-RL) with Hydrodynamic Swim Dynamics"
+                ),
+                "protocol": {
+                    "stage": st,
+                    "algorithm": "PIML-PPO (Clipped PPO + GAE + Frontier Resets + Self-Imitation + SciML Losses)",
+                    "obs_dim": OBS_DIM,
+                    "phys_dim": PHYS_DIM,
+                    "n_actions": N_ACTIONS,
+                    "frame_skip": FRAME_SKIP,
+                    "sciml_components": [
+                        "DiscreteCBFCategoricalFilter (Control-Barrier-Function logit projection)",
+                        "PhysicsInformedCriticLoss (HJB / Control-Lyapunov aquatic danger value decay)",
+                        "ActionPhysicsViolation (non-penetration and velocity-saturation regulariser)",
+                        "HardKinematicsHead (exact fixed-point dx = (k/16)*vx' structural integration)",
+                    ],
+                    "seed": int(seed),
+                },
+                "stage": res,
+            }
+            write_metrics(
+                os.path.join(output_dir, "piml_stage_ppo_aquatic_0x26_metrics.json"),
+                aquatic_payload,
+                seed=seed,
+                command=f"python -m src.training.piml_stage_ppo --state {st}",
+            )
 
     payload: Dict[str, Any] = {
         "study": (
-            "Physics-Informed Proximal Policy Optimization (PIML-PPO / SciML-RL) on stages 0x29 "
-            "and 0x27: closed-loop Actor-Critic with DiscreteCBFCategoricalFilter, "
+            "Physics-Informed Proximal Policy Optimization (PIML-PPO / SciML-RL) on stages 0x29, "
+            "0x27, and 0x26: closed-loop Actor-Critic with DiscreteCBFCategoricalFilter, "
             "PhysicsInformedCriticLoss (HJB/Lyapunov), ActionPhysicsViolation, and a "
             "HardKinematicsHead (Residual PINN) under the potential-maximum reward (10.71)"
         ),
@@ -1067,7 +1149,7 @@ def train_all_piml_stages(
         "stages": stage_results,
     }
     write_metrics(
-        os.path.join(output_dir, "piml_stage_ppo_metrics.json"),
+        metrics_path,
         payload,
         seed=seed,
         command="python -m src.training.piml_stage_ppo",
@@ -1080,13 +1162,23 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[2])
     parser.add_argument("--config", default=None)
+    parser.add_argument("--state", default=None, help="Specific stage state to train.")
     parser.add_argument("--epochs", type=int, default=35)
     parser.add_argument("--rollout-steps", type=int, default=64)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output-dir", default=RESULTS_DIR)
     parser.add_argument("--checkpoint-dir", default=CHECKPOINTS_DIR)
     args = parse_args_with_config(parser)
+    target_states = (
+        (args.state,)
+        if args.state
+        else (
+            "smw_map_node_68_135_t29.state",
+            "smw_map_round_1_152_104_t27.state",
+        )
+    )
     train_all_piml_stages(
+        states=target_states,
         epochs=args.epochs,
         rollout_steps_per_epoch=args.rollout_steps,
         seed=args.seed,

@@ -66,3 +66,24 @@ def test_visual_tracking_errors_are_finite_and_bounded(pixel_piml_metrics: dict)
         assert 0.0 <= mae["x_px"] < 400.0
         assert 0.0 <= mae["y_px"] < 50.0
         assert 0.0 <= mae["vx_subpx"] < 50.0
+
+
+def test_full_stage_estimator_and_extended_clearance_metrics() -> None:
+    est_path = Path(RESULTS_DIR) / "pixel_estimator_full_stage_metrics.json"
+    assert est_path.is_file(), f"Missing artifact: {est_path}"
+    with open(est_path, "r", encoding="utf-8") as f:
+        est_data = json.load(f)
+
+    # Full stage estimator achieves superior R^2 across the full stage
+    assert est_data["per_variable"]["x"]["r2"] > 0.98
+    assert est_data["per_variable"]["y"]["r2"] > 0.95
+    assert est_data["per_variable"]["vx"]["r2"] > 0.90
+
+    clr_path = Path(RESULTS_DIR) / "pixel_piml_full_clearance_metrics.json"
+    assert clr_path.is_file(), f"Missing artifact: {clr_path}"
+    with open(clr_path, "r", encoding="utf-8") as f:
+        clr_data = json.load(f)
+
+    summary = clr_data["arms_summary"]
+    assert summary["unconstrained"]["mean_progress_px"] > 2000.0
+    assert summary["piml_cbf"]["mean_progress_px"] > 1400.0

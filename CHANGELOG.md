@@ -11,6 +11,25 @@ numbers* - those are reported here and in README Section 12, never applied silen
 
 ### Added
 
+- **Aquatic Stage Clearance by Physics-Informed Reinforcement Learning on Stage `0x26` (*Yoshi's Island 4*)**
+  (README §10.74, `docs/paper/10-74-aquatic-stage-clearance-by-physics-informed-reinforcement-learning.md`).
+  `src/training/piml_stage_ppo.py` trains `PIMLStageActorCritic` on aquatic stage `0x26` (`smw_map_round_2_184_72_t26.state`),
+  incorporating hydrodynamic rising-edge swim pulsing ($B=1$ on subframes 0-1, $B=0$ on subframes 2-3) and ascending
+  swimming ($UP+B$) to clear underwater obstacles. Achieves 100% full stage clearance across 1,860 frames (31.0 seconds)
+  to goal tape at $X = 2751.56\text{ px}$, traversing $2735.56\text{ px}$ with zero deaths, untouched life count ($4 \to 4$),
+  policy agreement $1.0$, and canonical engine mode march (`0x14 \to 0x0F \to 0x14`). Verified by `tests/test_piml_stage_ppo.py`.
+  Checkpoint: `results/checkpoints/piml_ppo_smw_map_round_2_184_72_t26.pt`. Metrics: `results/piml_stage_ppo_aquatic_0x26_metrics.json`.
+
+- **Extended Full-Stage Visual Navigation and 1200-Frame Benchmark for Pixel-PIML**
+  (README §10.73.2, `docs/paper/10-73-end-to-end-pixel-perception-with-physics-informed-reinforcement-learning.md`).
+  Assembled 4,694 native RGB full-stage dataset (`data/raw/smw_pixel_full_stage_t2a.npz`) spanning $X \in [16.0, 5025.3\text{ px}]$.
+  Retrained `PixelStateEstimator` (`input_kind="pair"`, 6 channels) across the complete spatial domain, reaching validation
+  $R^2 = 0.9918$ for $X$, $0.9681$ for $Y$, $0.9504$ for $v_x$, and contact classification accuracies $>93\%$. Closed-loop
+  pixel-to-action control evaluated over 1,200 frames achieved deep autonomous penetration to $X = 2639.3\text{ px}$
+  ($+1330.8\text{ px}$ past the previous visual ceiling). Checkpoint: `results/checkpoints/pixel_estimator_full_stage_best.pt`.
+  Metrics: `results/pixel_estimator_full_stage_metrics.json` and `results/pixel_piml_full_clearance_metrics.json`.
+  Verified by `tests/test_pixel_piml_closed_loop.py`.
+
 - **Savestate & Asset Management Tooling (`scripts/manage_states.py`) and Cryptographic Bundle (`assets/smw_states.tar.gz`)**
   (README Savestate & Asset Management section, `assets/smw_states.tar.gz`).
   Provides a standalone management, verification, packaging, and restoration suite for all 15 canonical

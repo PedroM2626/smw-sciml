@@ -41,7 +41,8 @@ def run_training(
 
     `input_kind="pair"` stacks each frame with the one before it and widens the first convolution to
     six channels; `tag` renames the checkpoint so a second arm cannot overwrite the published
-    `pixel_estimator_best.pt`. The defaults are the published run, unchanged.
+    `pixel_estimator_best.pt` (e.g. `pixel_estimator_full_stage_best.pt` and
+    `pixel_estimator_full_stage_metrics.json`). The defaults are the published run, unchanged.
     """
     if input_kind not in ("single", "pair"):
         raise ValueError(f"unknown input kind {input_kind!r}")

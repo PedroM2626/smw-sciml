@@ -68,7 +68,7 @@ def test_stage_and_mpc_action_permutations_are_bijections() -> None:
         assert MPC_PRIMITIVE_TO_STAGE_ACTION[mpc_idx] == idx
 
 
-def test_committed_piml_stage_ppo_artifact_clears_0x29_and_0x27() -> None:
+def test_committed_piml_stage_ppo_artifact_clears_all_stages() -> None:
     if not ARTIFACT.is_file():
         pytest.skip("piml_stage_ppo_metrics.json has not been generated")
     payload = json.loads(ARTIFACT.read_text(encoding="utf-8"))
@@ -76,6 +76,7 @@ def test_committed_piml_stage_ppo_artifact_clears_0x29_and_0x27() -> None:
     for st_name, min_px in (
         ("smw_map_node_68_135_t29.state", 4800.0),
         ("smw_map_round_1_152_104_t27.state", 5000.0),
+        ("smw_map_round_2_184_72_t26.state", 2700.0),
     ):
         assert st_name in stages
         rec = stages[st_name]
@@ -86,7 +87,7 @@ def test_committed_piml_stage_ppo_artifact_clears_0x29_and_0x27() -> None:
         assert ev["died"] is False
         assert ev["lives_at_start"] == ev["lives_at_end"] == 4
         assert ev["progress_px"] >= min_px
-        assert "0x0e" in ev["modes_seen"]
+        assert any(m in ev["modes_seen"] for m in ("0x0e", "0x0f"))
         diag = rec["sciml_diagnostics"]
         assert diag["policy_action_agreement"] == pytest.approx(1.0, abs=1e-4)
         assert diag["structural_kinematic_identity_max_residual"] < 0.01

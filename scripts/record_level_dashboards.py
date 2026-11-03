@@ -101,6 +101,16 @@ EPISODES = {
         "render_stride": 8,
         "outro_frames": 320,
     },
+    "0x26": {
+        "kind": "piml-ppo",
+        "seed": 42,
+        "frames": 9000,
+        "goal_px": None,
+        "operator_delay": 10000,
+        "warmup_frames": 0,
+        "render_stride": 8,
+        "outro_frames": 320,
+    },
 }
 
 

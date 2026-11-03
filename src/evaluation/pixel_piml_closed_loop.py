@@ -23,6 +23,7 @@ Three comparative arms are evaluated on authentic hardware:
   * Arm C: Physics-Informed Visual Policy (CNN front-end with Discrete CBF projection)
 
 Run:  python -m src.evaluation.pixel_piml_closed_loop
+Run (full-stage): python -m src.evaluation.pixel_piml_closed_loop --output-file pixel_piml_full_clearance_metrics.json
 """
 
 from __future__ import annotations
@@ -80,7 +81,7 @@ def run_single_closed_loop_pixel_episode(
     rng = np.random.default_rng(seed)
     emu.enable_frame_capture(True)
     start_state = emu.start_episode(initial_savestate)
-    hold = PlayerHold()
+    hold = PlayerHold(trigger=60)
 
     # Initial frame pair buffer
     f0 = emu.get_frame()
@@ -210,7 +211,7 @@ def run_single_closed_loop_pixel_episode(
         else:
             stall_count += 1
 
-        if died or stall_count > 60 or hold.exhausted():
+        if died or stall_count > 100 or hold.exhausted():
             break
 
     # Calculate visual tracking statistics
@@ -259,6 +260,7 @@ def run_pixel_piml_study(
     seeds: Sequence[int] = (42, 43, 44),
     max_frames: int = 500,
     output_dir: str = RESULTS_DIR,
+    output_file: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Execute comparative 3-arm pixel-to-action study across multiple seeds on real hardware."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -327,7 +329,8 @@ def run_pixel_piml_study(
             "mean_vx_r2": float(np.mean(r2_vxs)),
         }
 
-    out_file = os.path.join(output_dir, "pixel_piml_closed_loop_metrics.json")
+    out_filename = output_file if output_file is not None else "pixel_piml_closed_loop_metrics.json"
+    out_file = os.path.join(output_dir, out_filename)
     full_artifact = {
         "study": (
             "Closed-loop pixel-to-action control with Physics-Informed RL (Pixel-PIML) on "
@@ -364,6 +367,7 @@ def main() -> int:
     parser.add_argument("--seeds", default="42,43,44")
     parser.add_argument("--max-frames", type=int, default=500)
     parser.add_argument("--output-dir", default=RESULTS_DIR)
+    parser.add_argument("--output-file", default=None, help="Custom output JSON filename")
     args = parser.parse_args()
 
     seeds = [int(s.strip()) for s in args.seeds.split(",")]
@@ -373,6 +377,7 @@ def main() -> int:
         seeds=seeds,
         max_frames=args.max_frames,
         output_dir=args.output_dir,
+        output_file=args.output_file,
     )
     return 0
 

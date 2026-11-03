@@ -154,6 +154,9 @@ through the installed console script: `smw-pinn benchmark`, `smw-pinn multiseed`
 | `piml_stage_ppo_metrics.json` | `src/training/piml_stage_ppo.py` | yes | 10.71 |
 | `aquatic_physics_identification_metrics.json` | `src/inverse/aquatic_physics_identification.py` | yes | 10.72 |
 | `pixel_piml_closed_loop_metrics.json` | `src/evaluation/pixel_piml_closed_loop.py` | yes | 10.73 |
+| `pixel_estimator_full_stage_metrics.json` | `src/training/train_pixel_estimator.py` | no | 10.73 |
+| `pixel_piml_full_clearance_metrics.json` | `src/evaluation/pixel_piml_closed_loop.py` | yes | 10.73 |
+| `piml_stage_ppo_aquatic_0x26_metrics.json` | `src/training/piml_stage_ppo.py` | yes | 10.74 |
 
 ## Input freshness
 
