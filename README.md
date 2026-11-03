@@ -45,11 +45,11 @@ The repository systematically explores every stage reachable through authentic w
 
 | Stage Translevel | Name & Environment | Best Controller | Progress | Completion Frames | WRAM Status Byte | Clear Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `0x2A` | *Yoshi's Island 1* (Grassland) | MPC / PIML-PPO | $5010.0\text{ px}$ | 6,706 frames | `$7E:0100 \to 0x0C` | **Full Stage Clearance** (Hero Run) |
-| `0x28` | *Yoshi's House* (Domestic) | Trajectory Replay | $128.0\text{ px}$ | 300 frames | `$7E:0100 = 0x14` | Non-scrolling domestic node |
-| `0x29` | *Yoshi's Island 2* (Cave/Banzai) | PIML-PPO / GA | $4808.1\text{ px}$ | 3,288 frames | `$7E:0100 \to 0x0C` | **Full Stage Clearance** (§10.69, §10.71) |
-| `0x27` | *Yoshi's Island 3* (Staircase/Pillars) | PIML-PPO / Go-Explore | $5065.6\text{ px}$ | 2,252 frames | `$7E:0100 \to 0x0C` | **Full Stage Clearance** (§10.70, §10.71) |
-| `0x26` | *Yoshi's Island 4* (Aquatic/Fluid) | Inverse Identification | Telemetry Grid | 4,800 frames | `$7E:0075 = 1` | **Fluid Parameter Identification** (§10.72) |
+| Stage `0x2A` | *Yoshi's Island 1* (Grassland) | MPC / PIML-PPO | $5010.0\text{ px}$ | 6,706 frames | `$7E:0100 \to 0x0C` | **Full Stage Clearance** (Hero Run) |
+| Stage `0x28` | *Yoshi's House* (Domestic) | Trajectory Replay | $128.0\text{ px}$ | 300 frames | `$7E:0100 = 0x14` | Non-scrolling domestic node |
+| Stage `0x29` | *Yoshi's Island 2* (Cave/Banzai) | PIML-PPO / GA | $4808.1\text{ px}$ | 3,288 frames | `$7E:0100 \to 0x0C` | **Full Stage Clearance** (§10.69, §10.71) |
+| Stage `0x27` | *Yoshi's Island 3* (Staircase/Pillars) | PIML-PPO / Go-Explore | $5065.6\text{ px}$ | 2,252 frames | `$7E:0100 \to 0x0C` | **Full Stage Clearance** (§10.70, §10.71) |
+| Stage `0x26` | *Yoshi's Island 4* (Aquatic/Fluid) | Inverse Identification | Telemetry Grid | 4,800 frames | `$7E:0075 = 1` | **Fluid Parameter Identification** (§10.72) |
 
 ### Key Scientific Horizons (Sections 10.71 - 10.73)
 * **Full-Stage Multi-Modal Dashboards (§10.71):** Every completed stage is captured in synchronized multi-modal video format ([`results/figures/dashboard_level_1.mp4`](results/figures/dashboard_level_1.mp4), [`dashboard_level_2.mp4`](results/figures/dashboard_level_2.mp4), [`dashboard_level_3.mp4`](results/figures/dashboard_level_3.mp4), [`dashboard_level_4.mp4`](results/figures/dashboard_level_4.mp4), and the unified composite [`results/figures/all_covered_stages.mp4`](results/figures/all_covered_stages.mp4)).
