@@ -11,6 +11,16 @@ numbers* - those are reported here and in README Section 12, never applied silen
 
 ### Added
 
+- **Savestate & Asset Management Tooling (`scripts/manage_states.py`) and Cryptographic Bundle (`assets/smw_states.tar.gz`)**
+  (README Savestate & Asset Management section, `assets/smw_states.tar.gz`).
+  Provides a standalone management, verification, packaging, and restoration suite for all 15 canonical
+  Super Mario World savestates (.state, 804 KB each) covering 5 stages (`0x2A`, `0x28`, `0x29`, `0x27`, `0x26`)
+  and world map transit nodes. `python scripts/manage_states.py check` reports cryptographic SHA-256 and ROM SHA-1;
+  `python scripts/manage_states.py verify` boots the Snes9x Libretro core and verifies live WRAM addresses (Mario coordinates,
+  game mode `$7E:0100`, translevel `$7E:13BF`, and map cursor `$7E:1F17/$7E:1F19`); `python scripts/manage_states.py bundle`
+  and `unpack` compress and extract `assets/smw_states.tar.gz` with strict manifest validation for offline and reproducible
+  evaluation without requiring Git-LFS. Verified by `tests/test_manage_states.py`.
+
 - **End-to-End Pixel Perception with Physics-Informed Reinforcement Learning Closed-Loop Control**
   (README 10.73, `make pixel-piml`, `smw-pinn pixel-piml`).
   `src/evaluation/pixel_piml_closed_loop.py` establishes the first closed-loop visual control benchmark
@@ -156,6 +166,16 @@ uncertainty for the identified laws, a documentation site that renders the whole
 gate the LFS migration was missing.
 
 ### Added
+
+- **Savestate & Asset Management Tooling (`scripts/manage_states.py`) and Cryptographic Bundle (`assets/smw_states.tar.gz`)**
+  (README Savestate & Asset Management section, `assets/smw_states.tar.gz`).
+  Provides a standalone management, verification, packaging, and restoration suite for all 15 canonical
+  Super Mario World savestates (.state, 804 KB each) covering 5 stages (`0x2A`, `0x28`, `0x29`, `0x27`, `0x26`)
+  and world map transit nodes. `python scripts/manage_states.py check` reports cryptographic SHA-256 and ROM SHA-1;
+  `python scripts/manage_states.py verify` boots the Snes9x Libretro core and verifies live WRAM addresses (Mario coordinates,
+  game mode `$7E:0100`, translevel `$7E:13BF`, and map cursor `$7E:1F17/$7E:1F19`); `python scripts/manage_states.py bundle`
+  and `unpack` compress and extract `assets/smw_states.tar.gz` with strict manifest validation for offline and reproducible
+  evaluation without requiring Git-LFS. Verified by `tests/test_manage_states.py`.
 
 - **The message-box A pulse reaches the controller stack** (README 10.60). The engine's own message
   boxes suspend the player until the A button arrives, and until now only the recorders, the terrain
@@ -1404,6 +1424,16 @@ tilemap world models, DAgger, distillation, cross-stage generalization).
   as blocked with its diagnostics artifact (Section 10.36), not a fabricated state.
 
 ### Added
+
+- **Savestate & Asset Management Tooling (`scripts/manage_states.py`) and Cryptographic Bundle (`assets/smw_states.tar.gz`)**
+  (README Savestate & Asset Management section, `assets/smw_states.tar.gz`).
+  Provides a standalone management, verification, packaging, and restoration suite for all 15 canonical
+  Super Mario World savestates (.state, 804 KB each) covering 5 stages (`0x2A`, `0x28`, `0x29`, `0x27`, `0x26`)
+  and world map transit nodes. `python scripts/manage_states.py check` reports cryptographic SHA-256 and ROM SHA-1;
+  `python scripts/manage_states.py verify` boots the Snes9x Libretro core and verifies live WRAM addresses (Mario coordinates,
+  game mode `$7E:0100`, translevel `$7E:13BF`, and map cursor `$7E:1F17/$7E:1F19`); `python scripts/manage_states.py bundle`
+  and `unpack` compress and extract `assets/smw_states.tar.gz` with strict manifest validation for offline and reproducible
+  evaluation without requiring Git-LFS. Verified by `tests/test_manage_states.py`.
 
 - `results/MANIFEST.md` artifact index with CI-enforced provenance (`_meta`), writer,
   command, README-section mapping and checkpoint-freshness gates.

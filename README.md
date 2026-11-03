@@ -39,6 +39,64 @@ Sections 10.37-10.73 train and score the rest of the repository's models against
 
 ---
 
+## 🎮 Stage Coverage, Autonomous Clearance & Scientific Horizons
+
+The repository systematically explores every stage reachable through authentic world map progression, moving from the initial level entry through to the aquatic fluid regime:
+
+| Stage Translevel | Name & Environment | Best Controller | Progress | Completion Frames | WRAM Status Byte | Clear Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `0x2A` | *Yoshi's Island 1* (Grassland) | MPC / PIML-PPO | $5010.0\text{ px}$ | 6,706 frames | `$7E:0100 \to 0x0C` | **Full Stage Clearance** (Hero Run) |
+| `0x28` | *Yoshi's House* (Domestic) | Trajectory Replay | $128.0\text{ px}$ | 300 frames | `$7E:0100 = 0x14` | Non-scrolling domestic node |
+| `0x29` | *Yoshi's Island 2* (Cave/Banzai) | PIML-PPO / GA | $4808.1\text{ px}$ | 3,288 frames | `$7E:0100 \to 0x0C` | **Full Stage Clearance** (§10.69, §10.71) |
+| `0x27` | *Yoshi's Island 3* (Staircase/Pillars) | PIML-PPO / Go-Explore | $5065.6\text{ px}$ | 2,252 frames | `$7E:0100 \to 0x0C` | **Full Stage Clearance** (§10.70, §10.71) |
+| `0x26` | *Yoshi's Island 4* (Aquatic/Fluid) | Inverse Identification | Telemetry Grid | 4,800 frames | `$7E:0075 = 1` | **Fluid Parameter Identification** (§10.72) |
+
+### Key Scientific Horizons (Sections 10.71 - 10.73)
+* **Full-Stage Multi-Modal Dashboards (§10.71):** Every completed stage is captured in synchronized multi-modal video format ([`results/figures/dashboard_level_1.mp4`](results/figures/dashboard_level_1.mp4), [`dashboard_level_2.mp4`](results/figures/dashboard_level_2.mp4), [`dashboard_level_3.mp4`](results/figures/dashboard_level_3.mp4), [`dashboard_level_4.mp4`](results/figures/dashboard_level_4.mp4), and the unified composite [`results/figures/all_covered_stages.mp4`](results/figures/all_covered_stages.mp4)).
+* **Aquatic Physics Identification (§10.72):** Transitioning into fluid (`$7E:0075 = 1`) reduces downward acceleration by **91.8%** ($g_{\text{water}} \approx 0.48\text{ subpx/f}$ vs $g_{\text{air}} \approx 5.87\text{ subpx/f}$), replaces the jump parabola with a swim stroke impulse ($J_{\text{water}} \approx -24.0\text{ subpx/f}$), and caps horizontal velocity by viscous drag at $16.0\text{ subpx/f}$, while preserving discrete kinematic scale invariance ($16\Delta x - v_x = 0$, residual $0.0000$).
+* **Closed-Loop Pixel Perception with SciML Barriers (§10.73):** End-to-end visual control coupling a 2-frame RGB convolutional encoder with Discrete Control Barrier Functions (`DiscreteCBFCategoricalFilter`, $\beta_{\text{cbf}} = 0.25$) achieves $1198.04 \pm 143.20\text{ px}$ forward displacement with strictly **$0.0000$ physics violations**.
+
+---
+
+## 💾 Savestate & Asset Management (Verification & Reproduction)
+
+To test, benchmark, or train on the repository's starting points across all stages, **all 15 canonical savestates** are versioned via Git-LFS and packaged in a standalone archive bundle ([`assets/smw_states.tar.gz`](assets/smw_states.tar.gz)) with an embedded SHA-256 cryptographic manifest.
+
+The dedicated management utility [`scripts/manage_states.py`](scripts/manage_states.py) enables instant health checks, live emulator verification, bundling, and unpacking:
+
+```bash
+# 1. Unpack savestates bundle into data/raw/ with strict SHA-256 validation
+python scripts/manage_states.py unpack --bundle assets/smw_states.tar.gz
+
+# 2. Check presence, sizes, and cryptographic checksums of ROM and savestates
+python scripts/manage_states.py check
+
+# 3. Boot Snes9x Libretro emulator and verify RAM coordinates for all 15 states
+python scripts/manage_states.py verify
+```
+
+### Canonical Savestates Catalog
+
+| Savestate File (`data/raw/`) | Translevel (`$7E:13BF`) | Mode (`$7E:0100`) | Initial Coordinates | Benchmark Purpose & Role |
+| :--- | :--- | :--- | :--- | :--- |
+| `smw_yoshi_island_1_level.state` | `0x2A` | `0x14` | $X=16.0, Y=352.3$ | Canonical live gameplay entry for Yoshi's Island 1 (Hero Run) |
+| `smw_yoshi_island_1.state` | `0x00` | `0x08` | Title / Preamble | Title screen preamble state for Yoshi's Island 1 |
+| `smw_yoshi_house.state` | `0x00` | `0x08` | Title / Preamble | Yoshi's House demo mode preamble state |
+| `smw_map_node_104_120_t28.state` | `0x28` | `0x14` | $X=128.0, Y=352.1$ | Level entry state for Yoshi's House |
+| `smw_map_node_116_126_t28.state` | `0x28` | `0x14` | $X=128.0, Y=352.1$ | Map node waypoint capture for Yoshi's House |
+| `smw_map_node_93_126_t28.state` | `0x28` | `0x14` | $X=128.0, Y=352.1$ | Map node waypoint capture for Yoshi's House alternate node |
+| `smw_map_node_141_135_t2a.state` | `0x2A` | `0x14` | $X=16.0, Y=352.1$ | Map node waypoint capture for Yoshi's Island 1 |
+| `smw_map_node_152_136_t2a.state` | `0x2A` | `0x14` | $X=16.0, Y=352.1$ | Map node entry right before stage loading |
+| `smw_map_round_0_152_136_t2a.state` | `0x2A` | `0x14` | $X=16.0, Y=352.1$ | World map round 0 initial stage state |
+| `smw_map_node_56_136_t29.state` | `0x29` | `0x14` | $X=16.0, Y=352.1$ | Map node capture for Yoshi's Island 2 |
+| `smw_map_node_68_135_t29.state` | `0x29` | `0x14` | $X=16.0, Y=352.1$ | Live gameplay level entry for Yoshi's Island 2 (Cleared) |
+| `smw_map_round_1_152_104_t27.state` | `0x27` | `0x14` | $X=16.0, Y=352.1$ | Live gameplay level entry for Yoshi's Island 3 (Cleared) |
+| `smw_map_round_2_184_72_t26.state` | `0x26` | `0x14` | $X=16.0, Y=272.6$ | Live gameplay aquatic level entry for Yoshi's Island 4 |
+| `smw_world_map_after_round_0_152_136_t2a.state` | `0x2A` | `0x0E` | Cursor $(152, 104)$ | World map state post-clear 0x2A (unlocks path to 0x27) |
+| `smw_world_map_after_round_1_152_104_t27.state` | `0x27` | `0x0E` | Cursor $(184, 72)$ | World map state post-clear 0x27 (unlocks path to 0x26) |
+
+---
+
 ## Contents
 
 The full research document lives in [`docs/paper/`](docs/paper/), one page per section, so
@@ -138,12 +196,14 @@ are published with MathJax on the [documentation site](https://pedrom2626.github
 
 ```bash
 git lfs install          # datasets, checkpoints, figures and savestates are LFS objects
-git lfs pull
+git lfs pull             # or: python scripts/manage_states.py unpack --bundle assets/smw_states.tar.gz
 python -m venv .venv
 .venv\Scripts\activate   # Windows: the bundled Libretro core is a Windows DLL
 pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu126
 pip install -e ".[dev]"
-make test                # or: smw-pinn test-cov
+python scripts/manage_states.py check   # verify ROM & 15 savestates
+python scripts/manage_states.py verify  # verify live RAM states via emulator
+make test                # or: smw-pinn test-cov (1,138+ unit & regression tests)
 make reproduce           # the CPU benchmark of Section 8 in minutes
 ```
 

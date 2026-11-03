@@ -54,7 +54,8 @@ smw-pinn/
 │   ├── unlock_world_map.py                # Fly the clearance controller and read the mode byte (10.66)
 │   ├── probe_tile_behaviors.py            # Measure what the engine does with every standard tile id (10.68)
 │   ├── probe_sprite_behaviors.py          # Meet every stage sprite and touch it, twice (10.68)
-│   └── record_level_dashboards.py         # One episode per stage, flown by the agent that can finish it (10.66, 10.68)
+│   ├── record_level_dashboards.py         # One episode per stage, flown by the agent that can finish it (10.66, 10.68)
+│   └── manage_states.py                   # Savestate health check, verification, bundle & unpack tool
 ├── src/
 │   ├── cli.py                             # Cross-platform entry point (`smw-pinn`, `python -m src.cli`)
 │   ├── environment/
@@ -276,6 +277,10 @@ pip install -e ".[dev]"
 # Large binaries/datasets are versioned via Git-LFS:
 git lfs install
 git lfs pull
+# Or unpack canonical savestates bundle with cryptographic verification:
+python scripts/manage_states.py unpack --bundle assets/smw_states.tar.gz
+python scripts/manage_states.py check
+python scripts/manage_states.py verify
 ```
 
 > **Determinism:** all entry points seed Python/NumPy/PyTorch via `src/utils/seed.py:set_global_seed(seed, deterministic=True)` (cuDNN deterministic, `PYTHONHASHSEED` fixed). Pass `--non-deterministic` only when benchmarking raw throughput.
