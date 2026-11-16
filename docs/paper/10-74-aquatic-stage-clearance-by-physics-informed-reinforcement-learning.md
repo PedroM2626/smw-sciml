@@ -2,7 +2,7 @@
 
 ### 10.74 Aquatic Stage Clearance by Physics-Informed Reinforcement Learning (`PIML-PPO` on Stage `0x26`, Yoshi's Island 4)
 
-Section 10.71 established that Physics-Informed Reinforcement Learning (`PIML-PPO`) achieves 100% closed-loop clearance across terrestrial stages (`0x29` Yoshi's Island 2 and `0x27` Yoshi's Island 3). Section 10.72 identified the hydrodynamic governing equations of Super Mario World's fluid medium (`$7E:0075 = 1$`). However, closed-loop aquatic stage completion remained unsolved because standard terrestrial policies sink to the ocean floor and stall or drown.
+Section 10.71 reports closed-loop clearance of the terrestrial stages `0x29` (Yoshi's Island 2) and `0x27` (Yoshi's Island 3) by `PIML-PPO`; a re-run found `0x27` reproducing and `0x29` not (10.71.3). Section 10.72 identified the hydrodynamic governing equations of Super Mario World's fluid medium (`$7E:0075 = 1$`). However, closed-loop aquatic stage completion remained unsolved because standard terrestrial policies sink to the ocean floor and stall or drown.
 
 This study implements and verifies closed-loop clearance of the full aquatic stage `0x26` (*Yoshi's Island 4*, savestate `smw_map_round_2_184_72_t26.state`) using a physics-informed policy conditioned on fluid-mechanics inductive priors.
 
@@ -43,7 +43,7 @@ The aquatic policy employs the `PIMLStageActorCritic` architecture ([`piml_stage
 
   guaranteeing zero structural kinematic residual across all rollouts.
 
-The policy was initialized via behavioral cloning on frontier archive [`frontier_archive_smw_map_round_2_184_72_t26.npz`](file:///c:/Users/Acer/Downloads/mworld-experiment/results/checkpoints/frontier_archive_smw_map_round_2_184_72_t26.npz) (465 macro actions) and trained with PPO on the live SNES emulator for 25 epochs.
+The policy was initialized via behavioral cloning on [`frontier_archive_smw_map_round_2_184_72_t26.npz`](file:///c:/Users/Acer/Downloads/mworld-experiment/results/checkpoints/frontier_archive_smw_map_round_2_184_72_t26.npz) (465 macro actions - a hand-written list, not a search result; see 10.74.5) and trained with PPO on the live SNES emulator for 25 epochs.
 
 ---
 
@@ -54,19 +54,20 @@ The trained aquatic agent was evaluated in closed loop on authentic SNES hardwar
 | Metric | Measured Value | Requirement / Significance |
 |---|:---:|---|
 | **Initial Position** | $X = 16.00\text{ px}, Y = 368.00\text{ px}$ | Stage `0x26` entrance |
-| **Final Goal Position** | $X = 2751.56\text{ px}, Y = 352.00\text{ px}$ | Goal tape passed at $X \approx 2736\dots 2800\text{ px}$ |
-| **Net Forward Progress** | **$+2735.56\text{ px}$** | **100% full stage traversed** |
-| **Total Frames Run** | 1860 frames (31.00 seconds) | Real-time 60 Hz execution |
-| **Game Mode Sequence** | `0x14` $\to$ `0x0F` $\to$ `0x10` $\to$ `0x11` $\to$ `0x12` $\to$ `0x13` $\to$ `0x14` | Canonical SNES level clear march verified |
+| **The pipe** | $X = 2751.56\text{ px}$, frame 1860 | A pipe into a second room; the fade and load of entering it are modes `0x0F`-`0x13` (frames 1860-1936), after which Mario stands at $X = 16\text{ px}$ in the second room |
+| **The goal tape** | second room, $X \approx 217\text{ px}$, frame 2052 | The end-level timer `$7E:1493` first reads 255 there; it is zero on every frame before |
+| **Net Forward Progress** | $+2735.56\text{ px}$ in the first room | The second room restarts $X$, so this figure is the first room only |
+| **Frames to the goal tape** | 2052 frames (34.2 seconds), 513 macro-steps | Real-time 60 Hz execution; then 647 frames of released controls before the level-end march |
+| **Game Mode Sequence** | `0x14` $\to$ `0x0F`-`0x13` $\to$ `0x14` $\to$ `0x0C` $\to$ `0x0D` $\to$ `0x0E` | The first three are the pipe transition; the last three are the level-end march (`0x0C` at frame 2699), the actual clear |
 | **Life Count** | $4 \to 4$ (0 deaths, 0 damage taken) | Flawless survival |
-| **Policy Action Agreement** | **1.0000** | 100% adherence to optimal frontier |
+| **Policy Action Agreement** | **1.0000** | Agreement with the 465 anchor actions it was cloned on, not with an optimum |
 | **Hard PINN Position MAE** | $1.476\text{ px}$ | Near-perfect spatial trajectory tracking |
 | **Hard PINN Velocity MAE** | $5.908\text{ subpx/frame}$ | Accurate hydrodynamic velocity modeling |
 | **Structural Kinematic Residual** | **$0.00195$** | Analytical kinematic identity strictly preserved |
 
 ![The dashboard on Yoshi's Island 4: the console's own picture, the tile window that stage's models read, and what the actor believed on every frame](results/figures/dashboard_level_5.gif)
 
-**Level 5: Yoshi's Island 4 Multi-Modal Dashboard.** 2,840 recorded frames (goal tape triggered at frame 2,052, with 800 outro frames capturing the celebration and map settling), 2735.56 px of forward progress, 4.34 MB GIF / 7.08 MB MP4: [`results/figures/dashboard_level_5.mp4`](file:///c:/Users/Acer/Downloads/mworld-experiment/results/figures/dashboard_level_5.mp4).
+**Level 5: Yoshi's Island 4 Multi-Modal Dashboard.** 2,840 recorded frames (goal tape triggered at frame 2,052 in the second room, with 800 outro frames capturing the level-end march and the map settling), 2735.56 px of forward progress in the first room, 4.34 MB GIF / 7.08 MB MP4: [`results/figures/dashboard_level_5.mp4`](file:///c:/Users/Acer/Downloads/mworld-experiment/results/figures/dashboard_level_5.mp4).
 
 ```mermaid
 graph LR
@@ -79,9 +80,9 @@ graph LR
         D --> E["Surface Breach onto Island (X=1282 -> 2500 px)"]
     end
     subgraph S3["Phase 3: Goal Clearance March"]
-        E --> F["Sprint & Goal Jump (X=2736 px)"]
-        F --> G["Goal Tape Cut (Mode 0x0F)"]
-        G --> H["Level Clear (Modes 0x10 -> 0x14)"]
+        E --> F["Pipe into the second room (X=2751 px, frame 1860)"]
+        F --> G["Sub-level transition (Modes 0x0F -> 0x13), second room from X=16 px"]
+        G --> H["Goal tape (X=217 px, frame 2052), then the level-end march (Modes 0x0C -> 0x0E)"]
     end
 ```
 
@@ -91,10 +92,16 @@ graph LR
 
 With stage `0x26` cleared, Physics-Informed Reinforcement Learning covers all playable stages unlocked in the campaign progression:
 
-| Stage Identifier | Stage Name | Medium / Regime | Goal Tape $X$ Coordinate | Clearance Progress | Final Mode | Lives | Policy Checkpoint |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| `0x29` | Yoshi's Island 2 | Terrestrial | $4864\text{ px}$ | $4864.0\text{ px}$ | `0x14` (March `0x0E`) | $4 \to 4$ | `piml_ppo_smw_map_node_68_135_t29.pt` |
-| `0x27` | Yoshi's Island 3 | Terrestrial (Pits & Rotating Platforms) | $5072\text{ px}$ | $5088.0\text{ px}$ | `0x14` (March `0x0E`) | $4 \to 4$ | `piml_ppo_smw_map_round_1_152_104_t27.pt` |
-| `0x26` | Yoshi's Island 4 | Aquatic (Fluid Drag & Buoyancy) | $2736\text{ px}$ | $2735.6\text{ px}$ | `0x14` (March `0x0F`) | $4 \to 4$ | `piml_ppo_smw_map_round_2_184_72_t26.pt` |
+| Stage Identifier | Stage Name | Medium / Regime | Progress to the goal tape (artifact) | Level-end march | Lives | Policy Checkpoint |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| `0x29` | Yoshi's Island 2 | Terrestrial | $4808.1\text{ px}$ (not reproduced by the shipped evaluation, 10.71.3) | `0x0C` $\to$ `0x0E` | $4 \to 4$ | `piml_ppo_smw_map_node_68_135_t29.pt` |
+| `0x27` | Yoshi's Island 3 | Terrestrial (Pits & Rotating Platforms) | $5065.6\text{ px}$ | `0x0C` $\to$ `0x0E` | $4 \to 4$ | `piml_ppo_smw_map_round_1_152_104_t27.pt` |
+| `0x26` | Yoshi's Island 4 | Aquatic (Fluid Drag & Buoyancy) | $2735.6\text{ px}$ to the pipe, then the goal tape at $X \approx 217\text{ px}$ of the second room | `0x0C` $\to$ `0x0E` | $4 \to 4$ | `piml_ppo_smw_map_round_2_184_72_t26.pt` |
+
+#### 10.74.5 A Verdict Correction, and What the Clear Is
+
+**The verdict.** This section first read the evaluation's stop at the pipe as the goal: `StageVerdict` called any exit from mode `0x14` a clear, and modes `0x0F`-`0x13` are the fade and load a level goes through when it is *entered* - at its start, and mid-stage through a pipe or a door. The evaluation therefore ended at frame 1860 with `end_timer_frame = None` (the artifact says so), `cleared = True` and a progress of 2735.56 px, and the text called that "100% full stage traversed" and the pipe transition "the canonical clear march". Neither holds: the first room is not the stage. `StageVerdict` now counts only the level-end mode `0x0C` as a clear and lets the sub-level transition pass, and `scripts/reaudit_piml_verdicts.py` re-evaluated the committed checkpoint with it (the superseded block is kept in the artifacts under `verdict_correction`). Measured through an external tap on the emulator's `step_frame`, independent of the verdict: `$7E:1493` is zero on every frame up to 2051, reads 255 at frame 2052 with Mario at $X = 217\text{ px}$ of the second room, and the mode byte then marches `0x0C` (frame 2699), `0x0D`, `0x0E` with the lives counter at 4 throughout and no `0x0B`. The stage is cleared; the numbers above are the corrected ones.
+
+**What the clear is.** The anchor is not a search result: `scripts/create_0x26_frontier_archive.py` writes the list `[4] * 260 + [7] * 180 + [2] * 25` and saves it under the name the real Go-Explore output of 10.70 carries. Replayed alone, those 465 actions do not clear the stage: under the evaluation's message-box pulse (`PlayerHold(trigger=60)`) they end at the pipe at frame 1860, and with `trigger=10` Mario dies at frame 1605. The trained network continues for 48 macro-steps past them (513 in total) and sets the timer at frame 2052, so the clear belongs to the network, not to the list. Two things this section does not show: that the physics-informed terms are what made the difference - there is no control arm trained without them, and the same cross-entropy stage that makes the policy agree with the anchor to 1.0000 also runs on every other stage of 10.71 - and that the clear generalises: it is one deterministic episode from one savestate.
 
 Artifact: [`results/piml_stage_ppo_aquatic_0x26_metrics.json`](file:///c:/Users/Acer/Downloads/mworld-experiment/results/piml_stage_ppo_aquatic_0x26_metrics.json). Consolidated metrics: [`results/piml_stage_ppo_metrics.json`](file:///c:/Users/Acer/Downloads/mworld-experiment/results/piml_stage_ppo_metrics.json).

@@ -31,9 +31,11 @@ numbers* - those are reported here and in README Section 12, never applied silen
   (README §10.74, `docs/paper/10-74-aquatic-stage-clearance-by-physics-informed-reinforcement-learning.md`).
   `src/training/piml_stage_ppo.py` trains `PIMLStageActorCritic` on aquatic stage `0x26` (`smw_map_round_2_184_72_t26.state`),
   incorporating hydrodynamic rising-edge swim pulsing ($B=1$ on subframes 0-1, $B=0$ on subframes 2-3) and ascending
-  swimming ($UP+B$) to clear underwater obstacles. Achieves 100% full stage clearance across 1,860 frames (31.0 seconds)
-  to goal tape at $X = 2751.56\text{ px}$, traversing $2735.56\text{ px}$ with zero deaths, untouched life count ($4 \to 4$),
-  policy agreement $1.0$, and canonical engine mode march (`0x14 \to 0x0F \to 0x14`). Verified by `tests/test_piml_stage_ppo.py`.
+  swimming ($UP+B$) to clear underwater obstacles. Clears the stage in 2,052 frames: it reaches a pipe at
+  $X = 2751.56\text{ px}$ (frame 1,860), crosses into a second room, and sets the end-level timer there at
+  $X \approx 217\text{ px}$ (frame 2,052), then marches `0x0C -> 0x0D -> 0x0E` with the life count untouched ($4 \to 4$). This entry
+  first recorded the pipe as the goal (1,860 frames, "`0x14 -> 0x0F -> 0x14` clear march"); see Fixed below. Verified by
+  `tests/test_piml_stage_ppo.py`.
   Checkpoint: `results/checkpoints/piml_ppo_smw_map_round_2_184_72_t26.pt`. Metrics: `results/piml_stage_ppo_aquatic_0x26_metrics.json`.
 
 - **Extended Full-Stage Visual Navigation and 1200-Frame Benchmark for Pixel-PIML**
@@ -124,6 +126,22 @@ numbers* - those are reported here and in README Section 12, never applied silen
   `results/MANIFEST.md`; `tests/test_potential_reward_ga.py` pins the reward, the verdict and
   10.69's table to them. Section 12 withdraws 10.68's reading that the two sessions themselves
   could not be concluded.
+
+### Fixed
+
+- **A pipe was read as a clear** (README 10.74, 10.74.5). `StageVerdict` counted any exit from mode `0x14` as a
+  clear, and modes `0x0F`-`0x13` are also the fade and load of taking a pipe or a door into a sub-level. `0x26` has a
+  pipe at x = 2751.6 px, so its evaluation stopped there with `end_timer_frame = None`, 1,860 frames and a "clear",
+  and 10.74 called the pipe transition the clear march and the first room the whole stage. Only the level-end mode
+  `0x0C` is a clear now, and the sub-level transition no longer ends an episode. `scripts/reaudit_piml_verdicts.py`
+  re-evaluated the committed `0x26` checkpoint (2,052 frames, end-level timer at frame 2,052 in the second room,
+  `0x0C` march, lives 4 -> 4) and rewrote its blocks in `results/piml_stage_ppo_metrics.json` and
+  `results/piml_stage_ppo_aquatic_0x26_metrics.json`, keeping the superseded values under `verdict_correction`; the
+  stage was cleared, and the numbers and the description were wrong. `tests/test_piml_stage_ppo.py` required only
+  `0x0F` as evidence and now requires the timer and `0x0C` for every stage; `tests/test_potential_reward_ga.py` pins the
+  pipe case. 10.74.5 also records that the `0x26` anchor is a hand-written list, and 10.71.3 that `0x29` does not
+  reproduce with the evaluation as shipped (it clears only under `PlayerHold(trigger=10)`, not the `60` in use since
+  the aquatic commit) and that the PIML-PPO checkpoints are trained to reproduce their anchor sequences.
 
 ### Changed
 

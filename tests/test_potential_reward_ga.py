@@ -44,6 +44,31 @@ def test_verdict_separates_a_clear_from_a_death_and_from_no_verdict() -> None:
     assert lost_a_life.died and not lost_a_life.cleared
 
 
+def test_a_pipe_into_a_sub_level_is_not_a_clear() -> None:
+    """Modes 0x0F-0x13 are the fade and load of entering a level, mid-stage as well as at its start.
+
+    10.74 read that sequence as the goal of 0x26, whose pipe at x = 2751.6 px leads to a second room
+    with the goal tape in it: the episode neither ended nor cleared there, and the verdict has to
+    keep waiting instead of declaring either.
+    """
+    in_pipe = ga.StageVerdict(lives_at_start=4)
+    for mode in (0x14, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14):
+        in_pipe.observe(mode, 4)
+    assert not in_pipe.left_interactive and not in_pipe.cleared and not in_pipe.died
+
+    through = ga.StageVerdict(lives_at_start=4)
+    for mode in (0x14, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x0C, 0x0D, 0x0E):
+        through.observe(mode, 4)
+    assert through.left_interactive and through.cleared
+
+
+def test_the_verdict_recomputed_from_a_record_agrees_with_the_live_one() -> None:
+    pipe_only = ["0x14", "0x0f", "0x10", "0x11", "0x12", "0x13", "0x14"]
+    assert not ga.verdict_from_record(pipe_only, 4, 4)
+    assert ga.verdict_from_record([*pipe_only, "0x0c", "0x0d", "0x0e"], 4, 4)
+    assert not ga.verdict_from_record(["0x14", "0x0b", "0x0c", "0x0d"], 4, 3)
+
+
 def test_policy_round_trips_its_genome_and_picks_a_valid_action() -> None:
     policy = ga.MLPPolicy(hidden=8)
     genome = np.arange(policy.size, dtype=np.float32) / policy.size

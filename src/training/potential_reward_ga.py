@@ -79,24 +79,37 @@ def potential_reward(x: float, max_x: float) -> Tuple[float, float]:
     return gain / 16.0, max(x, max_x)
 
 
+# Engine modes around a level. `0x0C` is the end of the level (the march to the map that follows the
+# goal tape or an exit); `0x0F`-`0x13` are the fade and load a level goes through when it is *entered*,
+# which also happens mid-stage when Mario takes a pipe or a door into a sub-level, so they say nothing
+# about the stage being over. 10.74 once read that sequence as a clear (`stage_verdict_correction`).
+GAME_MODE_LEVEL_END = 0x0C
+SUBLEVEL_TRANSITION_MODES = frozenset({0x0F, 0x10, 0x11, 0x12, 0x13})
+
+
 @dataclass
 class StageVerdict:
     """The engine's own account of how a session ended (10.66).
 
-    A clear leaves interactive mode without the death mode on the way and with the lives counter
-    untouched; a death passes through `0x0B` or takes a life. A run still in `0x14` has no verdict.
+    A clear reaches the level-end mode `0x0C` without the death mode on the way and with the lives
+    counter untouched; a death passes through `0x0B` or takes a life. A run still in `0x14` has no
+    verdict, and neither has one that is passing through a sub-level transition (`0x0F`-`0x13`): the
+    stage goes on in the next room, so the episode is neither over nor cleared.
     """
 
     lives_at_start: int
     saw_death_mode: bool = False
     left_interactive: bool = False
+    saw_level_end: bool = False
     lives_now: int = -1
 
     def observe(self, mode: int, lives: int) -> None:
         self.lives_now = lives
         if mode == GAME_MODE_DEATH:
             self.saw_death_mode = True
-        if mode != wram.GAME_MODE_INTERACTIVE:
+        if mode == GAME_MODE_LEVEL_END:
+            self.saw_level_end = True
+        if mode != wram.GAME_MODE_INTERACTIVE and mode not in SUBLEVEL_TRANSITION_MODES:
             self.left_interactive = True
 
     def has_left_interactive(self) -> bool:
@@ -108,7 +121,17 @@ class StageVerdict:
 
     @property
     def cleared(self) -> bool:
-        return self.left_interactive and not self.died
+        return self.saw_level_end and not self.died
+
+
+def verdict_from_record(modes_seen: Sequence[str], lives_at_start: int, lives_at_end: int) -> bool:
+    """The same verdict, recomputed from what an artifact recorded (`modes_seen` as `"0x0c"` strings).
+
+    Used to re-audit artifacts written before the verdict was corrected, without an emulator.
+    """
+    modes = {int(m, 16) for m in modes_seen}
+    died = GAME_MODE_DEATH in modes or lives_at_end < lives_at_start
+    return GAME_MODE_LEVEL_END in modes and not died
 
 
 def observe(emu: Any) -> np.ndarray:

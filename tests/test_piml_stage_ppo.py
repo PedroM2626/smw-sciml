@@ -87,7 +87,12 @@ def test_committed_piml_stage_ppo_artifact_clears_all_stages() -> None:
         assert ev["died"] is False
         assert ev["lives_at_start"] == ev["lives_at_end"] == 4
         assert ev["progress_px"] >= min_px
-        assert any(m in ev["modes_seen"] for m in ("0x0e", "0x0f"))
+        # A clear is the level-end march after the end-level timer fired. Modes 0x0F-0x13 alone
+        # are the fade and load of entering a (sub-)level - 0x26 passes through them at its pipe
+        # at x = 2751.6 px - and 10.74 once read them as the goal.
+        assert ev["end_timer_frame"] is not None, f"{st_name}: the end-level timer never fired"
+        assert "0x0c" in ev["modes_seen"], f"{st_name}: the level-end mode was never reached"
+        assert "0x0b" not in ev["modes_seen"]
         diag = rec["sciml_diagnostics"]
         assert diag["policy_action_agreement"] == pytest.approx(1.0, abs=1e-4)
         assert diag["structural_kinematic_identity_max_residual"] < 0.01

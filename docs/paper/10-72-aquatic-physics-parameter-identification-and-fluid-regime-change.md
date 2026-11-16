@@ -2,7 +2,7 @@
 
 ### 10.72 Aquatic Physics Parameter Identification and Fluid-Regime Transition
 
-10.71 established that closed-loop Physics-Informed Stage PPO (`PIML-PPO`) clears every terrestrial stage the world map hands over (`0x2A`, `0x29`, `0x27`). Finishing `0x27` on the console moves the overworld cursor from node `(152, 104)` to `(184, 72)` and unlocks **`0x26` (*Yoshi's Island 4*)**, saved as `data/raw/smw_map_round_2_184_72_t26.state` beside the post-clear world map `data/raw/smw_world_map_after_round_1_152_104_t27.state`.
+10.71 reports closed-loop Physics-Informed Stage PPO (`PIML-PPO`) clearing the terrestrial stages the world map hands over (`0x2A`, `0x29`, `0x27`; the `0x29` result is not reproduced by the shipped evaluation, 10.71.3). Finishing `0x27` on the console moves the overworld cursor from node `(152, 104)` to `(184, 72)` and unlocks **`0x26` (*Yoshi's Island 4*)**, saved as `data/raw/smw_map_round_2_184_72_t26.state` beside the post-clear world map `data/raw/smw_world_map_after_round_1_152_104_t27.state`.
 
 In `0x26`, Mario starts on an elevated wooden pier at `x = 16.0 px, y = 272.6 px` over a lake. Moving past `x = 304 px` drops the body into the water, triggering the engine's internal fluid routines via the in-water WRAM flag `$7E:0075 = 1`. This presents an inverse system-identification problem: **how does the discrete dynamical law change across the phase boundary between air and water, and can an inverse solver recover the fluid parameters to prevent catastrophic forward prediction drift?** `src/inverse/aquatic_physics_identification.py` measures both regimes on authentic hardware.
 
