@@ -123,3 +123,19 @@ def test_emulator_exposes_the_shared_episode_helpers():
 
     for name in ("get_game_mode", "in_level", "enable_gameplay_mode", "start_episode"):
         assert callable(getattr(SnesLibretroEmulator, name)), name
+
+
+def test_portable_relpath_survives_paths_on_different_drives(monkeypatch):
+    """Windows `os.path.relpath` raises across drives (pytest tmp on C:, workspace on D: on CI)."""
+    import os
+
+    from src.utils.paths import portable_relpath
+
+    def cross_drive(path, start=None):
+        raise ValueError("path is on mount 'C:', start on mount 'D:'")
+
+    assert portable_relpath(os.path.join("a", "b", "c.pt"), "a") == "b/c.pt"
+    monkeypatch.setattr(os.path, "relpath", cross_drive)
+    recorded = portable_relpath(os.path.join("a", "b", "c.pt"), "a")
+    assert recorded == os.path.abspath(os.path.join("a", "b", "c.pt")).replace(os.sep, "/")
+    assert "\\" not in recorded

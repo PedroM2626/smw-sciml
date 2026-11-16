@@ -38,7 +38,14 @@ import numpy as np
 from src.environment import tile_behavior, wram
 from src.environment.episode_hygiene import PlayerHold
 from src.utils.logging import get_logger
-from src.utils.paths import CHECKPOINTS_DIR, CORE_PATH, RESULTS_DIR, ROM_PATH, state_path
+from src.utils.paths import (
+    CHECKPOINTS_DIR,
+    CORE_PATH,
+    RESULTS_DIR,
+    ROM_PATH,
+    portable_relpath,
+    state_path,
+)
 from src.utils.provenance import write_metrics
 
 logger = get_logger(__name__)
@@ -360,9 +367,7 @@ def train_potential_reward_ga(
         "first_clear_generation": first_clear,
         "best": best_result,
         "history": history,
-        "checkpoint": os.path.relpath(ckpt, os.path.dirname(output_dir) or ".").replace(
-            os.sep, "/"
-        ),
+        "checkpoint": portable_relpath(ckpt, os.path.dirname(output_dir) or "."),
     }
     write_metrics(
         os.path.join(output_dir, f"potential_ga_{tag}_metrics.json"),

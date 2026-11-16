@@ -89,7 +89,14 @@ from src.training.potential_reward_ga import (
     observe as observe_ga,
 )
 from src.utils.logging import get_logger
-from src.utils.paths import CHECKPOINTS_DIR, CORE_PATH, RESULTS_DIR, ROM_PATH, state_path
+from src.utils.paths import (
+    CHECKPOINTS_DIR,
+    CORE_PATH,
+    RESULTS_DIR,
+    ROM_PATH,
+    portable_relpath,
+    state_path,
+)
 from src.utils.provenance import write_metrics
 
 logger = get_logger(__name__)
@@ -1089,9 +1096,7 @@ def train_piml_stage_ppo_single(
     closed_loop_summary = {k: v for k, v in closed_loop.items() if k != "actions"}
     return {
         "state": state_name,
-        "checkpoint": os.path.relpath(ckpt_path, os.path.dirname(RESULTS_DIR) or ".").replace(
-            os.sep, "/"
-        ),
+        "checkpoint": portable_relpath(ckpt_path, os.path.dirname(RESULTS_DIR) or "."),
         "epochs": int(epochs),
         "rollout_steps_per_epoch": int(rollout_steps_per_epoch),
         "ppo_updates_per_epoch": int(ppo_updates_per_epoch),

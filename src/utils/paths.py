@@ -51,6 +51,20 @@ def _env_path(name: str, default: Path) -> Path:
     return Path(raw).expanduser().resolve() if raw else default
 
 
+def portable_relpath(path: str | os.PathLike[str], start: str | os.PathLike[str] = ".") -> str:
+    """`path` relative to `start`, with forward slashes, for recording in an artifact.
+
+    `os.path.relpath` raises on Windows when the two paths are on different drives (a pytest
+    temporary directory on `C:` against a workspace on `D:`); a path with no relative form is
+    recorded as its absolute path instead of failing the run that produced it.
+    """
+    try:
+        rel = os.path.relpath(path, start)
+    except ValueError:
+        rel = os.path.abspath(path)
+    return rel.replace(os.sep, "/")
+
+
 def data_dir() -> Path:
     return _env_path("SMW_DATA_DIR", REPO_ROOT / "data" / "raw")
 

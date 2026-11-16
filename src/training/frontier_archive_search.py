@@ -62,7 +62,14 @@ from src.training.potential_reward_ga import (
     potential_reward,
 )
 from src.utils.logging import get_logger
-from src.utils.paths import CHECKPOINTS_DIR, CORE_PATH, RESULTS_DIR, ROM_PATH, state_path
+from src.utils.paths import (
+    CHECKPOINTS_DIR,
+    CORE_PATH,
+    RESULTS_DIR,
+    ROM_PATH,
+    portable_relpath,
+    state_path,
+)
 from src.utils.provenance import write_metrics
 
 logger = get_logger(__name__)
@@ -416,9 +423,7 @@ def run_frontier_archive_search(
         "best": replay_hygiene,
         "replay_without_player_hold": replay_raw,
         "milestones": milestones,
-        "checkpoint": os.path.relpath(ckpt, os.path.dirname(output_dir) or ".").replace(
-            os.sep, "/"
-        ),
+        "checkpoint": portable_relpath(ckpt, os.path.dirname(output_dir) or "."),
     }
     write_metrics(
         os.path.join(output_dir, f"frontier_archive_{tag}_metrics.json"),
