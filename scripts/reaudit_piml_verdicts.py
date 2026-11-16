@@ -32,6 +32,7 @@ from src.environment.snes_emulator import SnesLibretroEmulator  # noqa: E402
 from src.training.piml_stage_ppo import (  # noqa: E402
     PIMLStageActorCritic,
     evaluate_closed_loop_piml,
+    hold_trigger_for,
 )
 from src.utils.logging import get_logger  # noqa: E402
 from src.utils.paths import CHECKPOINTS_DIR, CORE_PATH, RESULTS_DIR, ROM_PATH, state_path  # noqa: E402
@@ -77,7 +78,10 @@ def reevaluate(state_name: str) -> Dict[str, Any]:
     try:
         with open(state_path(state_name), "rb") as handle:
             root_state = handle.read()
-        result = evaluate_closed_loop_piml(emu, root_state, model, torch.device("cpu"))
+        trigger = int(blob.get("hold_trigger", hold_trigger_for(state_name)))
+        result = evaluate_closed_loop_piml(
+            emu, root_state, model, torch.device("cpu"), hold_trigger=trigger
+        )
     finally:
         emu.close()
     return {key: result[key] for key in KEEP}

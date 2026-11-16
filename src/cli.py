@@ -90,6 +90,7 @@ MODULE_COMMANDS: dict[str, str] = {
     "sindy": "src.evaluation.sindy_identification_benchmark",
     "conformal-uncertainty": "src.evaluation.conformal_uncertainty_benchmark",
     "potential-ga": "src.training.potential_reward_ga",
+    "piml-sciml-ablation": "src.evaluation.piml_sciml_ablation",
     "frontier-search": "src.training.frontier_archive_search",
     "piml-stage-ppo": "src.training.piml_stage_ppo",
     "residue-process": "src.evaluation.residue_process_study",

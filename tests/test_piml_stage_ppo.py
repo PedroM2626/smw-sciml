@@ -96,3 +96,18 @@ def test_committed_piml_stage_ppo_artifact_clears_all_stages() -> None:
         diag = rec["sciml_diagnostics"]
         assert diag["policy_action_agreement"] == pytest.approx(1.0, abs=1e-4)
         assert diag["structural_kinematic_identity_max_residual"] < 0.01
+
+
+def test_the_message_box_pulse_is_a_per_stage_value() -> None:
+    """0x29 and 0x27 were recorded under the default pulse; the aquatic 0x26 needs 60.
+
+    A single global trigger made 0x29 stop reproducing (death at frame 2187): action sequences are
+    only valid under the pulse timing they were recorded with.
+    """
+    from src.environment.episode_hygiene import DEFAULT_TRIGGER
+    from src.training.piml_stage_ppo import hold_trigger_for
+
+    assert hold_trigger_for("smw_map_node_68_135_t29.state") == DEFAULT_TRIGGER
+    assert hold_trigger_for("smw_map_round_1_152_104_t27.state") == DEFAULT_TRIGGER
+    assert hold_trigger_for("smw_map_round_2_184_72_t26.state") == 60
+    assert hold_trigger_for("data/raw/smw_map_round_2_184_72_t26.state") == 60

@@ -1,4 +1,4 @@
-[← 10.74](10-74-aquatic-stage-clearance-by-physics-informed-reinforcement-learning.md) · [Contents](../../README.md#contents) · [12 →](12-scientific-integrity-statement.md)
+[← 10.75](10-75-what-the-physics-informed-terms-of-piml.md) · [Contents](../../README.md#contents) · [12 →](12-scientific-integrity-statement.md)
 
 ## 11. Complete Reproducibility Guide
 

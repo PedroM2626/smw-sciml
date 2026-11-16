@@ -159,5 +159,6 @@ nav:
           - '10.72 Aquatic Physics Parameter Identification and Fluid-Regime Transition': paper/10-72-aquatic-physics-parameter-identification-and-fluid-regime-change.md
           - '10.73 End-to-End Pixel Perception with Physics-Informed Reinforcement Learning (Pixel-PIML)': paper/10-73-end-to-end-pixel-perception-with-physics-informed-reinforcement-learning.md
           - '10.74 Aquatic Stage Clearance by Physics-Informed Reinforcement Learning (PIML-PPO Stage 0x26)': paper/10-74-aquatic-stage-clearance-by-physics-informed-reinforcement-learning.md
+          - '10.75 What the Physics-Informed Terms of PIML-PPO Contribute: a Four-Arm Ablation': paper/10-75-what-the-physics-informed-terms-of-piml.md
       - '11. Complete Reproducibility Guide': paper/11-complete-reproducibility-guide.md
       - '12. Scientific Integrity Statement': paper/12-scientific-integrity-statement.md

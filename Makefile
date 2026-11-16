@@ -8,7 +8,7 @@ CONFIG_DIR := configs
 SMOKE_DIR := results_smoke
 
 .PHONY: install install-cuda test test-cov lint format format-check typecheck check-all \
-       reproduce benchmark sample-efficiency multiseed piml-mfrl piml-mfrl-study inverse-transfer deeponet operators symbolic-inverse symbolic-tilemap symbolic-engines inverse-mpc sprint-excitation learned-probes physics-injection plateau-provenance projection-cell gate-excitation effective-velocity physics-claims neural-ode sindy potential-ga frontier-search piml-stage-ppo aquatic-physics pixel-piml full-clearance corrected-physics residue-process boundary-channel pixel-frame-probe scroll-scan record-boundary record-dashboard dashboard-video dashboard-study stage-identity pixel-level-recheck pause-hygiene forced-mode-buffer pixel-retrain survey-map survey-opened-map survey-map-replay world-map-recheck probe-tiles probe-sprites perception-correction-study unlock-map record-level-dashboards level-dashboard-study record-jump record-sprint metric-decomposition velocity-classes smoke smoke-all run install-info help
+       reproduce benchmark sample-efficiency multiseed piml-mfrl piml-mfrl-study inverse-transfer deeponet operators symbolic-inverse symbolic-tilemap symbolic-engines inverse-mpc sprint-excitation learned-probes physics-injection plateau-provenance projection-cell gate-excitation effective-velocity physics-claims neural-ode sindy potential-ga frontier-search piml-stage-ppo aquatic-physics pixel-piml full-clearance piml-sciml-ablation corrected-physics residue-process boundary-channel pixel-frame-probe scroll-scan record-boundary record-dashboard dashboard-video dashboard-study stage-identity pixel-level-recheck pause-hygiene forced-mode-buffer pixel-retrain survey-map survey-opened-map survey-map-replay world-map-recheck probe-tiles probe-sprites perception-correction-study unlock-map record-level-dashboards level-dashboard-study record-jump record-sprint metric-decomposition velocity-classes smoke smoke-all run install-info help
 
 help:
 	@echo "install            pip install -e .[dev] (CPU torch)"
@@ -74,6 +74,7 @@ help:
 	@echo "potential-ga       GA policy under the simple potential-maximum reward, clears 0x29 (10.69, needs core + ROM)"
 	@echo "frontier-search    Cell-archive frontier search (Go-Explore), clears 0x27 (10.70, needs core + ROM)"
 	@echo "piml-stage-ppo     Physics-Informed Stage PPO (CBF + HJB critic + Hard PINN head), clears 0x29 & 0x27 (10.71, needs core + ROM)"
+	@echo "piml-sciml-ablation  What the physics-informed terms of PIML-PPO contribute: 4 arms x 3 stages x 3 seeds (10.75, needs core + ROM, ~1 h on GPU)"
 	@echo "full-clearance     Re-fly the published Yoshi's Island 1 clearance run (10.29.4, needs core + ROM)"
 	@echo "corrected-physics  What the three section-4 corrections cost, open loop and on the console (10.57, 10.57.1)"
 	@echo "record-jump        Record jump-excited WRAM telemetry (needs the console)"
@@ -250,6 +251,11 @@ pixel-piml:
 
 # The published full-stage clearance run (README 10.29.4, needs core + ROM). It was flown without
 # the message-box A pulse of 10.60, which is now the evaluator's default, so the flag turns it off.
+# Four-arm ablation of PIML-PPO (README 10.75): with and without the physics-informed terms, with and
+# without the demonstration anchor, evaluated in closed loop after the PPO epochs and after the polish.
+piml-sciml-ablation:
+	$(PY) -m src.evaluation.piml_sciml_ablation
+
 full-clearance:
 	$(PY) -m src.evaluation.evaluate_full_level_clearance --no-message-box-hygiene
 

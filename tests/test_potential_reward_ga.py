@@ -243,3 +243,37 @@ def test_section_10_69_quotes_the_committed_artifacts(stage: str) -> None:
     else:
         assert payload["first_clear_generation"] is None
         assert f"{payload['protocol']['generations_run']}, no clear" in row
+
+
+# --- the pure helpers of the 10.70 cell-archive search ------------------------------------------
+
+
+def test_cell_keys_keep_a_sprint_run_up_apart_from_a_walking_arrival() -> None:
+    from src.training.frontier_archive_search import CELL_PX, cell_key
+
+    walking = cell_key(100.0, 300.0, 20.0, 0.0, 1.0)
+    sprinting = cell_key(100.0, 300.0, 40.0, 0.0, 1.0)
+    assert walking[:2] == sprinting[:2] and walking != sprinting
+    assert (walking[3], sprinting[3]) == (1, 2)
+    assert cell_key(100.0, 300.0, -4.0, 0.0, 1.0)[3] == -1
+    airborne_up = cell_key(100.0, 200.0, 10.0, -20.0, 0.0)
+    airborne_down = cell_key(100.0, 200.0, 10.0, 20.0, 0.0)
+    assert (airborne_up[2], airborne_down[2]) == (2, 0)
+    assert cell_key(CELL_PX * 3 + 1.0, 0.0, 0.0, 0.0, 1.0)[0] == 3
+
+
+def test_a_cell_prefers_progress_height_and_a_grounded_foot() -> None:
+    from src.training.frontier_archive_search import cell_score
+
+    assert cell_score(300.0, 200.0, 10.0, 1.0) > cell_score(300.0, 200.0, 10.0, 0.0)
+    assert cell_score(300.0, 100.0, 10.0, 1.0) > cell_score(300.0, 200.0, 10.0, 1.0)
+    assert cell_score(400.0, 200.0, 10.0, 1.0) > cell_score(300.0, 200.0, 10.0, 1.0)
+
+
+def test_the_macro_primitives_are_the_documented_28_and_only_name_real_actions() -> None:
+    from src.training.frontier_archive_search import build_macro_primitives
+
+    macros = build_macro_primitives()
+    assert len(macros) == 8 * 3 + 4
+    assert all(0 <= a < len(ga.ACTIONS) for macro in macros for a in macro)
+    assert [4] * 6 in macros and [4] * 10 in macros

@@ -11,6 +11,15 @@ numbers* - those are reported here and in README Section 12, never applied silen
 
 ### Added
 
+- **A four-arm ablation of PIML-PPO** (README 10.75, `make piml-sciml-ablation`). `src/evaluation/piml_sciml_ablation.py`
+  trains `full`, `no_sciml`, `no_imitation` and `no_imitation_no_sciml` on `0x29`, `0x27` and `0x26` (3 seeds, 25
+  epochs) and evaluates each in closed loop after the PPO epochs and after the polish. Without the demonstration
+  anchor no run clears (0 of 18, furthest 1830 px); with it, 2 of 18 clear after the PPO epochs and 12 after the
+  polish, `full` clearing 7 of 9 and `no_sciml` 5 of 9 (Fisher p = 0.62, opposite signs by stage), and the shipped `0x29`
+  result is one seed of three. `train_piml_stage_ppo_single` gained `polish`, `require_clear`, `save_checkpoint` and
+  `pre_polish_eval` (defaults unchanged) and reports `training_diagnostics`. Covered by `tests/test_piml_stage_ppo_units.py`.
+- **Unit tests for the PIML-PPO trainer, the aquatic identification and the cell-archive helpers**, against a scripted
+  fake console and frames generated from laws chosen in the test; `piml_stage_ppo.py` coverage goes from 14% to 82%.
 - **Multi-Modal Aquatic Dashboard for Stage `0x26` (*Yoshi's Island 4*) and Empirical Sprite Probe Integration**
   (README §10.74, `docs/paper/10-74-aquatic-stage-clearance-by-physics-informed-reinforcement-learning.md`, `results/figures/dashboard_level_5.mp4`, `dashboard_level_5.gif`).
   Rendered the synchronized multi-modal telemetry dashboard for Yoshi's Island 4 (`0x26`), recording through sub-level pipe transitions
@@ -139,9 +148,14 @@ numbers* - those are reported here and in README Section 12, never applied silen
   `results/piml_stage_ppo_aquatic_0x26_metrics.json`, keeping the superseded values under `verdict_correction`; the
   stage was cleared, and the numbers and the description were wrong. `tests/test_piml_stage_ppo.py` required only
   `0x0F` as evidence and now requires the timer and `0x0C` for every stage; `tests/test_potential_reward_ga.py` pins the
-  pipe case. 10.74.5 also records that the `0x26` anchor is a hand-written list, and 10.71.3 that `0x29` does not
-  reproduce with the evaluation as shipped (it clears only under `PlayerHold(trigger=10)`, not the `60` in use since
-  the aquatic commit) and that the PIML-PPO checkpoints are trained to reproduce their anchor sequences.
+  pipe case. 10.74.5 also records that the `0x26` anchor is a hand-written list, and 10.71.3 that the PIML-PPO
+  checkpoints are trained to reproduce their anchor sequences.
+- **`0x29` reproduces again: the message-box pulse is a per-stage value** (README 10.71.3).
+  The aquatic commit changed `PlayerHold(trigger=...)` from the default 10 frames to a global 60 in
+  `piml_stage_ppo`, and the `0x29` actions, recorded under 10, then diverged (death at frame 2187). The trigger is now
+  `HOLD_TRIGGER_BY_STAGE` / `hold_trigger_for` (60 for `0x26`, which dies under 10; the default for the others), and
+  `evaluate_closed_loop_piml` takes it as `hold_trigger`. Re-evaluated with it, all three checkpoints reproduce their
+  artifacts to the frame (`0x29` 4808.0625 px / 3288 frames, `0x27` 5065.6250 px / 2252, `0x26` 2052 frames).
 
 ### Changed
 

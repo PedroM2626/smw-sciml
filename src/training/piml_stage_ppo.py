@@ -61,6 +61,7 @@ import torch.nn.functional as F
 from torch.distributions import Categorical
 
 from src.environment import tile_behavior, wram
+from src.environment.episode_hygiene import DEFAULT_TRIGGER as DEFAULT_HOLD_TRIGGER
 from src.environment.episode_hygiene import PlayerHold
 from src.losses.physics_rl_losses import (
     ActionPhysicsViolation,
@@ -387,6 +388,21 @@ def get_macro_subframe_buttons(
         return btn_raw
 
 
+# How long the player record must repeat before `PlayerHold` pulses A at a message box, per stage.
+# Action sequences are only valid under the pulse timing they were recorded with - a pulse that
+# lands 50 frames later shifts every jump that follows and the chaos-sensitive run diverges - so
+# the timing is a property of the stage, not one global constant. 0x29 and 0x27 were recorded with
+# the default (10 frames; 10.69 and 10.70); the aquatic 0x26 anchor reaches its pipe under 60 and
+# dies under 10. A global 60, introduced with the aquatic stage, stopped 0x29 from reproducing.
+HOLD_TRIGGER_BY_STAGE: Dict[str, int] = {"smw_map_round_2_184_72_t26": 60}
+
+
+def hold_trigger_for(state_name: str) -> int:
+    """The `PlayerHold` trigger the stage's action sequences were recorded under."""
+    tag = os.path.splitext(os.path.basename(state_name))[0]
+    return HOLD_TRIGGER_BY_STAGE.get(tag, DEFAULT_HOLD_TRIGGER)
+
+
 def step_macro_action(
     emu: Any,
     hold: PlayerHold,
@@ -498,13 +514,14 @@ def build_clear_dataset_and_frontiers(
     actions: Sequence[int],
     gamma: float = 0.99,
     n_frontiers: int = 8,
+    hold_trigger: int = DEFAULT_HOLD_TRIGGER,
 ) -> Tuple[Dict[str, np.ndarray], List[Tuple[bytes, EpisodeTracker, PlayerHold]]]:
     """Roll out a clearing action sequence to collect `(obs, phys, action, reward, next_phys, return)`
     and intermediate frontier snapshots for Go-Explore Phase-2 PPO resets.
     """
     emu.load_state(root_state)
     verdict = StageVerdict(lives_at_start=emu.read_wram_u8(ADDR_LIVES))
-    hold = PlayerHold(trigger=60)
+    hold = PlayerHold(trigger=hold_trigger)
     tracker = EpisodeTracker.from_emu(emu)
 
     obs_list: List[np.ndarray] = []
@@ -597,12 +614,16 @@ def evaluate_closed_loop_piml(
     device: torch.device,
     max_frames: int = 8000,
     post_verdict_frames: int = 120,
+    hold_trigger: int = DEFAULT_HOLD_TRIGGER,
 ) -> Dict[str, Any]:
-    """Evaluate `PIMLStageActorCritic` in deterministic closed loop from `t = 0` (`root_state`)."""
+    """Evaluate `PIMLStageActorCritic` in deterministic closed loop from `t = 0` (`root_state`).
+
+    `hold_trigger` is the stage's message-box pulse timing (`hold_trigger_for`).
+    """
     model.eval()
     emu.load_state(root_state)
     verdict = StageVerdict(lives_at_start=emu.read_wram_u8(ADDR_LIVES))
-    hold = PlayerHold(trigger=60)
+    hold = PlayerHold(trigger=hold_trigger)
     tracker = EpisodeTracker.from_emu(emu)
     s0 = emu.get_smw_state()
     start_x = float(s0["x"])
@@ -736,8 +757,19 @@ def train_piml_stage_ppo_single(
     seed: int = 42,
     device_str: str = "cuda" if torch.cuda.is_available() else "cpu",
     checkpoint_dir: str = CHECKPOINTS_DIR,
+    polish: bool = True,
+    require_clear: bool = True,
+    save_checkpoint: bool = True,
+    pre_polish_eval: bool = False,
 ) -> Dict[str, Any]:
-    """Train a Physics-Informed PPO (`PIMLStageActorCritic`) agent on `state_name` and verify its closed-loop clear."""
+    """Train a Physics-Informed PPO (`PIMLStageActorCritic`) agent on `state_name` and verify its closed-loop clear.
+
+    The four keyword switches at the end exist for the ablation of 10.75 and leave the defaults
+    untouched: `polish=False` skips the final cross-entropy stage that makes the network agree
+    with every anchor action, `require_clear=False` reports a failed clear instead of asserting it,
+    `save_checkpoint=False` writes nothing under `checkpoint_dir`, and `pre_polish_eval` also
+    evaluates the network in closed loop right after the PPO epochs, before any polishing.
+    """
     from src.environment.snes_emulator import SnesLibretroEmulator
 
     torch.backends.cuda.matmul.allow_tf32 = False
@@ -751,9 +783,10 @@ def train_piml_stage_ppo_single(
     with open(state_path(state_name), "rb") as handle:
         root_state = handle.read()
 
+    hold_trigger = hold_trigger_for(state_name)
     ref_actions = extract_reference_actions(emu, root_state, state_name)
     clear_data, frontiers = build_clear_dataset_and_frontiers(
-        emu, root_state, ref_actions, gamma=gamma
+        emu, root_state, ref_actions, gamma=gamma, hold_trigger=hold_trigger
     )
 
     model = PIMLStageActorCritic(
@@ -799,7 +832,7 @@ def train_piml_stage_ppo_single(
         emu.load_state(root_state)
         return (
             StageVerdict(lives_at_start=emu.read_wram_u8(ADDR_LIVES)),
-            PlayerHold(trigger=60),
+            PlayerHold(trigger=hold_trigger),
             EpisodeTracker.from_emu(emu),
         )
 
@@ -956,8 +989,22 @@ def train_piml_stage_ppo_single(
 
         history.append({"epoch": int(epoch), "anchor_accuracy": acc, **ep_losses})
 
+    anchor_accuracy_after_ppo = float(history[-1]["anchor_accuracy"]) if history else 0.0
+    pre_polish: Optional[Dict[str, Any]] = None
+    if pre_polish_eval:
+        pre_polish = {
+            k: v
+            for k, v in evaluate_closed_loop_piml(
+                emu, root_state, model, device, hold_trigger=hold_trigger
+            ).items()
+            if k != "actions"
+        }
+        model.train()
+
     # Polish actor & critic heads on the anchor trajectory + physics losses so closed-loop argmax is 100% exact
-    for _ in range(1000):
+    polish_steps = 0
+    for _ in range(1000 if polish else 0):
+        polish_steps += 1
         a_phys_req = anchor_phys.detach().clone().requires_grad_(True)
         dist_anc, val_anc, _ = model(anchor_obs, a_phys_req)
         pred_kin, struct_res = model.predict_kinematics(anchor_obs, anchor_phys, anchor_act)
@@ -983,12 +1030,15 @@ def train_piml_stage_ppo_single(
                 break
 
     # Evaluate in pure closed loop from t = 0
-    closed_loop = evaluate_closed_loop_piml(emu, root_state, model, device)
-    assert closed_loop["cleared"], (
-        f"PIML-PPO policy failed to clear {state_name} in closed loop: "
-        f"progress={closed_loop['progress_px']} px, frames={closed_loop['frames']}"
+    closed_loop = evaluate_closed_loop_piml(
+        emu, root_state, model, device, hold_trigger=hold_trigger
     )
-    assert not closed_loop["died"]
+    if require_clear:
+        assert closed_loop["cleared"], (
+            f"PIML-PPO policy failed to clear {state_name} in closed loop: "
+            f"progress={closed_loop['progress_px']} px, frames={closed_loop['frames']}"
+        )
+        assert not closed_loop["died"]
 
     # Measure final SciML diagnostics on the clearing rollout
     with torch.no_grad():
@@ -1006,22 +1056,24 @@ def train_piml_stage_ppo_single(
     emu.close()
 
     tag = os.path.splitext(os.path.basename(state_name))[0]
-    os.makedirs(checkpoint_dir, exist_ok=True)
     ckpt_path = os.path.join(checkpoint_dir, f"piml_ppo_{tag}.pt")
-    torch.save(
-        {
-            "model_state_dict": model.state_dict(),
-            "obs_dim": OBS_DIM,
-            "phys_dim": PHYS_DIM,
-            "hidden_dim": hidden_dim,
-            "n_actions": N_ACTIONS,
-            "cbf_beta": cbf_beta,
-            "frame_skip": FRAME_SKIP,
-            "state_name": state_name,
-            "closed_loop_actions": closed_loop["actions"],
-        },
-        ckpt_path,
-    )
+    if save_checkpoint:
+        os.makedirs(checkpoint_dir, exist_ok=True)
+        torch.save(
+            {
+                "model_state_dict": model.state_dict(),
+                "obs_dim": OBS_DIM,
+                "phys_dim": PHYS_DIM,
+                "hidden_dim": hidden_dim,
+                "n_actions": N_ACTIONS,
+                "cbf_beta": cbf_beta,
+                "frame_skip": FRAME_SKIP,
+                "state_name": state_name,
+                "hold_trigger": hold_trigger,
+                "closed_loop_actions": closed_loop["actions"],
+            },
+            ckpt_path,
+        )
 
     logger.info(
         "PIML-PPO %s | cleared=%s | progress=%.4f px | frames=%d | acc=%.4f | pos_mae=%.3f px | %.1fs",
@@ -1057,6 +1109,13 @@ def train_piml_stage_ppo_single(
             "final_hard_pinn_loss": float(history[-1]["hard_pinn"]),
         },
         "closed_loop_evaluation": closed_loop_summary,
+        "training_diagnostics": {
+            "polish": bool(polish),
+            "polish_steps": int(polish_steps),
+            "anchor_accuracy_after_ppo": anchor_accuracy_after_ppo,
+            "lambda_sil": float(lambda_sil),
+            "pre_polish_evaluation": pre_polish,
+        },
         "history_head_tail": [history[0], history[len(history) // 2], history[-1]],
     }
 

@@ -150,6 +150,7 @@ through the installed console script: `smw-pinn benchmark`, `smw-pinn multiseed`
 | `pixel_estimator_retrain_level_pair_metrics.json` | `src/evaluation/pixel_retrain_study.py` | no | 10.65 |
 | `potential_ga_smw_map_node_68_135_t29_metrics.json` | `src/training/potential_reward_ga.py` | yes | 10.69 |
 | `potential_ga_smw_map_round_1_152_104_t27_metrics.json` | `src/training/potential_reward_ga.py` | yes | 10.69 |
+| `piml_sciml_ablation_metrics.json` | `src/evaluation/piml_sciml_ablation.py` | yes | 10.75 |
 | `frontier_archive_smw_map_round_1_152_104_t27_metrics.json` | `src/training/frontier_archive_search.py` | yes | 10.70 |
 | `piml_stage_ppo_metrics.json` | `src/training/piml_stage_ppo.py` | yes | 10.71 |
 | `aquatic_physics_identification_metrics.json` | `src/inverse/aquatic_physics_identification.py` | yes | 10.72 |
